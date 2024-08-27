@@ -1,7 +1,7 @@
-import http.client
+from collections import defaultdict
+import requests
 import json
-import csv
-
+import math
 
 #############################################################################################################################
 # cse6242 
@@ -61,7 +61,12 @@ class Graph:
         add a tuple (id, name) representing a node to self.nodes if it does not already exist
         The graph should not contain any duplicate nodes
         """
-        return NotImplemented
+
+        if (id, name) not in self.nodes:
+            self.nodes.append((id, name))
+
+
+        #return NotImplemented
 
 
     def add_edge(self, source: str, target: str) -> None:
@@ -71,21 +76,25 @@ class Graph:
         Where 'source' is the id of the source node and 'target' is the id of the target node
         e.g., for two nodes with ids 'a' and 'b' respectively, add the tuple ('a', 'b') to self.edges
         """
-        return NotImplemented
+
+        if (source, target) not in self.edges and (target, source) not in self.edges:
+            self.edges.append((source, target))
+
+        #return NotImplemented
 
 
     def total_nodes(self) -> int:
         """
         Returns an integer value for the total number of nodes in the graph
         """
-        return NotImplemented
+        return len(self.nodes)
 
 
     def total_edges(self) -> int:
         """
         Returns an integer value for the total number of edges in the graph
         """
-        return NotImplemented
+        return len(self.edges)
 
 
     def max_degree_nodes(self) -> dict:
@@ -96,7 +105,21 @@ class Graph:
         e.g. {'a': 8}
         or {'a': 22, 'b': 22}
         """
-        return NotImplemented
+
+        degree_count = defaultdict(int)
+
+        # Count the degree of each node
+        for node1, node2 in edges:
+            degree_count[node1] += 1
+            degree_count[node2] += 1
+
+        # Determine the maximum degree
+        max_degree = max(degree_count.values())
+
+        # Find all nodes with the maximum degree
+        highest_degree_nodes = {node: degree for node, degree in degree_count.items() if degree == max_degree}
+
+        return highest_degree_nodes
 
 
     def print_nodes(self):
@@ -183,7 +206,21 @@ class  TMDBAPIUtils:
                 Note that this is an example of the structure of the list and some of the fields returned by the API.
                 The result of the API call will include many more fields for each cast member.
         """
-        return NotImplemented
+
+        movie_response = requests.get(f"https://api.themoviedb.org/3/movie/{movie_id}/credits?api_key={api_key}")
+        movie_json = json.loads(movie_response.text)
+
+        if limit is None:
+            limit = math.inf
+        if exclude_ids is None:
+            exclude_ids = []
+
+        cast_list = []
+        for cast_member in movie_json['cast']:
+            if cast_member['order'] < limit and cast_member['id'] not in exclude_ids:
+                cast_list.append(cast_member)
+
+        return cast_list
 
 
     def get_movie_credits_for_person(self, person_id:str, vote_avg_threshold:float=None)->list:
@@ -202,6 +239,9 @@ class  TMDBAPIUtils:
                 'title': 'Long, Stock and Two Smoking Barrels' # the title (not original title) of the credit
                 'vote_avg': 5.0 # the float value of the vote average value for the credit}, ... ]
         """
+        api_key = 'd8519a7a0db7f575689297e821b187f0'
+
+        requests.get("https://api.themoviedb.org/3/person/{person_id}/movie_credits?api_key={api_key}")
         return NotImplemented
 
 
