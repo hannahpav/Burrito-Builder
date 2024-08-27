@@ -206,7 +206,7 @@ class  TMDBAPIUtils:
                 Note that this is an example of the structure of the list and some of the fields returned by the API.
                 The result of the API call will include many more fields for each cast member.
         """
-
+        api_key = 'd8519a7a0db7f575689297e821b187f0'
         movie_response = requests.get(f"https://api.themoviedb.org/3/movie/{movie_id}/credits?api_key={api_key}")
         movie_json = json.loads(movie_response.text)
 
@@ -241,8 +241,17 @@ class  TMDBAPIUtils:
         """
         api_key = 'd8519a7a0db7f575689297e821b187f0'
 
-        requests.get("https://api.themoviedb.org/3/person/{person_id}/movie_credits?api_key={api_key}")
-        return NotImplemented
+        movie_credits = requests.get("https://api.themoviedb.org/3/person/{person_id}/movie_credits?api_key={api_key}")
+        credits_json = json.loads(movie_credits.text)
+
+        credit_list = []
+        if vote_avg_threshold is None:
+            vote_avg_threshold = 0
+        for credit in credits_json['cast']:
+            if credit['vote_average'] >= vote_avg_threshold:
+                credit_list.append(credit)
+
+        return credit_list
 
 
 #############################################################################################################################
@@ -347,17 +356,37 @@ def return_name()->str:
     e.g., gburdell3
     Do not return your 9 digit GTId
     """
-    return NotImplemented
+    return f'hpavlovich3'
 
 
 # You should modify __main__ as you see fit to build/test your graph using  the TMDBAPIUtils & Graph classes.
 # Some boilerplate/sample code is provided for demonstration. We will not call __main__ during grading.
 
 if __name__ == "__main__":
+    api_key = 'd8519a7a0db7f575689297e821b187f0'
 
     graph = Graph()
     graph.add_node(id='2975', name='Laurence Fishburne')
-    tmdb_api_utils = TMDBAPIUtils(api_key='<your API key>')
+    tmdb_api_utils = TMDBAPIUtils(api_key='api_key')
+
+    laurence_start = tmdb_api_utils.get_movie_credits_for_person('2975', 8.0)
+    for movie in laurence_start:
+        cast_movie = tmdb_api_utils.get_movie_cast(cast_movie['id'], limit = 3)
+        for cast_member in cast_movie:
+            graph.add_node(id = cast_member['id'], str = cast_member['name'])
+            graph.add_edge('2975', cast_member['id'])
+    # BEGIN BUILD BASE GRAPH:
+    #   Find all of Laurence Fishburne's movie credits that have a vote average >= 8.0
+    #   FOR each movie credit:
+    #   |   get the movie cast members having an 'order' value between 0-2 (these are the co-actors)
+    #   |
+    #   |   FOR each movie cast member:
+    #   |   |   using graph.add_node(), add the movie cast member as a node (keep track of all new nodes added to the graph)
+    #   |   |   using graph.add_edge(), add an edge between the Laurence Fishburne (actor) node
+    #   |   |   and each new node (co-actor/co-actress)
+    #   |   END FOR
+    #   END FOR
+    # END BUILD BASE GRAPH
 
     # call functions or place code here to build graph (graph building code not graded)
     # Suggestion: code should contain steps outlined above in BUILD CO-ACTOR NETWORK
