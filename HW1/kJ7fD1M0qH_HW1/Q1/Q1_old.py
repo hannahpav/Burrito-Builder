@@ -4,10 +4,6 @@ import json
 import math
 import re
 import csv
-import time
-
-#from numpy.f2py.crackfortran import endifs
-
 
 #############################################################################################################################
 # cse6242 
@@ -69,8 +65,8 @@ class Graph:
         """
 
         if (id, name) not in self.nodes:
-            clean_name = re.sub(r',', '', name)
-            self.nodes.append((id, clean_name))
+            self.nodes.append((id, name))
+
         #return NotImplemented
 
 
@@ -81,6 +77,7 @@ class Graph:
         Where 'source' is the id of the source node and 'target' is the id of the target node
         e.g., for two nodes with ids 'a' and 'b' respectively, add the tuple ('a', 'b') to self.edges
         """
+
         if (source, target) not in self.edges and (target, source) not in self.edges:
             self.edges.append((source, target))
 
@@ -113,7 +110,7 @@ class Graph:
         degree_count = defaultdict(int)
 
         # Count the degree of each node
-        for node1, node2 in self.edges:
+        for node1, node2 in edges:
             degree_count[node1] += 1
             degree_count[node2] += 1
 
@@ -143,7 +140,7 @@ class Graph:
 
 
     # Do not modify
-    def write_edges_file(self, path="edges.csv")->None:
+    def write_edges_file(self, path="HW1\kJ7fD1M0qH_HW1\Q1\edges.csv")->None:
         """
         write all edges out as .csv
         :param path: string
@@ -158,10 +155,11 @@ class Graph:
             edges_file.write(e[0] + "," + e[1] + "\n")
 
         edges_file.close()
+        print("finished writing edges to csv")
 
 
     # Do not modify
-    def write_nodes_file(self, path="nodes.csv")->None:
+    def write_nodes_file(self, path="HW1/kJ7fD1M0qH_HW1/Q1/nodes.csv")->None:
         """
         write all nodes out as .csv
         :param path: string
@@ -174,6 +172,7 @@ class Graph:
         for n in self.nodes:
             nodes_file.write(n[0] + "," + n[1] + "\n")
         nodes_file.close()
+        print("finished writing nodes to csv")
 
 
 
@@ -208,12 +207,9 @@ class  TMDBAPIUtils:
                 Note that this is an example of the structure of the list and some of the fields returned by the API.
                 The result of the API call will include many more fields for each cast member.
         """
-        api_key = self.api_key
+        api_key = 'd8519a7a0db7f575689297e821b187f0'
         movie_response = requests.get(f"https://api.themoviedb.org/3/movie/{movie_id}/credits?api_key={api_key}")
-
-        if movie_response.status_code != 200:
-            return []
-        movie_json = movie_response.json()
+        movie_json = json.loads(movie_response.text)
 
         if limit is None:
             limit = math.inf
@@ -221,7 +217,7 @@ class  TMDBAPIUtils:
             exclude_ids = []
 
         cast_list = []
-        for cast_member in movie_json.get('cast', []):
+        for cast_member in movie_json['cast']:
             if cast_member['order'] < limit and cast_member['id'] not in exclude_ids:
                 cast_list.append(cast_member)
 
@@ -244,19 +240,16 @@ class  TMDBAPIUtils:
                 'title': 'Long, Stock and Two Smoking Barrels' # the title (not original title) of the credit
                 'vote_avg': 5.0 # the float value of the vote average value for the credit}, ... ]
         """
-        api_key = self.api_key
-        movie_credits = requests.get(f"https://api.themoviedb.org/3/person/{person_id}/movie_credits?api_key={api_key}")
+        api_key = 'd8519a7a0db7f575689297e821b187f0'
 
-        if movie_credits.status_code != 200:
-            return []
-        credits_json = movie_credits.json()
+        movie_credits = requests.get(f"https://api.themoviedb.org/3/person/{person_id}/movie_credits?api_key={api_key}")
+        credits_json = json.loads(movie_credits.text)
 
         credit_list = []
         if vote_avg_threshold is None:
             vote_avg_threshold = 0
-        for credit in credits_json.get('cast', []):
-            vote_average = credit.get('vote_average', -1)
-            if float(vote_average) >= vote_avg_threshold:
+        for credit in credits_json['cast']:
+            if credit['vote_average'] >= vote_avg_threshold:
                 credit_list.append(credit)
 
         return credit_list
@@ -372,68 +365,29 @@ def return_name()->str:
 
 if __name__ == "__main__":
     api_key = 'd8519a7a0db7f575689297e821b187f0'
+
     graph = Graph()
     graph.add_node(id='2975', name='Laurence Fishburne')
-    tmdb_api_utils = TMDBAPIUtils(api_key=api_key)
-    new_nodes = []
+    tmdb_api_utils = TMDBAPIUtils(api_key='api_key')
 
     laurence_start = tmdb_api_utils.get_movie_credits_for_person('2975', 8.0)
     for movie in laurence_start:
         cast_movie = tmdb_api_utils.get_movie_cast(movie['id'], limit = 3)
-
         for cast_member in cast_movie:
-            if cast_member['id'] not in [node[0] for node in graph.nodes]:
-                graph.add_node(str(cast_member['id']), cast_member['name'])
-                new_nodes.append(cast_member['id'])
+            graph.add_node(str(cast_member['id']), cast_member['name'])
             graph.add_edge('2975', str(cast_member['id']))
-
-    j=0
-    k=0
-    for i in range(2):
-        use_nodes = new_nodes
-        print(f'node length {len(new_nodes)}')
-        new_nodes = []
-        for node in use_nodes:
-            j+=1
-            print(f'iteration {i}, processing node {j}')
-            new_start = tmdb_api_utils.get_movie_credits_for_person(str(node), 8.0)
-            for movie in new_start:
-                cast_movie = tmdb_api_utils.get_movie_cast(movie['id'], limit = 3)
-                for cast_member in cast_movie:
-                    if str(cast_member['id']) not in [node[0] for node in graph.nodes]:
-                        graph.add_node(str(cast_member['id']), cast_member['name'])
-                        new_nodes.append(cast_member['id'])
-                        k+=1
-                        print(k)
-                    else:
-                    graph.add_edge(str(node), str(cast_member['id']))
-
-    #time.sleep(1)
-    # BEGIN Loop - DO  2    TIMES:
-    #   IF first iteration of loop:
-    #   |   nodes = The nodes added in the BUILD BASE GRAPH (this excludes the original node of Laurence Fishburne!)
-    #   ELSE
-    #   |    nodes = The nodes added in the previous iteration:
-    #   ENDIF
-    #
-    #   FOR each node in nodes:
-    #   |  get the movie credits for the actor that have a vote average >= 8.0
+    # BEGIN BUILD BASE GRAPH:
+    #   Find all of Laurence Fishburne's movie credits that have a vote average >= 8.0
+    #   FOR each movie credit:
+    #   |   get the movie cast members having an 'order' value between 0-2 (these are the co-actors)
     #   |
-    #   |   FOR each movie credit:
-    #   |   |   try to get the 3 movie cast members having an 'order' value between 0-2
-    #   |   |
-    #   |   |   FOR each movie cast member:
-    #   |   |   |   IF the node doesn't already exist:
-    #   |   |   |   |    add the node to the graph (track all new nodes added to the graph)
-    #   |   |   |   ENDIF
-    #   |   |   |
-    #   |   |   |   IF the edge does not exist:
-    #   |   |   |   |   add an edge between the node (actor) and the new node (co-actor/co-actress)
-    #   |   |   |   ENDIF
-    #   |   |   END FOR
+    #   |   FOR each movie cast member:
+    #   |   |   using graph.add_node(), add the movie cast member as a node (keep track of all new nodes added to the graph)
+    #   |   |   using graph.add_edge(), add an edge between the Laurence Fishburne (actor) node
+    #   |   |   and each new node (co-actor/co-actress)
     #   |   END FOR
     #   END FOR
-    # END LOOP
+    # END BUILD BASE GRAPH
 
     # call functions or place code here to build graph (graph building code not graded)
     # Suggestion: code should contain steps outlined above in BUILD CO-ACTOR NETWORK
