@@ -56,25 +56,42 @@ class HW2_sql():
                 return "Query executed successfully"
         except Error as e:
             return "Error occurred: " + str(e)
+
+
+    def execute_many(self, connection, query, table):
+        cursor = connection.cursor()
+        try:
+            if query == "":
+                return "Query Blank"
+            else:
+                cursor.executemany(query, table)
+                connection.commit()
+                return "Query many executed successfully"
+        except Error as e:
+            return "Error occurred: " + str(e)
     ######################################################################
     ######################################################################
 
     # GTusername [0 points]
     def GTusername(self):
-        gt_username = "gburdell3"
+        gt_username = "hpavlovich3"
         return gt_username
     
     # Part 1.a.i Create Tables [2 points]
     def part_1_a_i(self,connection):
         ############### EDIT SQL STATEMENT ###################################
-        part_1_a_i_sql = ""
+        part_1_a_i_sql = """
+        CREATE TABLE movies(id integer, title text, score real)
+        """
         ######################################################################
         
         return self.execute_query(connection, part_1_a_i_sql)
 
     def part_1_a_ii(self,connection):
         ############### EDIT SQL STATEMENT ###################################
-        part_1_a_ii_sql = ""
+        part_1_a_ii_sql = """
+        CREATE TABLE movie_cast(movie_id integer, cast_id integer, cast_name text, birthday text, popularity real)
+        """
         ######################################################################
         
         return self.execute_query(connection, part_1_a_ii_sql)
@@ -82,7 +99,10 @@ class HW2_sql():
     # Part 1.b Import Data [2 points]
     def part_1_b_movies(self,connection,path):
         ############### CREATE IMPORT CODE BELOW ############################
-
+        with open('HW1/kJ7fD1M0qH_HW1/Q2/data/movies.csv', 'r') as fin:
+            dr = csv.DictReader(fin)
+            to_db = [(i['id'], i['title'], i['score']) for i in dr]
+        self.execute_many("INSERT INTO movies VALUES (?,?,?)", to_db)
        ######################################################################
         
         sql = "SELECT COUNT(id) FROM movies;"
@@ -91,7 +111,10 @@ class HW2_sql():
     
     def part_1_b_movie_cast(self,connection, path):
         ############### CREATE IMPORT CODE BELOW ############################
-        
+        with open('HW1/kJ7fD1M0qH_HW1/Q2/data/movie_cast.csv', 'r') as fin:
+            dr = csv.DictReader(fin)
+            to_db = [(i['movie_id'], i['cast_id'], i['cast_name'], i['birthday'], i['popularity']) for i in dr]
+        self.execute_many("INSERT INTO movie_cast VALUES (?,?,?,?,?)", to_db)
         ######################################################################
         
         sql = "SELECT COUNT(cast_id) FROM movie_cast;"
