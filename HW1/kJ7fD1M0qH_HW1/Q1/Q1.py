@@ -212,6 +212,8 @@ class  TMDBAPIUtils:
         """
         api_key = 'd8519a7a0db7f575689297e821b187f0'
         movie_response = requests.get(f"https://api.themoviedb.org/3/movie/{movie_id}/credits?api_key={api_key}")
+        if movie_response.status_code != 200:
+            return []
         movie_json = json.loads(movie_response.text)
 
         if limit is None:
@@ -220,7 +222,7 @@ class  TMDBAPIUtils:
             exclude_ids = []
 
         cast_list = []
-        for cast_member in movie_json['cast']:
+        for cast_member in movie_json.get('cast', []):
             if cast_member['order'] < limit and cast_member['id'] not in exclude_ids:
                 cast_list.append(cast_member)
 
@@ -246,12 +248,15 @@ class  TMDBAPIUtils:
         api_key = 'd8519a7a0db7f575689297e821b187f0'
 
         movie_credits = requests.get(f"https://api.themoviedb.org/3/person/{person_id}/movie_credits?api_key={api_key}")
+
+        if movie_credits.status_code != 200:
+            return []
         credits_json = json.loads(movie_credits.text)
 
         credit_list = []
         if vote_avg_threshold is None:
             vote_avg_threshold = 0
-        for credit in credits_json['cast']:
+        for credit in credits_json.get('cast', []):
             vote_average = credit.get('vote_average', -1)
             if float(vote_average) >= vote_avg_threshold:
                 credit_list.append(credit)
@@ -380,22 +385,19 @@ if __name__ == "__main__":
         for cast_member in cast_movie:
             graph.add_node(str(cast_member['id']), cast_member['name'])
             graph.add_edge('2975', str(cast_member['id']))
+            if cast_member['id'] not in new_nodes:
+                new_nodes.append(cast_member['id'])
 
-    new_nodes = graph.nodes[1:]
-
-    for i in range(1,3):
-        print(f'loop = {i}')
-        if i==1:
-            nodes = graph.nodes[1:]
-        else:
-            nodes = new_nodes
-        for node in nodes:
+    for _ in range(2):
+        use_nodes = new_nodes
+        new_nodes = []
+        for node in use_nodes:
             new_start = tmdb_api_utils.get_movie_credits_for_person(str(node[0]), 8.0)
             for movie in new_start:
                 cast_movie = tmdb_api_utils.get_movie_cast(movie['id'], limit = 3)
                 for cast_member in cast_movie:
                     new_member = (str(cast_member['id']), cast_member['name'])
-                    if new_member not in new_nodes:
+                    if new_member not in [n for n, _ in new_nodes]:
                         new_nodes.append(new_member)
                     graph.add_node(str(cast_member['id']), cast_member['name'])
                     graph.add_edge(str(node[0]), str(cast_member['id']))
