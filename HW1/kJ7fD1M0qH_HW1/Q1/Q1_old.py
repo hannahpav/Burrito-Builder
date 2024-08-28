@@ -376,6 +376,7 @@ if __name__ == "__main__":
         for cast_member in cast_movie:
             graph.add_node(str(cast_member['id']), cast_member['name'])
             graph.add_edge('2975', str(cast_member['id']))
+    print(len(graph.nodes))
     # BEGIN BUILD BASE GRAPH:
     #   Find all of Laurence Fishburne's movie credits that have a vote average >= 8.0
     #   FOR each movie credit:
@@ -392,8 +393,8 @@ if __name__ == "__main__":
     # call functions or place code here to build graph (graph building code not graded)
     # Suggestion: code should contain steps outlined above in BUILD CO-ACTOR NETWORK
 
-    graph.write_edges_file()
-    graph.write_nodes_file()
+    #graph.write_edges_file()
+    #graph.write_nodes_file()
 
     # If you have already built & written out your graph, you could read in your nodes & edges files
     # to perform testing on your graph.
