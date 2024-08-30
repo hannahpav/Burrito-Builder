@@ -5,7 +5,7 @@ import math
 import re
 import csv
 
-from numpy.f2py.crackfortran import endifs
+#from numpy.f2py.crackfortran import endifs
 
 
 #############################################################################################################################
@@ -254,7 +254,7 @@ class  TMDBAPIUtils:
         if vote_avg_threshold is None:
             vote_avg_threshold = 0
         for credit in credits_json.get('cast', []):
-            vote_average = credit.get('vote_average', 0)
+            vote_average = credit.get('vote_average', -1)
             if float(vote_average) >= vote_avg_threshold:
                 credit_list.append(credit)
 
@@ -384,16 +384,14 @@ if __name__ == "__main__":
             if cast_member['id'] not in [node[0] for node in graph.nodes]:
                 graph.add_node(str(cast_member['id']), cast_member['name'])
                 new_nodes.append(cast_member['id'])
-            endifs
             if '2975' != str(cast_member['id']):
                 graph.add_edge('2975', str(cast_member['id']))
-            endifs
 
     j=0
     k=0
     for i in range(2):
-        print(f"initial nodes added: {len(new_nodes)}")
         use_nodes = new_nodes
+        print(f'node length {len(new_nodes)}')
         new_nodes = []
         for node in use_nodes:
             j+=1
@@ -402,16 +400,14 @@ if __name__ == "__main__":
             for movie in new_start:
                 cast_movie = tmdb_api_utils.get_movie_cast(movie['id'], limit = 3)
                 for cast_member in cast_movie:
-                    if str(cast_member['id']) not in [n[0] for n in graph.nodes]:
-                        new_nodes.append(cast_member['id'])
+                    if str(cast_member['id']) not in [node[0] for node in graph.nodes]:
                         graph.add_node(str(cast_member['id']), cast_member['name'])
+                        new_nodes.append(cast_member['id'])
                         k+=1
-                        #print(k)
-                    endifs
-
+                        print(k)
                     if str(node) != str(cast_member['id']):
                         graph.add_edge(str(node), str(cast_member['id']))
-                    endifs
+
 
     # call functions or place code here to build graph (graph building code not graded)
     # Suggestion: code should contain steps outlined above in BUILD CO-ACTOR NETWORK
