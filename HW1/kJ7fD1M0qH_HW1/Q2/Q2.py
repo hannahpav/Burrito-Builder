@@ -241,7 +241,7 @@ class HW2_sql():
         ON m.id = mc.movie_id
         WHERE score >= 25
         GROUP BY mc.cast_id, mc.cast_name
-        HAVING COUNT(m.id) > 3
+        HAVING COUNT(*) >= 3
         ORDER BY avg_score DESC, mc.cast_name
         LIMIT 10
         
@@ -276,10 +276,20 @@ class HW2_sql():
     def part_8(self,connection):
         ############### EDIT SQL STATEMENT ###################################
         part_8_sql = """
-        CREATE VIEW view_name AS
-        SELECT column1, column2, ...
-        FROM table_name
-        WHERE condition;
+        WITH all_cast AS (
+            SELECT cast_member_id1 as cast_member_id, average_movie_score
+            FROM good_collaboration
+            UNION ALL
+            SELECT cast_member_id2 as cast_member_id, average_movie_score
+            FROM good_collaboration)
+        SELECT ac.cast_member_id, mc.cast_name, printf("%.2f",avg(ac.average_movie_score)) as collaboration_score
+        FROM all_cast as ac
+        INNER JOIN movie_cast as mc
+        ON ac.cast_member_id = mc.cast_id
+        GROUP BY ac.cast_member_id, mc.cast_name
+        ORDER BY collaboration_score DESC, mc.cast_name
+        LIMIT 5
+            
         """
         ######################################################################
         cursor = connection.execute(part_8_sql)
