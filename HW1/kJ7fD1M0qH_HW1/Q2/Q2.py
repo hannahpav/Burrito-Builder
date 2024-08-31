@@ -3,6 +3,7 @@
 import sqlite3
 from sqlite3 import Error
 import csv
+#import sqlite_fts4
 #################################################################################
 
 ## Change to False to disable Sample
@@ -99,7 +100,6 @@ class HW2_sql():
     # Part 1.b Import Data [2 points]
     def part_1_b_movies(self,connection,path):
         ############### CREATE IMPORT CODE BELOW ############################
-        print('part_1_b')
         with open('data/movies.csv', 'r', newline='', encoding='utf-8') as movies:
             dr = csv.reader(movies)
             rows = list(dr)
@@ -298,11 +298,18 @@ class HW2_sql():
     # Part 9 FTS [4 points]
     def part_9_a(self,connection,path):
         ############### EDIT SQL STATEMENT ###################################
-        part_9_a_sql = ""
+
+        part_9_a_sql = """
+        CREATE VIRTUAL TABLE movie_overview USING fts4(id INTEGER, overview TEXT)
+        """
         ######################################################################
         connection.execute(part_9_a_sql)
         ############### CREATE IMPORT CODE BELOW ############################
-        
+        with open('data/movie_overview.csv', 'r', newline='', encoding='utf-8') as movies:
+            dr1 = csv.reader(movies)
+            bubs = list(dr1)
+        self.execute_many(connection,"INSERT INTO movie_overview VALUES (?,?)", bubs)
+
         ######################################################################
         sql = "SELECT COUNT(id) FROM movie_overview;"
         cursor = connection.execute(sql)
@@ -310,14 +317,21 @@ class HW2_sql():
         
     def part_9_b(self,connection):
         ############### EDIT SQL STATEMENT ###################################
-        part_9_b_sql = ""
+        part_9_b_sql = """
+        SELECT count(*)
+        FROM movie_overview
+        WHERE overview MATCH "fight"
+        """
         ######################################################################
         cursor = connection.execute(part_9_b_sql)
         return cursor.fetchall()[0][0]
     
     def part_9_c(self,connection):
         ############### EDIT SQL STATEMENT ###################################
-        part_9_c_sql = ""
+        part_9_c_sql = """
+        SELECT count(*) FROM movie_overview
+        WHERE overview MATCH "space NEAR/6 program"
+        """
         ######################################################################
         cursor = connection.execute(part_9_c_sql)
         return cursor.fetchall()[0][0]
