@@ -5,7 +5,21 @@
 
 <head>
   <style>    
-    /* Define css rules here */
+    .bar {
+      stroke: #000;
+      stroke-width: 1px;
+    }
+    #title {
+      font-size: 18px;
+      text-anchor: middle;
+    }
+    #x_axis_label, #y_axis_label {
+      font-size: 14px;
+    }
+    #credit {
+      font-size: 12px;
+      text-anchor: end;
+    }
   </style>
 <title></title>
 </head>
@@ -19,28 +33,37 @@
 
   <script>
     // define the dimensions and margins for the graph
-    var margin;
-    var width;
-    var height;
+    var margin = ({top: 20, right: 30, bottom: 30, left: 40});
+    var width = 954;
+    var height = 500;
 
 
     // create scales x & y for X and Y axis and set their ranges
-    var x;
-    var y;
+    var x =d3.scaleLinear()
+            .domain([0, d3.max(data, d=> d.count )])
+            .range([margin.left, width - margin.right])
+
+    var y = d3.scaleBand()
+            .domain(t)
+            .range([height - margin.bottom, margin.top])
 
 
     // append svg element to the body of the page
     var svg = d3.select("body").append("svg")
-	   	// set the id, dimensions and position of the svg element 	
-	    .append("g")
-	    .attr("id", "container");
+	   	// set the id, dimensions and position of the svg element
+	    .attr("id", "container")
+        .append("g")
+        .attr("width", width)
+        .attr("height", height);
 
 
     // Get the data and filter for top 5 most trafficked species
-	  var pathToCsv = "q3.csv";		// path to csv
+	  var pathToCsv = "q3.csv" 	// path to csv
+
 	
     d3.dsv(",", pathToCsv, function (d) {
       return {
+        pathToCsv = d;
         // format data attributes if required
       }
     }).then(function (data) {
@@ -57,22 +80,22 @@
 
 
       // Add the X Axis
-      svg.append()
+      svg.append("Count")
 
       // Add the text label for X Axis
-      svg.append()
+      svg.append("Species")
 
       // Add the Y Axis
-      svg.append()
+      svg.append("Species")
 
       // Add the text label for Y axis
       svg.append()
 
       // Add GT username
-      svg.append()
+      svg.append("hpavlovich3")
 
       // Add Title
-      svg.append()
+      svg.append("Wildlife Trafficking Incidents per Species (2015 to 2023)")
 
 
     }).catch(function (error) {
