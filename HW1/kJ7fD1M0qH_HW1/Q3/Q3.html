@@ -15,6 +15,7 @@
     }
     #x_axis_label, #y_axis_label {
       font-size: 14px;
+      text-anchor: end;
     }
     #credit {
       font-size: 12px;
@@ -34,26 +35,25 @@
   <script>
     // define the dimensions and margins for the graph
     var margin = ({top: 20, right: 30, bottom: 30, left: 40});
-    var width = 954;
-    var height = 500;
+    width = 954 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
 
 
-    // // create scales x & y for X and Y axis and set their ranges
-    // var x =d3.scaleLinear()
-    //         // .domain([0, d3.max(data, d=> d.count )])
-    //         .range([margin.left, width - margin.right])
-    //
-    // var y = d3.scaleBand()
-    //         // .domain([data.map(d => d.species)])
-    //         .range([height - margin.bottom, margin.top])
+    // create scales x & y for X and Y axis and set their ranges
+    var x =d3.scaleLinear()
+            .range([0, width])
+
+    var y = d3.scaleBand()
+            .range([0, height])
+            .padding(0.2)
 
 
     // append svg element to the body of the page
     var svg = d3.select("body").append("svg")
 	   	// set the id, dimensions and position of the svg element
 	    .attr("id", "container")
-        .attr("width", width)
-        .attr("height", height)
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`)
 
@@ -64,46 +64,83 @@
 	
     d3.dsv(",", pathToCsv).then( function (data) {
       data.forEach(d=>{
-        d.count = +d.count
-      })
+        d.count = +d.count})
 
-        // format data attributes if required
+    data.sort((a,b) => (b.count - a.count))
+    data = data.slice(0,5)
+
+      // format data attributes if required
 
 
-      console.log(data)}); // you should see the data in your browser's developer tools console
-    //
-    //   /* Create bar plot using data from csv */
-    //
-    //   // set the domains of X and Y scales based on data
-    //   x.domain();
-    //   y.domain();
-    //
-    //   // Add bars to svg - create new elements based on your data
-    //   svg.selectAll()
-    //
-    //
-    //   // Add the X Axis
-    //   svg.append("Count")
-    //
-    //   // Add the text label for X Axis
-    //   svg.append("Species")
-    //
-    //   // Add the Y Axis
-    //   svg.append("Species")
-    //
-    //   // Add the text label for Y axis
-    //   svg.append()
-    //
-    //   // Add GT username
-    //   svg.append("hpavlovich3")
-    //
-    //   // Add Title
-    //   svg.append("Wildlife Trafficking Incidents per Species (2015 to 2023)")
-    //
-    //
-    // }).catch(function (error) {
-    //   console.log(error);
-    // });
+      console.log(data); // you should see the data in your browser's developer tools console
+
+      /* Create bar plot using data from csv */
+
+      // set the domains of X and Y scales based on data
+
+      x.domain([0, d3.max(data, d=> d.count )]);
+      y.domain(data.map(d => d.species));
+
+      var myColor = d3.scaleLinear()
+              .domain(data.map(d => d.species))
+              .range(["#648FFF", "#785EF0", "#DC267F", "#FE6100", "#FFB000"])
+
+      // Add bars to svg - create new elements based on your data
+      svg.selectAll(".bar")
+              .data(data)
+              .enter()
+              .append("rect")
+              .attr("class", "bar")
+              .attr("x", 0)
+              .attr("y", d=> y(d.species))
+              .attr("width", d=> x(d.count))
+              .attr("height", y.bandwidth())
+              .attr("fill", d => myColor(d.species))
+
+
+      // Add the X Axis
+      svg.append("g")
+          .attr("transform", `translate(0, ${height})`)
+          .call(d3.axisBottom(x));
+
+      // Add the text label for X Axis
+      svg.append("text")
+              .attr("id", "x_axis_label")
+              .attr("x", width)
+              .attr("y", margin.bottom - 10)
+              .text("Count")
+
+      // Add the Y Axis
+      svg.append("g")
+              .call(d3.axisLeft(y));
+
+      // Add the text label for Y axis
+      svg.append("text")
+              .attr("id", "y_axis_label")
+              .attr("x", -margin.top)
+              .attr("y", -margin.left + 20)
+              .text("Species");
+
+      // Add GT username
+      svg.append("text")
+              .attr("id", "credit")
+              .attr("x", width)
+              .attr("y", height + margin.bottom - 10)
+              .text("hpavlovich3")
+
+
+      // Add Title
+      svg.append("text")
+              .attr("id", "title")
+              .attr("x", (width/2))
+              .attr("y", 0 - (margin.top/2))
+              .text("Wildlife Trafficking Incidents per Species (2015 to 2023)", )
+
+
+
+    }).catch(function (error) {
+      console.log(error);
+    });
 
   </script>
 </body>
