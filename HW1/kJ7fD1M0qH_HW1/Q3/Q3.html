@@ -38,69 +38,72 @@
     var height = 500;
 
 
-    // create scales x & y for X and Y axis and set their ranges
-    var x =d3.scaleLinear()
-            .domain([0, d3.max(data, d=> d.count )])
-            .range([margin.left, width - margin.right])
-
-    var y = d3.scaleBand()
-            .domain(t)
-            .range([height - margin.bottom, margin.top])
+    // // create scales x & y for X and Y axis and set their ranges
+    // var x =d3.scaleLinear()
+    //         // .domain([0, d3.max(data, d=> d.count )])
+    //         .range([margin.left, width - margin.right])
+    //
+    // var y = d3.scaleBand()
+    //         // .domain([data.map(d => d.species)])
+    //         .range([height - margin.bottom, margin.top])
 
 
     // append svg element to the body of the page
     var svg = d3.select("body").append("svg")
 	   	// set the id, dimensions and position of the svg element
 	    .attr("id", "container")
-        .append("g")
         .attr("width", width)
-        .attr("height", height);
+        .attr("height", height)
+        .append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`)
 
 
     // Get the data and filter for top 5 most trafficked species
 	  var pathToCsv = "q3.csv" 	// path to csv
 
 	
-    d3.dsv(",", pathToCsv, function (d) {
-      return {
-        pathToCsv = d;
+    d3.dsv(",", pathToCsv).then( function (data) {
+      data.forEach(d=>{
+        d.count = +d.count
+      })
+
         // format data attributes if required
-      }
-    }).then(function (data) {
-      console.log(data); // you should see the data in your browser's developer tools console 
-      
-      /* Create bar plot using data from csv */
-
-      // set the domains of X and Y scales based on data
-      x.domain();
-      y.domain();
-
-      // Add bars to svg - create new elements based on your data
-      svg.selectAll()
 
 
-      // Add the X Axis
-      svg.append("Count")
-
-      // Add the text label for X Axis
-      svg.append("Species")
-
-      // Add the Y Axis
-      svg.append("Species")
-
-      // Add the text label for Y axis
-      svg.append()
-
-      // Add GT username
-      svg.append("hpavlovich3")
-
-      // Add Title
-      svg.append("Wildlife Trafficking Incidents per Species (2015 to 2023)")
-
-
-    }).catch(function (error) {
-      console.log(error);
-    });
+      console.log(data)}); // you should see the data in your browser's developer tools console
+    //
+    //   /* Create bar plot using data from csv */
+    //
+    //   // set the domains of X and Y scales based on data
+    //   x.domain();
+    //   y.domain();
+    //
+    //   // Add bars to svg - create new elements based on your data
+    //   svg.selectAll()
+    //
+    //
+    //   // Add the X Axis
+    //   svg.append("Count")
+    //
+    //   // Add the text label for X Axis
+    //   svg.append("Species")
+    //
+    //   // Add the Y Axis
+    //   svg.append("Species")
+    //
+    //   // Add the text label for Y axis
+    //   svg.append()
+    //
+    //   // Add GT username
+    //   svg.append("hpavlovich3")
+    //
+    //   // Add Title
+    //   svg.append("Wildlife Trafficking Incidents per Species (2015 to 2023)")
+    //
+    //
+    // }).catch(function (error) {
+    //   console.log(error);
+    // });
 
   </script>
 </body>
