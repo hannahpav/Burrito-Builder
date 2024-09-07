@@ -5,10 +5,7 @@
 
 <head>
   <style>    
-    .bar {
-      stroke: #000;
-      stroke-width: 1px;
-    }
+
     #title {
       font-size: 24px;
       text-anchor: middle;
@@ -16,11 +13,6 @@
       font-weight: bold;
     }
 
-    #xy_axis{
-      font-size: 12px
-      font-family: sans-serif;
-
-    }
 
     #x_axis_label{
       font-size: 18px;
@@ -44,7 +36,7 @@
 
     }
   </style>
-<title></title>
+<title>'Wildlife Trafficking Incidents per Species (2015 to 2023)'</title>
 </head>
 
 <body>
@@ -107,7 +99,7 @@
               .range(["#648FFF", "#785EF0", "#DC267F", "#FE6100", "#FFB000"])
 
       // Container group
-      const container = svg.append('g')
+      var container = svg.append('g')
         .attr('id', 'container');
 
       // Bars group
@@ -127,7 +119,7 @@
               .attr("fill",  d=> myColor(d.species))
 
       // Add the X Axis
-      var container.append("g")
+      container.append("g")
               .attr("id", "x_axis")
               .attr("transform", `translate(0,${height - margin.bottom})`)
               .call(d3.axisBottom(x).ticks(5).tickFormat(d3.format(".0f")));
@@ -140,7 +132,8 @@
               .text("Count")
 
       // Add the Y Axis
-      svg.append("g")
+      container.append("g")
+              .attr("id", "y_axis")
               .attr("transform", `translate(${margin.left},0)`)
               .call(d3.axisLeft(y));
 
@@ -148,7 +141,7 @@
       svg.append("text")
               .attr("id", "y_axis_label")
               .attr("x", 0)
-                .attr("y", 20)
+              .attr("y", 20)
               .text("Species");
 
       // Add GT username
