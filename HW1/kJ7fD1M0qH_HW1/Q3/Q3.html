@@ -10,14 +10,15 @@
       stroke-width: 1px;
     }
     #title {
-      font-size: 18px;
+      font-size: 24px;
       text-anchor: middle;
       font-family: sans-serif;
       font-weight: bold;
     }
 
-    #x_axis{
+    #xy_axis{
       font-size: 12px
+      font-family: sans-serif;
 
     }
 
@@ -55,9 +56,9 @@
 
   <script>
     // define the dimensions and margins for the graph
-    var margin = ({top: 20, right: 30, bottom: 100, left: 50});
-    width = 954,
-    height = 400;
+    var margin = ({top: 20, right: 30, bottom: 70, left: 40});
+    width = 900,
+    height = 370;
 
 
     // create scales x & y for X and Y axis and set their ranges
@@ -65,14 +66,13 @@
             .range([margin.left, width - margin.right])
 
     var y = d3.scaleBand()
-            .range([height - margin.bottom, margin.top])
+            .range([margin.top, height - margin.bottom])
             .padding(0.2)
 
 
     // append svg element to the body of the page
     var svg = d3.select("body").append("svg")
-	   	// set the id, dimensions and position of the svg element
-	    .attr("id", "container")
+        .attr("id", "svg1")
         .attr("width", width)
         .attr("height", height)
         .append("g")
@@ -102,9 +102,17 @@
       x.domain([0, d3.max(data, d=> d.count )]);
       y.domain(data.map(d => d.species));
 
-      var myColor = d3.scaleLinear()
+      var myColor = d3.scaleOrdinal()
               .domain(data.map(d => d.species))
               .range(["#648FFF", "#785EF0", "#DC267F", "#FE6100", "#FFB000"])
+
+      // Container group
+      const container = svg.append('g')
+        .attr('id', 'container');
+
+      // Bars group
+      const bars = container.append('g')
+        .attr('id', 'bars');
 
       // Add bars to svg - create new elements based on your data
       svg.selectAll(".bar")
@@ -116,17 +124,19 @@
               .attr("y", d=> y(d.species))
               .attr("width", d=> x(d.count))
               .attr("height", y.bandwidth())
+              .attr("fill",  d=> myColor(d.species))
 
       // Add the X Axis
-      svg.append("g")
-          .attr("transform", `translate(0,${height - margin.bottom})`)
-          .call(d3.axisBottom(x));
+      var container.append("g")
+              .attr("id", "x_axis")
+              .attr("transform", `translate(0,${height - margin.bottom})`)
+              .call(d3.axisBottom(x).ticks(5).tickFormat(d3.format(".0f")));
 
       // Add the text label for X Axis
       svg.append("text")
               .attr("id", "x_axis_label")
-              .attr("x", width)
-              .attr("y", margin.bottom - 10)
+              .attr("x", width/2)
+              .attr("y", height - margin.bottom +40)
               .text("Count")
 
       // Add the Y Axis
@@ -138,14 +148,14 @@
       svg.append("text")
               .attr("id", "y_axis_label")
               .attr("x", 0)
-              .attr("y", 40)
+                .attr("y", 20)
               .text("Species");
 
       // Add GT username
       svg.append("text")
               .attr("id", "credit")
-              .attr("x", width)
-              .attr("y", height)
+              .attr("x", width - margin.right -30)
+              .attr("y", height - margin.bottom +40)
               .text("hpavlovich3")
 
 
