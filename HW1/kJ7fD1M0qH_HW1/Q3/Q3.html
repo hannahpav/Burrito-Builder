@@ -36,7 +36,7 @@
 
     }
   </style>
-<title>'Wildlife Trafficking Incidents per Species (2015 to 2023)'</title>
+<title>Wildlife Trafficking Incidents per Species (2015 to 2023)</title>
 </head>
 
 <body>
@@ -48,9 +48,9 @@
 
   <script>
     // define the dimensions and margins for the graph
-    var margin = ({top: 20, right: 30, bottom: 70, left: 40});
-    width = 900,
-    height = 370;
+    var margin = ({top: 20, right: 30, bottom: 70, left: 100});
+    var width = 900
+    var height = 370
 
 
     // create scales x & y for X and Y axis and set their ranges
@@ -72,30 +72,30 @@
 
 
     // Get the data and filter for top 5 most trafficked species
-	  var pathToCsv = "q3.csv" 	// path to csv
+    var pathToCsv = "q3.csv" 	// path to csv
 
 	
-    d3.dsv(",", pathToCsv).then( function (data) {
+    d3.dsv(",", pathToCsv).then(data => {
       data.forEach(d=>{
         d.count = +d.count})
 
-    data.sort((a,b) => (b.count - a.count))
-    data = data.slice(0,5)
+    var topFive = data.sort((a,b) => (b.count - a.count))
+            .slice(0,5)
 
       // format data attributes if required
 
 
-      console.log(data); // you should see the data in your browser's developer tools console
+      console.log(topFive); // you should see the data in your browser's developer tools console
 
       /* Create bar plot using data from csv */
 
       // set the domains of X and Y scales based on data
 
-      x.domain([0, d3.max(data, d=> d.count )]);
-      y.domain(data.map(d => d.species));
-
+      x.domain([0, d3.max(topFive, d=> d.count )]);
+      y.domain(topFive.map(d => d.species));
+      console.log("unique species:", topFive.map(d => d.species))
       var myColor = d3.scaleOrdinal()
-              .domain(data.map(d => d.species))
+              .domain(topFive.map(d => d.species))
               .range(["#648FFF", "#785EF0", "#DC267F", "#FE6100", "#FFB000"])
 
       // Container group
@@ -103,12 +103,12 @@
         .attr('id', 'container');
 
       // Bars group
-      const bars = container.append('g')
+      var bars = container.append('g')
         .attr('id', 'bars');
 
       // Add bars to svg - create new elements based on your data
-      svg.selectAll(".bar")
-              .data(data)
+      bars.selectAll(".bar")
+              .data(topFive)
               .enter()
               .append("rect")
               .attr("class", "bar")
@@ -122,13 +122,16 @@
       container.append("g")
               .attr("id", "x_axis")
               .attr("transform", `translate(0,${height - margin.bottom})`)
-              .call(d3.axisBottom(x).ticks(5).tickFormat(d3.format(".0f")));
+              .call(d3.axisBottom(x)
+                      .ticks(5)
+                      .tickFormat(d3.format(".0f")));
 
       // Add the text label for X Axis
       svg.append("text")
               .attr("id", "x_axis_label")
               .attr("x", width/2)
               .attr("y", height - margin.bottom +40)
+              .style('text-anchor', 'middle')
               .text("Count")
 
       // Add the Y Axis
@@ -142,6 +145,7 @@
               .attr("id", "y_axis_label")
               .attr("x", 0)
               .attr("y", 20)
+              .style('text-anchor', 'middle')
               .text("Species");
 
       // Add GT username
