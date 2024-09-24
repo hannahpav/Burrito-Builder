@@ -4,8 +4,8 @@
 
 path.link {
   fill: none;
-  stroke: #666;
-  stroke-width: 1.5px;
+  // stroke: #666;
+  // stroke-width: 1.5px;
 }
 
 circle {
@@ -19,6 +19,7 @@ text {
   fill: #000;
   font: 10px sans-serif;
   pointer-events: none;
+    font-weight: 700;
 }
 
 </style>
@@ -74,7 +75,7 @@ d3.dsv(",", "board_games.csv", function(d) {
       .attr("class", function(d) { return "link " + d.type; })
       .attr("stroke-width", function(d){
           if(d.value == 0){
-              return 4}
+              return 3}
           else{return 1}
           } )
       .attr("stroke-dasharray", function(d){
@@ -82,10 +83,10 @@ d3.dsv(",", "board_games.csv", function(d) {
             return null
         }
         else{
-            return '6,2'}
+            return '8,8'}
     })
       .attr("stroke", function(d) {
-          return d.value == 0 ? "#666" : "#00FF00"
+          return d.value == 0 ? "#666" : "#276f27"
       })
 
 
@@ -99,12 +100,26 @@ d3.dsv(",", "board_games.csv", function(d) {
           .on("drag", dragged)
           .on("end", dragended));
 
+
   // add the nodes
   node.append("circle")
       .attr("id", function(d){
          return (d.name.replace(/\s+/g,'').toLowerCase());
       })
-      .attr("r", 5);
+      .attr("r", function (d){
+          d.weight = links.filter(function(j){
+              return j.source.index == d.index || j.target.index == d.index
+          }).length
+          var minRadius = 2
+          return minRadius + (d.weight ** (7/5))
+      })
+      .style("fill", function(d){
+          d.weight = links.filter(function(j){
+              return j.source.index == d.index || j.target.index == d.index
+          }).length
+          console.log(d.weight)
+          return "rgb(" + (220/d.weight)**1.3 + "," + (220/d.weight)**1.3 + ", 255)";
+    })
   node.append("text")
       .attr("dx", 12)
       .attr("dy", "-.35em")
