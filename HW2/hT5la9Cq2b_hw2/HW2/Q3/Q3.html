@@ -1,13 +1,128 @@
 <!DOCTYPE html>
 
 <head>
+
+   <style>
+
+    #title {
+      font-size: 24px;
+      text-anchor: middle;
+      font-family: sans-serif;
+      font-weight: bold;
+    }
+
+
+    #x_axis_label{
+      font-size: 18px;
+      text-anchor: middle;
+      font-family: sans-serif;
+      font-weight: bold;
+
+    }
+
+    #y_axis_label {
+      font-size: 18px;
+      text-anchor: middle;
+      font-family: sans-serif;
+      font-weight: bold;
+
+    }
+    #credit {
+      font-size: 12px;
+      text-anchor: end;
+      font-family: sans-serif
+
+    }
+  </style>
+
   <title>Line Charts</title>
   <meta charset="utf-8">
-
-  <script type="text/javascript" src="../lib/d3.v5.min.js"></script>
 
 </head>
 
 <body>
-  <div id='signature'>gburdell3</div>
+  <script src="lib/d3.v5.min.js"></script>
+  <script src="lib/d3-dsv.min.js"></script>
+  <script src="lib/d3-geo-projection.v2.min.js"></script>
+  <script src="lib/d3-legend.min.js"></script>
+  <script src="lib/d3-tip.min.js"></script>
+  <script src="lib/topojson.v2.min.js"></script>
+
+  <svg width = "500" height = "400"></svg>
+
+  <script>
+
+  // get data
+    var pathToCsv = "boardgame_ratings.csv" 	// path to csv
+
+    d3.dsv(",", pathToCsv).then(data => {
+    data.forEach(d=>{
+      d.date = d3.timeParse("%Y-%m-%d")(d.date)
+
+      Object.keys(d).forEach(k => {
+        if (k != "date") {
+          d[k] = +d[k]
+        }
+      })
+    })
+      console.log(data)
+
+    // set margin
+    var svgA = d3.select("svg")
+            .attr("id", "svg-a")
+            .attr("margin", 200)
+            .attr("width", svg.attr("width")-margin)
+            .attr("height", svg.attr("height") - margin)
+
+      svgA.append("text")
+              .attr("id", "title-a")
+              .attr('x', width/2 + 100)
+              .attr('y', 100)
+              .attr('text-anchor', 'middle')
+              .text('First One Here');
+
+      svgA.append("g")
+              .attr("id", "plot-a")
+
+
+
+    // set scale
+    var xScale = d3.scaleTime()
+            .domain([0,100]).range([0,width]),
+            yScale = d3.scaleLinear().domain(d3.extent(function(d){return d.date}));
+
+    // title
+    svg.append('text')
+    .attr('x', width/2 + 100)
+    .attr('y', 100)
+    .attr('text-anchor', 'middle')
+    .style('font-family', 'Helvetica')
+    .style('font-size', 20)
+    .text('Line Chart');
+
+    // X label
+    svg.append('text')
+    .attr('x', width/2 + 100)
+    .attr('y', height - 15 + 150)
+    .attr('text-anchor', 'middle')
+    .style('font-family', 'Helvetica')
+    .style('font-size', 12)
+    .text('Independant');
+
+    // Y label
+    svg.append('text')
+    .attr('text-anchor', 'middle')
+    .attr('transform', 'translate(60,' + height + ')rotate(-90)')
+    .style('font-family', 'Helvetica')
+    .style('font-size', 12)
+    .text('Dependant');
+
+
+
+
+            }).catch(function (error) {
+      console.log(error);
+    });
+  </script>
+
 </body>
