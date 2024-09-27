@@ -4,8 +4,12 @@
 
    <style>
 
-    #title {
-      font-size: 24px;
+    #line {
+          fill: none; /* No fill for the line */
+          stroke-width: 1.5;
+        }
+    #title-a {
+      font-size: 18px;
       text-anchor: middle;
       font-family: sans-serif;
       font-weight: bold;
@@ -13,7 +17,7 @@
 
 
     #x_axis_label{
-      font-size: 18px;
+      font-size: 14px;
       text-anchor: middle;
       font-family: sans-serif;
       font-weight: bold;
@@ -21,21 +25,24 @@
     }
 
     #y_axis_label {
-      font-size: 18px;
+      font-size: 14px;
       text-anchor: middle;
       font-family: sans-serif;
       font-weight: bold;
 
     }
+
+    #line_label {
+      font-size: 10px;
+      text-anchor: left;
+      font-family: sans-serif;
+      font-weight: normal;
+    }
+
     #credit {
       font-size: 12px;
       text-anchor: end;
       font-family: sans-serif
-
-    #line {
-      stroke-width: 1.5;
-      fill: none;
-    }
 
     }
   </style>
@@ -53,7 +60,7 @@
 
 <body>
 
-  <svg id ="svg-a" width = "500" height = "400"></svg>
+  <svg id ="svg-a" width = "800" height = "350"></svg>
 
   <script>
 
@@ -76,7 +83,7 @@
 
     // set scale
 
-      var margin = {top: 20, right: 30, bottom: 30, left: 40}
+      var margin = {top: 40 , right: 60, bottom: 40, left: 100}
       var width = d3.select("#svg-a")
               .attr("width") - margin.left - margin.right
       var height = d3.select("#svg-a")
@@ -87,13 +94,14 @@
               .range([0, width])
 
       var yScale = d3.scaleLinear()
-              .domain([0, d3.max(data, d => d3.max(games, game => d[`${game}=count`]))])
+              .domain([0, 100000])
               .range([height, 0])
 
       //container
       var svgA = d3.select("#svg-a")
               .append('g')
-              .attr("transform", "translate(${margin.left}, ${margin.top})")
+              .attr("transform", "translate("+ margin.left +  "," + margin.top +")")
+              //.attr("transform", "translate(${margin.left}, ${margin.top})")
 
 
       // x-axis
@@ -101,26 +109,28 @@
       svgA.append("g")
               .attr("id", "x-axis-a")
               .attr("transform","translate(0," + height + ")")
-              .call(d3.axisBottom(xScale))
+              .call(d3.axisBottom(xScale)
+                      .ticks(d3.timeMonth.every(3))
+                      .tickFormat(d3.timeFormat("%b %y")))
 
       svgA.append('text')
+              .attr("id", "x_axis_label")
               .attr('x', width/2)
-              .attr('y', 20)
-              .attr('text-anchor', 'middle')
+              .attr('y', height + margin.bottom)
               .text('Month')
 
       //y-axis
 
       svgA.append('g')
               .attr("id", "y-axis-a")
-              .attr("transform","translate(0," + height + ")")
+              .attr("transform", "translate(0,0)")
               .call(d3.axisLeft(yScale))
 
-
       svgA.append('text')
+              .attr('id', 'y_axis_label')
               .attr('x', width/2)
               .attr('transform', "rotate(-90)")
-              .attr("y", -40)
+              .attr("y", -margin.left/2)
               .attr('x', -height/2)
               .text('text-anchor', 'middle')
               .text("Num of Ratings")
@@ -128,27 +138,27 @@
         // lines
       var myColor = d3.scaleOrdinal(d3.schemeCategory10)
 
-
       var linesA = svgA.append("g")
               .attr("id", "lines-a")
 
       games.forEach((name, i) => {
         var line = d3.line()
                 .x(d=> xScale(d.date))
-                .y(d=>yScale(d[`${name}=count`]))
+                .y(d=>yScale(d[name + "=count"]))
 
         linesA.append("path")
                 .datum(data)
-                .attr("class", "line")
+                .attr("id", "line")
                 .attr("d", line)
                 .style("stroke", myColor(i))
 
         linesA.append("text")
                 .datum(data[data.length - 1])
+                .attr("id", "line_label")
                 .attr("transform", d => `translate(${xScale(d.date)}, ${yScale(d[`${name}=count`])})`)
-                .attr("dy", "-0.5em")
-                .attr("dx","0.5em")
+                .attr("dx", 5)
                 .text(name)
+                .style("fill", myColor(i))
 
       })
 
@@ -159,10 +169,14 @@
               .attr("x", width/2)
               .attr("y", -10)
               .attr('text-anchor', 'middle')
-              .attr('transform', 'rotate(-90)')
               .text('Number of Ratings 2016-2020')
 
-
+      // Add GT username
+      svgA.append("text")
+              .attr("id", "credit")
+              .attr("x", margin.left+10)
+              .attr("y", height + margin.bottom)
+              .text("hpavlovich3")
 
             }).catch(function (error) {
       console.log(error);
