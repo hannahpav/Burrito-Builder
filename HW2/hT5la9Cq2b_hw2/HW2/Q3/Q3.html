@@ -32,97 +32,142 @@
       text-anchor: end;
       font-family: sans-serif
 
+    #line {
+      stroke-width: 1.5;
+      fill: none;
+    }
+
     }
   </style>
 
   <title>Line Charts</title>
   <meta charset="utf-8">
 
-</head>
-
-<body>
   <script src="lib/d3.v5.min.js"></script>
   <script src="lib/d3-dsv.min.js"></script>
   <script src="lib/d3-geo-projection.v2.min.js"></script>
   <script src="lib/d3-legend.min.js"></script>
   <script src="lib/d3-tip.min.js"></script>
   <script src="lib/topojson.v2.min.js"></script>
+</head>
 
-  <svg width = "500" height = "400"></svg>
+<body>
+
+  <svg id ="svg-a" width = "500" height = "400"></svg>
 
   <script>
 
   // get data
     var pathToCsv = "boardgame_ratings.csv" 	// path to csv
 
+    var games = ['Catan', 'Dominion', 'Codenames', 'Terraforming Mars', 'Gloomhaven', 'Magic: The Gathering', 'Dixit', 'Monopoly']
+
     d3.dsv(",", pathToCsv).then(data => {
-    data.forEach(d=>{
-      d.date = d3.timeParse("%Y-%m-%d")(d.date)
+      data.forEach(d => {
+        d.date = d3.timeParse("%Y-%m-%d")(d.date)
 
-      Object.keys(d).forEach(k => {
-        if (k != "date") {
-          d[k] = +d[k]
-        }
+        Object.keys(d).forEach(k => {
+          if (k != "date") {
+            d[k] = +d[k]
+          }
+        })
       })
-    })
-      console.log(data)
-
-    // set margin
-    var svgA = d3.select("svg")
-            .attr("id", "svg-a")
-            .attr("margin", 200)
-            .attr("width", svg.attr("width")-margin)
-            .attr("height", svg.attr("height") - margin)
-
-      svgA.append("text")
-              .attr("id", "title-a")
-              .attr('x', width/2 + 100)
-              .attr('y', 100)
-              .attr('text-anchor', 'middle')
-              .text('First One Here');
-
-      svgA.append("g")
-              .attr("id", "plot-a")
-
 
 
     // set scale
-    var xScale = d3.scaleTime()
-            .domain([0,100]).range([0,width]),
-            yScale = d3.scaleLinear().domain(d3.extent(function(d){return d.date}));
 
-    // title
-    svg.append('text')
-    .attr('x', width/2 + 100)
-    .attr('y', 100)
-    .attr('text-anchor', 'middle')
-    .style('font-family', 'Helvetica')
-    .style('font-size', 20)
-    .text('Line Chart');
+      var margin = {top: 20, right: 30, bottom: 30, left: 40}
+      var width = d3.select("#svg-a")
+              .attr("width") - margin.left - margin.right
+      var height = d3.select("#svg-a")
+              .attr("height") - margin.top - margin.bottom
 
-    // X label
-    svg.append('text')
-    .attr('x', width/2 + 100)
-    .attr('y', height - 15 + 150)
-    .attr('text-anchor', 'middle')
-    .style('font-family', 'Helvetica')
-    .style('font-size', 12)
-    .text('Independant');
+      var xScale = d3.scaleTime()
+              .domain(d3.extent(data, d=> d.date))
+              .range([0, width])
 
-    // Y label
-    svg.append('text')
-    .attr('text-anchor', 'middle')
-    .attr('transform', 'translate(60,' + height + ')rotate(-90)')
-    .style('font-family', 'Helvetica')
-    .style('font-size', 12)
-    .text('Dependant');
+      var yScale = d3.scaleLinear()
+              .domain([0, d3.max(data, d => d3.max(games, game => d[`${game}=count`]))])
+              .range([height, 0])
 
+      //container
+      var svgA = d3.select("#svg-a")
+              .append('g')
+              .attr("transform", "translate(${margin.left}, ${margin.top})")
+
+
+      // x-axis
+
+      svgA.append("g")
+              .attr("id", "x-axis-a")
+              .attr("transform","translate(0," + height + ")")
+              .call(d3.axisBottom(xScale))
+
+      svgA.append('text')
+              .attr('x', width/2)
+              .attr('y', 20)
+              .attr('text-anchor', 'middle')
+              .text('Month')
+
+      //y-axis
+
+      svgA.append('g')
+              .attr("id", "y-axis-a")
+              .attr("transform","translate(0," + height + ")")
+              .call(d3.axisLeft(yScale))
+
+
+      svgA.append('text')
+              .attr('x', width/2)
+              .attr('transform', "rotate(-90)")
+              .attr("y", -40)
+              .attr('x', -height/2)
+              .text('text-anchor', 'middle')
+              .text("Num of Ratings")
+
+        // lines
+      var myColor = d3.scaleOrdinal(d3.schemeCategory10)
+
+
+      var linesA = svgA.append("g")
+              .attr("id", "lines-a")
+
+      games.forEach((name, i) => {
+        var line = d3.line()
+                .x(d=> xScale(d.date))
+                .y(d=>yScale(d[`${name}=count`]))
+
+        linesA.append("path")
+                .datum(data)
+                .attr("class", "line")
+                .attr("d", line)
+                .style("stroke", myColor(i))
+
+        linesA.append("text")
+                .datum(data[data.length - 1])
+                .attr("transform", d => `translate(${xScale(d.date)}, ${yScale(d[`${name}=count`])})`)
+                .attr("dy", "-0.5em")
+                .attr("dx","0.5em")
+                .text(name)
+
+      })
+
+     // title
+
+      svgA.append('text')
+              .attr('id', 'title-a')
+              .attr("x", width/2)
+              .attr("y", -10)
+              .attr('text-anchor', 'middle')
+              .attr('transform', 'rotate(-90)')
+              .text('Number of Ratings 2016-2020')
 
 
 
             }).catch(function (error) {
       console.log(error);
-    });
+    })
+      ;
   </script>
 
 </body>
