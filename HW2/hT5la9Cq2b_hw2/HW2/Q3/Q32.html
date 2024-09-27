@@ -8,7 +8,7 @@
           fill: none; /* No fill for the line */
           stroke-width: 1.5;
         }
-    #title-a {
+    #title-b {
       font-size: 18px;
       text-anchor: middle;
       font-family: sans-serif;
@@ -70,6 +70,8 @@
     var pathToCsv = "boardgame_ratings.csv" 	// path to csv
 
     var games = ['Catan', 'Dominion', 'Codenames', 'Terraforming Mars', 'Gloomhaven', 'Magic: The Gathering', 'Dixit', 'Monopoly']
+    var gameDots = ['Catan', 'Codenames', 'Terraforming Mars', 'Gloomhaven']
+
 
     d3.dsv(",", pathToCsv).then(data => {
       data.forEach(d => {
@@ -86,9 +88,9 @@
     // set scale
 
       var margin = {top: 40 , right: 60, bottom: 40, left: 100}
-      var width = d3.select("#svg-a")
+      var width = d3.select("#svg-b")
               .attr("width") - margin.left - margin.right
-      var height = d3.select("#svg-a")
+      var height = d3.select("#svg-b")
               .attr("height") - margin.top - margin.bottom
 
       var xScale = d3.scaleTime()
@@ -100,26 +102,25 @@
               .range([height, 0])
 
       //container
-      var svgA = d3.select("#svg-a")
+      var svgB = d3.select("#svg-b")
               .append('g')
               .attr("transform", "translate("+ margin.left +  "," + margin.top +")")
               //.attr("transform", "translate(${margin.left}, ${margin.top})")
 
       // Container group
-      var plotA = svgA.append('g')
+      var plotB = svgB.append('g')
         .attr('id', 'plot-a');
-
 
       // x-axis
 
-      plotA.append("g")
-              .attr("id", "x-axis-a")
+      svgB.append("g")
+              .attr("id", "x-axis-b")
               .attr("transform","translate(0," + height + ")")
               .call(d3.axisBottom(xScale)
                       .ticks(d3.timeMonth.every(3))
                       .tickFormat(d3.timeFormat("%b %y")))
 
-      svgA.append('text')
+      svgB.append('text')
               .attr("id", "x_axis_label")
               .attr('x', width/2)
               .attr('y', height + margin.bottom)
@@ -127,12 +128,12 @@
 
       //y-axis
 
-      plotA.append('g')
-              .attr("id", "y-axis-a")
+      svgB.append('g')
+              .attr("id", "y-axis-b")
               .attr("transform", "translate(0,0)")
               .call(d3.axisLeft(yScale))
 
-      svgA.append('text')
+      svgB.append('text')
               .attr('id', 'y_axis_label')
               .attr('x', width/2)
               .attr('transform', "rotate(-90)")
@@ -141,24 +142,27 @@
               .text('text-anchor', 'middle')
               .text("Num of Ratings")
 
-        // lines
+        // lines and dots
       var myColor = d3.scaleOrdinal(d3.schemeCategory10)
 
-      var linesA = svgA.append("g")
-              .attr("id", "lines-a")
+      var linesB = svgB.append("g")
+              .attr("id", "lines-b")
+
+      var symbolsB = svgB.append("g")
+              .attr("id", "symbols-b")
 
       games.forEach((name, i) => {
         var line = d3.line()
                 .x(d=> xScale(d.date))
                 .y(d=>yScale(d[name + "=count"]))
 
-        linesA.append("path")
+        linesB.append("path")
                 .datum(data)
                 .attr("id", "line")
                 .attr("d", line)
                 .style("stroke", myColor(i))
 
-        linesA.append("text")
+        linesB.append("text")
                 .datum(data[data.length - 1])
                 .attr("id", "line_label")
                 .attr("transform", d => `translate(${xScale(d.date)}, ${yScale(d[`${name}=count`])})`)
@@ -166,19 +170,45 @@
                 .text(name)
                 .style("fill", myColor(i))
 
+
+        if(gameDots.includes(name)) {
+          symbolsB.selectAll('dot')
+                  .data(data)
+                  .enter()
+                  .append("circle")
+                  .attr("cx", function (d,i){
+                    if (i % 3 === 0) {
+                      return xScale(d.date)
+                    }
+                  })
+                  .attr("cy", function(d,i) {
+                    if (i % 3 === 0) {
+                      return yScale(d[name + "=count"])
+                    }
+                  })
+                  .attr("r", 5)
+                 // .attr("transform", "translate(" + 100 + "," + 100 + ")")
+                  .style("fill", myColor(i))
+          //symbolsB.append("text")
+
+
+        }
+
       })
+
+
 
      // title
 
-      svgA.append('text')
-              .attr('id', 'title-a')
+      svgB.append('text')
+              .attr('id', 'title-b')
               .attr("x", width/2)
               .attr("y", -10)
               .attr('text-anchor', 'middle')
               .text('Number of Ratings 2016-2020')
 
       // Add GT username
-      svgA.append("text")
+      svgB.append("text")
               .attr("id", "credit")
               .attr("x", margin.left+10)
               .attr("y", height + margin.bottom)
