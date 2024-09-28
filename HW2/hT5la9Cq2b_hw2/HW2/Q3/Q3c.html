@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Line Charts</title>
+    <style>
+        #line {
+            fill: none; /* No fill for the line */
+            stroke-width: 1.5;
+        }
+
+        text {
+            font-family: sans-serif;
+        }
+
+        #title-a, #title-b, #title-c-1, #title-c-2 {
+            font-size: 18px;
+            font-weight: bold;
+            text-anchor: middle;
+        }
+
+        #x-axis-a, #x-axis-b, #x-axis-c-1, #x-axis-c-2,
+        #y-axis-a, #y-axis-b, #y-axis-c-1, #y-axis-c-2 {
+            font-size: 14px;
+            font-weight: bold;
+            text-anchor: middle;
+        }
+
+        #line_label {
+            font-size: 10px;
+            text-anchor: left;
+            font-weight: normal;
+        }
+
+        #credit {
+            font-size: 12px;
+            text-anchor: end;
+        }
+
+        #dotText {
+            font-size: 10px;
+            text-anchor: middle;
+            fill: white;
+        }
+    </style>
+    <script src="lib/d3.v5.min.js"></script>
+</head>
+<body>
+
+    <svg id="svg-a" width="800" height="400"></svg>
+    <svg id="svg-b" width="800" height="400"></svg>
+    <svg id="svg-c-1" width="800" height="400"></svg>
+    <svg id="svg-c-2" width="800" height="400"></svg>
+
+    <script>
+        var pathToCsv = "boardgame_ratings.csv"; // path to csv
+        var games = ['Catan', 'Dominion', 'Codenames', 'Terraforming Mars', 'Gloomhaven', 'Magic: The Gathering', 'Dixit', 'Monopoly'];
+        var gameDots = ['Catan', 'Codenames', 'Terraforming Mars', 'Gloomhaven'];
+
+        d3.dsv(",", pathToCsv).then(data => {
+            data.forEach(d => {
+                d.date = d3.timeParse("%Y-%m-%d")(d.date);
+                Object.keys(d).forEach(k => {
+                    if (k !== "date") {
+                        d[k] = +d[k];
+                    }
+                });
+            });
+
+            // Set scale
+            var margin = {top: 80, right: 120, bottom: 40, left: 80};
+            var width = 800 - margin.left - margin.right;
+            var height = 400 - margin.top - margin.bottom;
+
+            var xScale = d3.scaleTime()
+                .domain(d3.extent(data, d => d.date))
+                .range([0, width]);
+
+            var yScale = d3.scaleLinear()
+                .domain([0, 90000])
+                .range([height, 0]);
+
+            var yScaleLog = d3.scaleLog()
+                .domain([1, 90000])
+                .range([height, 0]);
+
+            // -------------------------------START QUESTION 3.1------------------------------ //
+            var svgA = d3.select("#svg-a")
+                .append('g')
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            // Container group
+            var plotA = svgA.append('g').attr('id', 'plot-a');
+
+            // X-axis
+            plotA.append("g")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(xScale)
+                        .ticks(d3.timeMonth.every(3))
+                        .tickFormat(d3.timeFormat("%b %y")));
+
+            svgA.append('text')
+                .attr("id", "x-axis-a")
+                .attr('x', width / 2)
+                .attr('y', height + margin.bottom)
+                .text('Month');
+
+            // Y-axis
+            plotA.append('g').call(d3.axisLeft(yScale));
+            svgA.append('text')
+                .attr('id', 'y-axis-a')
+                .attr('x', -height / 2)
+                .attr('transform', "rotate(-90)")
+                .attr("y", -margin.left / 2 - 10)
+                .text("Num of Ratings");
+
+            // Lines
+            var myColor = d3.scaleOrdinal(d3.schemeCategory10);
+            var linesA = svgA.append("g").attr("id", "lines-a");
+
+            games.forEach((name, i) => {
+                var line = d3.line()
+                    .x(d => xScale(d.date))
+                    .y(d => yScale(d[name + "=count"]));
+
+                linesA.append("path")
+                    .datum(data)
+                    .attr("id", "line")
+                    .attr("d", line)
+                    .style("stroke", myColor(i));
+
+                linesA.append("text")
+                    .datum(data[data.length - 1])
+                    .attr("id", "line_label")
+                    .attr("transform", d => `translate(${xScale(d.date)}, ${yScale(d[`${name}=count`])})`)
+                    .attr("dx", 5)
+                    .text(name)
+                    .style("fill", myColor(i));
+            });
+
+            // Title
+            svgA.append('text')
+                .attr('id', 'title-a')
+                .attr("x", width / 2)
+                .attr("y", -10)
+                .text('Number of Ratings 2016-2020');
+
+            // -------------------------------END QUESTION 3.1------------------------------ //
+
+            // -------------------------------START QUESTION 3.2------------------------------ //
+            var svgB = d3.select("#svg-b")
+                .append('g')
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            // Container group
+            var plotB = svgB.append('g').attr('id', 'plot-b');
+
+            // X-axis
+            plotB.append("g")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(xScale).ticks(d3.timeMonth.every(3)).tickFormat(d3.timeFormat("%b %y")));
+
+            svgB.append('text')
+                .attr("id", "x-axis-b")
+                .attr('x', width / 2)
+                .attr('y', height + margin.bottom)
+                .text('Month');
+
+            // Y-axis
+            plotB.append('g').call(d3.axisLeft(yScale));
+            svgB.append('text')
+                .attr('id', 'y-axis-b')
+                .attr('x', -height / 2)
+                .attr('transform', "rotate(-90)")
+                .attr("y", -margin.left / 2 - 10)
+                .text("Num of Ratings");
+
+            // Lines and dots
+            var linesB = svgB.append("g").attr("id", "lines-b");
+            var symbolsB = svgB.append("g").attr("id", "symbols-b");
+
+            games.forEach((name, i) => {
+                var line = d3.line()
+                    .x(d => xScale(d.date))
+                    .y(d => yScale(d[name + "=count"]));
+
+                linesB.append("path")
+                    .datum(data)
+                    .attr("id", "line")
+                    .attr("d", line)
+                    .style("stroke", myColor(i));
+
+                linesB.append("text")
+                    .datum(data[data.length - 1])
+                    .attr("id", "line_label")
+                    .attr("transform", d => `translate(${xScale(d.date)}, ${yScale(d[`${name}=count`])})`)
+                    .attr("dx", 5)
+                    .text(name)
+                    .style("fill", myColor(i));
+
+                if (gameDots.includes(name)) {
+                    var dataFilter = data.filter((d, i) => i !== 0 && i % 3 === 2);
+                    symbolsB.selectAll('dot')
+                        .data(dataFilter)
+                        .enter()
+                        .append("circle")
+                        .attr("cx", d => xScale(d.date))
+                        .attr("cy", d => yScale(d[name + "=count"]))
+                        .attr("r", 10)
+                        .style("fill", myColor(i));
+
+                    symbolsB.selectAll("dotText")
+                        .data(dataFilter)
+                        .enter()
+                        .append("text")
+                        .attr("id", "dotText")
+                        .attr("x", d => xScale(d.date))
+                        .attr("y", d => yScale(d[name + "=count"]) + 2)
+                        .text(d => d[name + '=rank']);
+                }
+            });
+
+            // Title
+            svgB.append('text')
+                .attr('id', 'title-b')
+                .attr("x", width / 2)
+                .attr("y", -10)
+                .text('Number of Ratings 2016-2020 with Rankings');
+
+            // -------------------------------END QUESTION 3.2------------------------------ //
+
+            // -------------------------------START QUESTION 3.3-1------------------------------ //
+            var svgC1 = d3.select("#svg-c-1")
+                .append('g')
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            var plotC1 = svgC1.append('g').attr('id', 'plot-c-1');
+
+            plotC1.append("g")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(xScale).ticks(d3.timeMonth.every(3)).tickFormat(d3.timeFormat("%b %y")));
+
+            svgC1.append('text')
+                .attr("id", "x-axis-c-1")
+                .attr('x', width / 2)
+                .attr('y', height + margin.bottom)
+                .text('Month');
+
+            plotC1.append('g').call(d3.axisLeft(yScaleLog));
+            svgC1.append('text')
+                .attr('id', 'y-axis-c-1')
+                .attr('x', -height / 2)
+                .attr('transform', "rotate(-90)")
+                .attr("y", -margin.left / 2 - 10)
+                .text("Num of Ratings (log)");
+
+            // Lines
+            var linesC1 = svgC1.append("g").attr("id", "lines-c-1");
+
+            games.forEach((name, i) => {
+                var line = d3.line()
+                    .x(d => xScale(d.date))
+                    .y(d => yScaleLog(d[name + "=count"]));
+
+                linesC1.append("path")
+                    .datum(data)
+                    .attr("id", "line")
+                    .attr("d", line)
+                    .style("stroke", myColor(i));
+            });
+
+            // Title
+            svgC1.append('text')
+                .attr('id', 'title-c-1')
+                .attr("x", width / 2)
+                .attr("y", -10)
+                .text('Log of Number of Ratings 2016-2020');
+
+            // -------------------------------END QUESTION 3.3-1------------------------------ //
+
+            // -------------------------------START QUESTION 3.3-2------------------------------ //
+            var svgC2 = d3.select("#svg-c-2")
+                .append('g')
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            var plotC2 = svgC2.append('g').attr('id', 'plot-c-2');
+
+            plotC2.append("g")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(xScale).ticks(d3.timeMonth.every(3)).tickFormat(d3.timeFormat("%b %y")));
+
+            svgC2.append('text')
+                .attr("id", "x-axis-c-2")
+                .attr('x', width / 2)
+                .attr('y', height + margin.bottom)
+                .text('Month');
+
+            plotC2.append('g').call(d3.axisLeft(yScaleLog));
+            svgC2.append('text')
+                .attr('id', 'y-axis-c-2')
+                .attr('x', -height / 2)
+                .attr('transform', "rotate(-90)")
+                .attr("y", -margin.left / 2 - 10)
+                .text("Num of Ratings (log)");
+
+            // Lines
+            var linesC2 = svgC2.append("g").attr("id", "lines-c-2");
+
+            games.forEach((name, i) => {
+                var line = d3.line()
+                    .x(d => xScale(d.date))
+                    .y(d => yScaleLog(d[name + "=count"]));
+
+                linesC2.append("path")
+                    .datum(data)
+                    .attr("id", "line")
+                    .attr("d", line)
+                    .style("stroke", myColor(i));
+            });
+
+            // Title
+            svgC2.append('text')
+                .attr('id', 'title-c-2')
+                .attr("x", width / 2)
+                .attr("y", -10)
+                .text('Log of Number of Ratings 2016-2020');
+
+            // -------------------------------END QUESTION 3.3-2------------------------------ //
+        });
+    </script>
+</body>
+</html>
