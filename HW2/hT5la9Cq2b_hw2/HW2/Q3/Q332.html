@@ -131,28 +131,27 @@
         .domain([1, 100000])
         .range([height, 0])
 
-      //-------------------------------START QUESTION 3.3-1------------------------------//
-
+      //-------------------------------START QUESTION 3.3-2------------------------------//
       //container
-      var svgC1 = d3.select("#svg-c-1")
+      var svgC2 = d3.select("#svg-c-2")
               .append('g')
               .attr("transform", "translate("+ margin.left +  "," + margin.top +")")
               //.attr("transform", "translate(${margin.left}, ${margin.top})")
 
       // Container group
-      var plotC1 = svgC1.append('g')
-        .attr('id', 'plot-c-1');
+      var plotC2 = svgC2.append('g')
+        .attr('id', 'plot-c-2');
 
       // x-axis
 
-      svgC1.append("g")
-              .attr("id", "x-axis-c-1")
+      svgC2.append("g")
+              .attr("id", "x-axis-c-2")
               .attr("transform","translate(0," + height + ")")
               .call(d3.axisBottom(xScale)
                       .ticks(d3.timeMonth.every(3))
                       .tickFormat(d3.timeFormat("%b %y")))
 
-      svgC1.append('text')
+      svgC2.append('text')
               .attr("id", "x_axis_label")
               .attr('x', width/2)
               .attr('y', height + margin.bottom)
@@ -160,12 +159,12 @@
 
       //y-axis
 
-      svgC1.append('g')
-              .attr("id", "y-axis-c-1")
+      svgC2.append('g')
+              .attr("id", "y-axis-c-2")
               .attr("transform", "translate(0,0)")
-              .call(d3.axisLeft(yScale))
+              .call(d3.axisLeft(yScaleLog))
 
-      svgC1.append('text')
+      svgC2.append('text')
               .attr('id', 'y_axis_label')
               .attr('x', width/2)
               .attr('transform', "rotate(-90)")
@@ -177,50 +176,50 @@
         // lines and dots
       var myColor = d3.scaleOrdinal(d3.schemeCategory10)
 
-      var linesC1 = svgC1.append("g")
-              .attr("id", "lines-c-1")
+      var linesC2 = svgC2.append("g")
+              .attr("id", "lines-c-2")
 
-      var symbolsC1 = svgC1.append("g")
-              .attr("id", "symbols-c-1")
+      var symbolsC2 = svgC2.append("g")
+              .attr("id", "symbols-c-2")
 
       games.forEach((name, i) => {
         var line = d3.line()
                 .x(d=> xScale(d.date))
-                .y(d=>yScale(d[name + "=count"]))
-        linesC1.append("path")
+                .y(d=>yScaleLog(d[name + "=count"]))
+        linesC2.append("path")
                 .datum(data)
                 .attr("id", "line")
                 .attr("d", line)
                 .style("stroke", myColor(i))
 
-        linesC1.append("text")
+        linesC2.append("text")
                 .datum(data[data.length - 1])
                 .attr("id", "line_label")
-                .attr("transform", d => `translate(${xScale(d.date)}, ${yScale(d[`${name}=count`])})`)
+                .attr("transform", d => `translate(${xScale(d.date)}, ${yScaleLog(d[`${name}=count`])})`)
                 .attr("dx", 5)
                 .text(name)
                 .style("fill", myColor(i))
 
         if(gameDots.includes(name)) {
           var dataFilter = data.filter((d, i) => i !== 0 && i % 3 === 2)
-          symbolsC1.selectAll('dot')
+          symbolsC2.selectAll('dot')
                 .data(dataFilter)
                 .enter()
                 .append("circle")
                 .attr("cx", d=> xScale(d.date))
-                .attr("cy", d => yScale(d[name + "=count"]))
+                .attr("cy", d => yScaleLog(d[name + "=count"]))
                 .attr("r", 10)
                 .style("fill", myColor(i));
 
           console.log("before text " + name);
 
-          symbolsC1.selectAll("title")
+          symbolsC2.selectAll("title")
                   .data(dataFilter)
                   .enter()
                   .append("text")
                   .attr("id", "dotText")
                   .attr("x", d=> xScale(d.date))
-                  .attr("y", d=> yScale(d[name + "=count"])+2)
+                  .attr("y", d=> yScaleLog(d[name + "=count"])+2)
                   .text(d=> d[name+ '=rank'])
                   //.style("fill", "white")
         }
@@ -229,15 +228,15 @@
 
      // title
 
-      svgC1.append('text')
-              .attr('id', 'title-c-1')
+      svgC2.append('text')
+              .attr('id', 'title-c-2')
               .attr("x", width/2)
               .attr("y", -10)
               .attr('text-anchor', 'middle')
               .text('Number of Ratings 2016-2020 (Square Root Scale)')
 
       // Add GT username
-      svgC1.append("text")
+      svgC2.append("text")
               .attr("id", "credit")
               .attr("x", margin.left+10)
               .attr("y", height + margin.bottom)
@@ -246,6 +245,7 @@
             }).catch(function (error) {
       console.log(error);
     })
+    //-------------------------------END QUESTION 3.3-2------------------------------//
       ;
   </script>
 
