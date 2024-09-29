@@ -120,7 +120,15 @@
               .range([0, width])
 
       var yScale = d3.scaleLinear()
-              .domain([0, 100000])
+              .domain([0, d3.max(data, d => d3.max(games, game => d[`${game}=count`]))])
+              .range([height, 0])
+
+      var yScaleSqrt = d3.scaleSqrt()
+              .domain([0, d3.max(data, d => d3.max(games, game => d[`${game}=count`]))])
+              .range([height, 0])
+
+      var yScaleLog = d3.scaleLog()
+              .domain([1, d3.max(data, d => d3.max(games, game => d[`${game}=count`]))])
               .range([height, 0])
 
       var svgA = d3.select("#svg-a")
@@ -142,11 +150,13 @@
                       .ticks(d3.timeMonth.every(3))
                       .tickFormat(d3.timeFormat("%b %y")))
 
-      svgA.append('text')
-              .attr("id", "x_axis_label")
+      plotA.append('text')
               .attr('x', width / 2)
               .attr('y', height + margin.bottom)
               .text('Month')
+              .style("font-family", "sans-serif")
+              .style("font-weight", "bold")
+
 
       //y-axis
 
@@ -155,14 +165,15 @@
               .attr("transform", "translate(0,0)")
               .call(d3.axisLeft(yScale))
 
-      svgA.append('text')
-              .attr('id', 'y_axis_label')
+      plotA.append('text')
               .attr('x', width / 2)
               .attr('transform', "rotate(-90)")
               .attr("y", -margin.left / 2 - 10)
-              .attr('x', -height / 2)
+              .attr('x', -height / 2 - margin.top/2)
               .text('text-anchor', 'middle')
               .text("Num of Ratings")
+              .style("font-family", "sans-serif")
+              .style("font-weight", "bold")
 
       // lines
       var myColor = d3.scaleOrdinal(d3.schemeCategory10)
@@ -216,7 +227,7 @@
 
       // x-axis
 
-      svgB.append("g")
+      plotB.append("g")
               .attr("id", "x-axis-b")
               .attr("transform", "translate(0," + height + ")")
               .call(d3.axisBottom(xScale)
@@ -231,7 +242,7 @@
 
       //y-axis
 
-      svgB.append('g')
+      plotB.append('g')
               .attr("id", "y-axis-b")
               .attr("transform", "translate(0,0)")
               .call(d3.axisLeft(yScale))
@@ -333,18 +344,13 @@
               .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
       //.attr("transform", "translate(${margin.left}, ${margin.top})")
 
-
-      var yScaleLog = d3.scaleLog()
-              .domain([1, 100000])
-              .range([height, 0])
-
       // Container group
       var plotC1 = svgC1.append('g')
               .attr('id', 'plot-c-1');
 
       // x-axis
 
-      svgC1.append("g")
+      plotC1.append("g")
               .attr("id", "x-axis-c-1")
               .attr("transform", "translate(0," + height + ")")
               .call(d3.axisBottom(xScale)
@@ -359,10 +365,10 @@
 
       //y-axis
 
-      svgC1.append('g')
+      plotC1.append('g')
               .attr("id", "y-axis-c-1")
               .attr("transform", "translate(0,0)")
-              .call(d3.axisLeft(yScale))
+              .call(d3.axisLeft(yScaleSqrt))
 
       svgC1.append('text')
               .attr('id', 'y_axis_label')
@@ -385,7 +391,7 @@
       games.forEach((name, i) => {
         var line = d3.line()
                 .x(d => xScale(d.date))
-                .y(d => yScale(d[name + "=count"]))
+                .y(d => yScaleSqrt(d[name + "=count"]))
         linesC1.append("path")
                 .datum(data)
                 .attr("id", "line")
@@ -395,7 +401,7 @@
         linesC1.append("text")
                 .datum(data[data.length - 1])
                 .attr("id", "line_label")
-                .attr("transform", d => `translate(${xScale(d.date)}, ${yScale(d[`${name}=count`])})`)
+                .attr("transform", d => `translate(${xScale(d.date)}, ${yScaleSqrt(d[`${name}=count`])})`)
                 .attr("dx", 5)
                 .text(name)
                 .style("fill", myColor(i))
@@ -407,7 +413,7 @@
                   .enter()
                   .append("circle")
                   .attr("cx", d => xScale(d.date))
-                  .attr("cy", d => yScale(d[name + "=count"]))
+                  .attr("cy", d => yScaleSqrt(d[name + "=count"]))
                   .attr("r", 10)
                   .style("fill", myColor(i));
 
@@ -419,7 +425,7 @@
                   .append("text")
                   .attr("id", "dotText")
                   .attr("x", d => xScale(d.date))
-                  .attr("y", d => yScale(d[name + "=count"]) + 2)
+                  .attr("y", d => yScaleSqrt(d[name + "=count"]) + 2)
                   .text(d => d[name + '=rank'])
           //.style("fill", "white")
         }
