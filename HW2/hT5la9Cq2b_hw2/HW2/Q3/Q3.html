@@ -9,38 +9,52 @@
           stroke-width: 1.5;
         }
 
-    #itle-a, #title-b, #title-c-1, #title-c-2  {
+    #title-a {
+      font-size: 18px;
+      text-anchor: middle;
+      font-family: sans-serif;
+      font-weight: bold;
+    }
+    #title-b {
       font-size: 18px;
       text-anchor: middle;
       font-family: sans-serif;
       font-weight: bold;
     }
 
-    #x-axis-a, #x-axis-b, #x-axis-c-1, #x-axis-c-2,
-    #y-axis-a, #y-axis-b, #y-axis-c-1, #y-axis-c-2{
-      font-size: 10px;
-      text-anchor: left;
+    #title-c-1 {
+      font-size: 18px;
+      text-anchor: middle;
       font-family: sans-serif;
-      font-weight: normal;
+      font-weight: bold;
     }
 
-    #x-axis-label, #y-axis-label{
+    #title-c-2 {
+      font-size: 18px;
+      text-anchor: middle;
+      font-family: sans-serif;
+      font-weight: bold;
+    }
+
+    #x_axis_label{
       font-size: 14px;
       text-anchor: middle;
       font-family: sans-serif;
       font-weight: bold;
     }
 
+    #y_axis_label {
+      font-size: 14px;
+      text-anchor: middle;
+      font-family: sans-serif;
+      font-weight: bold;
+    }
 
     #line_label {
       font-size: 10px;
       text-anchor: left;
       font-family: sans-serif;
       font-weight: normal;
-    }
-
-    #line{
-      fill:none
     }
 
     #credit {
@@ -92,12 +106,13 @@
         })
       })
 
-      // set scale
 
+      //-------------------------------START QUESTION 3.1------------------------------//
+      //container
       var margin = {top: 80, right: 120, bottom: 40, left: 80}
-      var width = d3.select("#svg-c-2")
+      var width = d3.select("#svg-c-1")
               .attr("width") - margin.left - margin.right
-      var height = d3.select("#svg-c-2")
+      var height = d3.select("#svg-c-1")
               .attr("height") - margin.top - margin.bottom
 
       var xScale = d3.scaleTime()
@@ -105,15 +120,9 @@
               .range([0, width])
 
       var yScale = d3.scaleLinear()
-              .domain([0,90000])
+              .domain([0, 100000])
               .range([height, 0])
 
-      var yScaleLog = d3.scaleLog()
-              .domain([1, 90000])
-              .range([height, 0])
-
-      //-------------------------------START QUESTION 3.1------------------------------//
-      //container
       var svgA = d3.select("#svg-a")
               .append('g')
               .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
@@ -121,42 +130,39 @@
 
       // Container group
       var plotA = svgA.append('g')
-              .attr("id", "plot-a")
-              .attr("transform", "translate(0," + height + ")")
-
+              .attr('id', 'plot-a');
 
 
       // x-axis
 
-      var xAxisA = plotA.append("g")
+      plotA.append("g")
               .attr("id", "x-axis-a")
+              .attr("transform", "translate(0," + height + ")")
               .call(d3.axisBottom(xScale)
-                .ticks(d3.timeMonth.every(3))
-                .tickFormat(d3.timeFormat("%b %y")))
+                      .ticks(d3.timeMonth.every(3))
+                      .tickFormat(d3.timeFormat("%b %y")))
 
       svgA.append('text')
-              .attr("id", "x-axis-label")
+              .attr("id", "x_axis_label")
               .attr('x', width / 2)
               .attr('y', height + margin.bottom)
               .text('Month')
 
       //y-axis
 
-      var yAxisA = plotA.append('g')
+      plotA.append('g')
               .attr("id", "y-axis-a")
-              .attr("transform", "translate(0," + -height + ")")
+              .attr("transform", "translate(0,0)")
               .call(d3.axisLeft(yScale))
 
       svgA.append('text')
-              .attr('id', 'y-axis-label')
+              .attr('id', 'y_axis_label')
+              .attr('x', width / 2)
               .attr('transform', "rotate(-90)")
               .attr("y", -margin.left / 2 - 10)
               .attr('x', -height / 2)
               .text('text-anchor', 'middle')
               .text("Num of Ratings")
-
-      console.log(plotA)
-
 
       // lines
       var myColor = d3.scaleOrdinal(d3.schemeCategory10)
@@ -178,7 +184,6 @@
         linesA.append("text")
                 .datum(data[data.length - 1])
                 .attr("id", "line_label")
-                .attr("class", "line")
                 .attr("transform", d => `translate(${xScale(d.date)}, ${yScale(d[`${name}=count`])})`)
                 .attr("dx", 5)
                 .text(name)
@@ -207,26 +212,32 @@
 
       // Container group
       var plotB = svgB.append('g')
-              .attr("id", "plot-b")
+              .attr('id', 'plot-b');
+
+      // x-axis
+
+      svgB.append("g")
+              .attr("id", "x-axis-b")
               .attr("transform", "translate(0," + height + ")")
               .call(d3.axisBottom(xScale)
                       .ticks(d3.timeMonth.every(3))
                       .tickFormat(d3.timeFormat("%b %y")))
 
       svgB.append('text')
-              .attr("id", "x-axis-b")
+              .attr("id", "x_axis_label")
               .attr('x', width / 2)
               .attr('y', height + margin.bottom)
               .text('Month')
 
       //y-axis
 
-      plotB.append('g')
-              .attr("id", "plot-b")
+      svgB.append('g')
+              .attr("id", "y-axis-b")
+              .attr("transform", "translate(0,0)")
               .call(d3.axisLeft(yScale))
 
       svgB.append('text')
-              .attr('id', 'y-axis-b')
+              .attr('id', 'y_axis_label')
               .attr('x', width / 2)
               .attr('transform', "rotate(-90)")
               .attr("y", -margin.left / 2 - 10)
@@ -272,19 +283,39 @@
                   .attr("r", 10)
                   .style("fill", myColor(i));
 
+          console.log("before text " + name);
+
           symbolsB.selectAll("title")
+                  .each(function (d) {
+                    // Log the data point for each text element
+                    console.log("text test " + name);
+                  })
                   .data(dataFilter)
+                  .each(function (d) {
+                    // Log the data point for each text element
+                    console.log("after dataFiler " + name);
+                  })
                   .enter()
                   .append("text")
+                  .each(function (d) {
+                    // Log the data point for each text element
+                    console.log("text test2 " + name);
+                  })
                   .attr("id", "dotText")
-                  .attr("x", d => xScale(d.date))
+                  .attr("x", d => {
+                    var scale = xScale(d.date)
+                    console.log(scale)
+                    return scale
+                  })
                   .attr("y", d => yScale(d[name + "=count"]) + 2)
                   .text(d => d[name + '=rank'])
           //.style("fill", "white")
         }
+
       })
 
       // title
+
       svgB.append('text')
               .attr('id', 'title-b')
               .attr("x", width / 2)
@@ -302,6 +333,11 @@
               .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
       //.attr("transform", "translate(${margin.left}, ${margin.top})")
 
+
+      var yScaleLog = d3.scaleLog()
+              .domain([1, 100000])
+              .range([height, 0])
+
       // Container group
       var plotC1 = svgC1.append('g')
               .attr('id', 'plot-c-1');
@@ -309,27 +345,27 @@
       // x-axis
 
       svgC1.append("g")
-              .attr("id", "plot-c-1")
+              .attr("id", "x-axis-c-1")
               .attr("transform", "translate(0," + height + ")")
               .call(d3.axisBottom(xScale)
                       .ticks(d3.timeMonth.every(3))
                       .tickFormat(d3.timeFormat("%b %y")))
 
       svgC1.append('text')
-              .attr("id", "x-axis-c-1")
+              .attr("id", "x_axis_label")
               .attr('x', width / 2)
               .attr('y', height + margin.bottom)
               .text('Month')
 
       //y-axis
 
-      plotC1.append('g')
-              .attr("id", "plot-c-1")
+      svgC1.append('g')
+              .attr("id", "y-axis-c-1")
               .attr("transform", "translate(0,0)")
               .call(d3.axisLeft(yScale))
 
       svgC1.append('text')
-              .attr('id', 'y-axis-c-1')
+              .attr('id', 'y_axis_label')
               .attr('x', width / 2)
               .attr('transform', "rotate(-90)")
               .attr("y", -margin.left / 2 - 10)
@@ -413,26 +449,28 @@
 
       // x-axis
 
-      plotC2.append("g")
+      svgC2.append("g")
+              .attr("id", "x-axis-c-2")
               .attr("transform","translate(0," + height + ")")
               .call(d3.axisBottom(xScale)
                       .ticks(d3.timeMonth.every(3))
                       .tickFormat(d3.timeFormat("%b %y")))
 
       svgC2.append('text')
-              .attr("id", "x-axis-c-2")
+              .attr("id", "x_axis_label")
               .attr('x', width/2)
               .attr('y', height + margin.bottom)
               .text('Month')
 
       //y-axis
 
-      plotC2.append('g')
+      svgC2.append('g')
+              .attr("id", "y-axis-c-2")
               .attr("transform", "translate(0,0)")
               .call(d3.axisLeft(yScaleLog))
 
       svgC2.append('text')
-              .attr('id', 'y-axis-c-2')
+              .attr('id', 'y_axis_label')
               .attr('x', width/2)
               .attr('transform', "rotate(-90)")
               .attr("y", -margin.left/2-10)
@@ -494,6 +532,7 @@
       })
 
      // title
+
       svgC2.append('text')
               .attr('id', 'title-c-2')
               .attr("x", width/2)
