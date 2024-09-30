@@ -95,7 +95,7 @@
       var height = d3.select("#line_chart")
               .attr("height") - margin.top - margin.bottom
 
-      //-------------------------------START QUESTION 4.1------------------------------//
+      //-------------------------------START LINE CHART------------------------------//
       //container
     // define the dimensions and margins for the bar chart
 
@@ -106,17 +106,12 @@
               .entries(data)
 
       var grouped = grouped_hold.map(dYear => {
-        var dCounts = dYear.values.reduce((acc, count) => {
-          acc[count.key] = count.value;
-          return acc;
-        }, {});
+        var dCounts = Object.fromEntries(dYear.values.map(count => [count.key, count.value]));
 
-        // Use the correct variable and length calculation
-        var dRatings = Array.from({ length: d3.max(data, d => d.average_rating+1) }, (_, i) => i )
-          .map(rating => ({
-            rating: rating,
-            count: dCounts[rating] || 0
-          }));
+        var dRatings = Array.from({ length: d3.max(data, d => d.average_rating) + 1 }, (_, i) => ({
+          rating: i,
+          count: dCounts[i] || 0
+        }));
 
         return {
           year: +dYear.key,
@@ -143,6 +138,7 @@
 
       // lines
       var myColor = d3.scaleOrdinal(d3.schemeCategory10)
+
 
       var linesA = plotLine.append("g")
               .attr("id", "lines")
@@ -212,13 +208,43 @@
               .attr("y", -margin.top/2)
               .attr('text-anchor', 'middle')
               .text('Board Games by Rating 2015-2019')
+      // credit
+      linesA.append('text')
+              .attr('id', 'credit')
+              .attr("x", width / 2)
+              .attr("y", -margin.top/2+20)
+              .text('hpavlovich3')
 
+      //legend
 
+      var legendA = svgLine.append('g')
+              .attr('id', 'legend')
+
+      var years = [2015,2016,2017,2018,2019]
+      color = d3.schemeCategory10
+      for (var i = 0; i < years.length; i++) {
+          legendA.append("circle")
+                  .attr("cx",width-35)
+                  .attr("cy",25*i)
+                  .attr("r", 5)
+                  .style("fill", color[i])
+          legendA.append("text")
+                  .attr("x", width-20)
+                  .attr("y", 25*i)
+                  .text(years[i])
+                  .style("font-size", "14px").style("font-weight","bold").style('font-family', 'sans-serif').attr("alignment-baseline","middle")
+      }
 
       //console.log(data); // you should see the data in your browser's developer tools console
 
-      /* Create bar plot using data from csv */
+    //-------------------------------END LINE CHART------------------------------//
 
+    //-------------------------------START BAR CHART------------------------------//
+
+
+
+
+    //-------------------------------END BAR CHART------------------------------//
 
 
 
