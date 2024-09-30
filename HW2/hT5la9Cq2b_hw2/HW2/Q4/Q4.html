@@ -4,7 +4,53 @@
   <title>Games Rating: 2015 - 2019</title>
   <meta charset="utf-8">
   <style>
-    <!-- define CSS rules -->
+    #line {
+          fill: none; /* No fill for the line */
+          stroke-width: 1.5;
+        }
+
+    #line_chart_title {
+      font-size: 18px;
+      text-anchor: middle;
+      font-family: sans-serif;
+      font-weight: bold;
+    }
+
+    #x_axis_label{
+      font-size: 14px;
+      text-anchor: middle;
+      font-family: sans-serif;
+      font-weight: bold;
+    }
+
+    #y_axis_label {
+      font-size: 14px;
+      text-anchor: middle;
+      font-family: sans-serif;
+      font-weight: bold;
+    }
+
+    #line_label {
+      font-size: 10px;
+      text-anchor: left;
+      font-family: sans-serif;
+      font-weight: normal;
+    }
+
+    #credit {
+      font-size: 12px;
+      text-anchor: end;
+      font-family: sans-serif
+
+    }
+
+    #dotText{
+      font-size:10px;
+      text-anchor: middle;
+      font-family: sans-serif;
+      fill: white;
+    }
+
   </style>
 </head>
 
@@ -18,37 +64,158 @@
   <!-- Example of styling an element -->
   <!-- svg_element.style()-->
 
-  <script>
-    // define the dimensions and margins for the line chart
-    // Use the Margin Convention referenced in the HW document to layout your graph
+  <svg id ="line_chart" width = "800" height = "400"></svg>
+  <svg id ="bar_chart" width = "800" height = "400"></svg>  <script>
 
+  // get data
+    var pathToCsv = "boardgame_ratings.csv" 	// path to csv
 
+  // Fetch the data
+	var pathToCsv = "average-rating.csv";
+
+    d3.dsv(",", pathToCsv).then(data_raw => {
+      data_raw.forEach(d => {
+        d.name = d.name
+        d.year = +d.year
+        d.average_rating = +Math.floor(d.average_rating)
+        d.users_rated = +d.users_rated
+      })
+
+ //     var startYear = d3.timeParse("%Y")(2015);
+ //     var endYear = d3.timeParse("%Y")(2019);
+
+      var data = data_raw.filter(row =>{
+            return 2015 <= row.year && row.year <= 2019;
+          });
+
+      var margin = {top: 80, right: 120, bottom: 40, left: 80}
+      var width = d3.select("#line_chart")
+              .attr("width") - margin.left - margin.right
+
+      var height = d3.select("#line_chart")
+              .attr("height") - margin.top - margin.bottom
+
+      //-------------------------------START QUESTION 4.1------------------------------//
+      //container
     // define the dimensions and margins for the bar chart
 
+      var grouped_hold = d3.nest()
+              .key(d =>  d.year)
+              .key(d => d.average_rating)
+              .rollup(v => v.length)
+              .entries(data)
 
-    // append svg element to the body of the page
-    // set dimensions and position of the svg element
-    let svg = d3
-      .select("body")
-      .append("svg")
-      .attr("id", "line_chart")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
-      .append("g")
-      .attr("id", "container")
-      .attr("transform",
-        "translate(" + margin.left + "," + margin.top + ")");
+      var grouped = grouped_hold.map(dYear => {
+        var dCounts = dYear.values.reduce((acc, count) => {
+          acc[count.key] = count.value;
+          return acc;
+        }, {});
 
-    // Fetch the data
-	var pathToCsv = "";
+        // Use the correct variable and length calculation
+        var dRatings = Array.from({ length: d3.max(data, d => d.average_rating+1) }, (_, i) => i )
+          .map(rating => ({
+            rating: rating,
+            count: dCounts[rating] || 0
+          }));
+
+        return {
+          year: +dYear.key,
+          ratings: dRatings
+        };
+      });
+
+      var xScale = d3.scaleLinear()
+              .domain([0, d3.max(grouped, d=> d3.max(d.ratings, w=> w.rating))])
+              .range([0, width])
+
+      var yScale = d3.scaleLinear()
+              .domain([0, d3.max(grouped, d => d3.max(d.ratings, w=> w.count))])
+              .range([height, 0])
+
+      var svgLine = d3.select("#line_chart")
+              .append('g')
+              .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+      //.attr("transform", "translate(${margin.left}, ${margin.top})")
+
+      // Container group
+      var plotLine = svgLine.append('g')
+              .attr('id', 'container');
+
+      // lines
+      var myColor = d3.scaleOrdinal(d3.schemeCategory10)
+
+      var linesA = plotLine.append("g")
+              .attr("id", "lines")
+
+      grouped.forEach((year_group, i) => {
+        year_group.ratings.sort((a,b) => d3.ascending(a.rating, b.rating))
+        var line = d3.line()
+                .x(d => xScale(d.rating))
+                .y(d => yScale(d.count))
+
+        linesA.append("path")
+                .datum(year_group.ratings)
+                .attr("id", "line")
+                .attr("d", line)
+                .style("stroke", myColor(i))
+
+      // dots
+      var dotsA = linesA.append("g")
+        .attr("id", "circles")
+
+      dotsA.selectAll('dot')
+        .data(year_group.ratings)
+        .enter()
+        .append("circle")
+        .attr("cx", d => xScale(d.rating))
+        .attr("cy", d => yScale(d.count))
+        .attr("r", 3)
+        .style("fill", myColor(i));
+
+      })
+
+      // x-axis
+
+      linesA.append("g")
+              .attr("id", "x-axis-lines")
+              .attr("transform", "translate(0," + height + ")")
+              .call(d3.axisBottom(xScale))
+
+      linesA.append('text')
+              .attr('x', width / 2)
+              .attr('y', height + margin.bottom-10)
+              .text('Rating')
+              .style("font-family", "sans-serif")
+              .style("font-weight", "bold")
+
+      //y-axis
+
+      linesA.append('g')
+              .attr("id", "y-axis-lines")
+              .attr("transform", "translate(0,0)")
+              .call(d3.axisLeft(yScale))
+
+      linesA.append('text')
+              .attr('x', width / 2)
+              .attr('transform', "rotate(-90)")
+              .attr("y", -margin.left / 2 - 10)
+              .attr('x', -height / 2 - margin.top/2)
+              .text('text-anchor', 'middle')
+              .text("Count")
+              .style("font-family", "sans-serif")
+              .style("font-weight", "bold")
+
+      //title
+      linesA.append('text')
+              .attr('id', 'line_chart_title')
+              .attr("x", width / 2)
+              .attr("y", -margin.top/2)
+              .attr('text-anchor', 'middle')
+              .text('Board Games by Rating 2015-2019')
 
 
-    d3.dsv(",", pathToCsv, function (d) {
-      return {
-        // format data attributes if required
-      }
-    }).then(function (data) {
-      console.log(data); // you should see the data in your browser's developer tools console
+
+      //console.log(data); // you should see the data in your browser's developer tools console
 
       /* Create bar plot using data from csv */
 

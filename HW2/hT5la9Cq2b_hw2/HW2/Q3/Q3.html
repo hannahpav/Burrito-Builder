@@ -98,7 +98,6 @@
     d3.dsv(",", pathToCsv).then(data => {
       data.forEach(d => {
         d.date = d3.timeParse("%Y-%m-%d")(d.date)
-
         Object.keys(d).forEach(k => {
           if (k !== "date") {
             d[k] = +d[k]
