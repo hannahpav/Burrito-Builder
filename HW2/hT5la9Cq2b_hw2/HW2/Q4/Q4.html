@@ -58,6 +58,7 @@
   <!-- svg_element.style()-->
 
   <svg id ="line_chart" width = "800" height = "400"></svg>
+    <g id = "container"></g>
 
   <div id="bar_chart_title"></div>
   <svg id ="bar_chart" width = "800" height = "400"></svg>  <script>
@@ -75,300 +76,303 @@
         d.users_rated = +d.users_rated
       })
 
- //     var startYear = d3.timeParse("%Y")(2015);
- //     var endYear = d3.timeParse("%Y")(2019);
+        //     var startYear = d3.timeParse("%Y")(2015);
+        //     var endYear = d3.timeParse("%Y")(2019);
 
-      var data = data_raw.filter(row =>{
-            return 2015 <= row.year && row.year <= 2019;
-          });
+        var data = data_raw.filter(row => {
+          return 2015 <= row.year && row.year <= 2019;
+        });
 
-      var margin = {top: 80, right: 120, bottom: 40, left: 80}
-      var width = d3.select("#line_chart")
-              .attr("width") - margin.left - margin.right
+        var margin = {top: 80, right: 120, bottom: 40, left: 100}
+        var width = d3.select("#line_chart")
+                .attr("width") - margin.left - margin.right
 
-      var height = d3.select("#line_chart")
-              .attr("height") - margin.top - margin.bottom
+        var height = d3.select("#line_chart")
+                .attr("height") - margin.top - margin.bottom
 
-      //-------------------------------START LINE CHART------------------------------//
-      //container
-    // define the dimensions and margins for the bar chart
+        //-------------------------------START LINE CHART------------------------------//
+        //container
+        // define the dimensions and margins for the bar chart
 
-      var grouped_hold = d3.nest()
-              .key(d =>  d.year)
-              .key(d => d.average_rating)
-              .rollup(v => v.length)
-              .entries(data)
+        var grouped_hold = d3.nest()
+                .key(d => d.year)
+                .key(d => d.average_rating)
+                .rollup(v => v.length)
+                .entries(data)
 
-      var grouped = grouped_hold.map(dYear => {
-        var dCounts = Object.fromEntries(dYear.values.map(count => [count.key, count.value]));
+        var grouped = grouped_hold.map(dYear => {
+          var dCounts = Object.fromEntries(dYear.values.map(count => [count.key, count.value]));
 
-        var ratings = Array.from({ length: d3.max(data, d => d.average_rating) + 1 }, (_, i) => ({
-          rating: i,
-          count: dCounts[i] || 0
-        }));
+          var ratings = Array.from({length: d3.max(data, d => d.average_rating) + 1}, (_, i) => ({
+            rating: i,
+            count: dCounts[i] || 0
+          }));
 
-        return {
-          year: +dYear.key,
-          ratings: ratings
-        };
-      });
+          return {
+            year: +dYear.key,
+            ratings: ratings
+          };
+        });
 
-      var xScale = d3.scaleLinear()
-              .domain([0, d3.max(grouped, d=> d3.max(d.ratings, w=> w.rating))])
-              .range([0, width])
+        var svgLine = d3.select("#line_chart")
+                .append('g')
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 
-      var yScale = d3.scaleLinear()
-              .domain([0, d3.max(grouped, d => d3.max(d.ratings, w=> w.count))])
-              .range([height, 0])
+        var xScale = d3.scaleLinear()
+                .domain([0, d3.max(grouped, d => d3.max(d.ratings, w => w.rating))])
+                .range([0, width])
 
-      var svgLine = d3.select("#line_chart")
-              .append('g')
-              .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-      //.attr("transform", "translate(${margin.left}, ${margin.top})")
+        var yScale = d3.scaleLinear()
+                .domain([0, d3.max(grouped, d => d3.max(d.ratings, w => w.count))])
+                .range([height, 0])
 
-      // Container group
-      var plotLine = svgLine.append('g')
-              .attr('id', 'container');
+        //.attr("transform", "translate(${margin.left}, ${margin.top})")
 
-      // lines
-      var myColor = d3.scaleOrdinal(d3.schemeCategory10)
+        // Container group
+        var plotLine = svgLine.append('g')
+                .attr('id', 'container');
 
-      var linesA = plotLine.append("g")
-              .attr("id", "lines")
+        // lines
+        var myColor = d3.scaleOrdinal(d3.schemeCategory10)
 
-      grouped.forEach((dYear, i) => {
-        dYear.ratings.sort((a, b) => d3.ascending(a.rating, b.rating))
-        var line = d3.line()
-                .x(d => xScale(d.rating))
-                .y(d => yScale(d.count))
+        var linesA = plotLine.append("g")
+                .attr("id", "lines")
 
-        linesA.append("path")
-                .datum(dYear.ratings)
-                .attr("id", "line")
-                .attr("d", line)
-                .style("stroke", myColor(i))
-        console.log("dYear: ", dYear)
-        // dots
-        var dotsA = linesA.append("g")
-                .attr("id", "circles")
-        dotsA.selectAll(`.dot-${dYear.year}`)
-                .data(dYear.ratings)
-                .enter()
-                .append("circle")
-                .attr('class', `.dot-${dYear.year}`)
-                .attr("cx", d => xScale(d.rating))
-                .attr("cy", d => yScale(d.count))
-                .attr("r", 5)
-                .style("fill", myColor(i))
-                .on("mouseover", function (event, d) {
-                  // Call hoverBars on mouseover
-                  hoverBars(dYear.year, dYear.ratings)
-                  d3.select(this).transition().duration(200)
-                          .attr("r", 12);
-                })
-                .on("mouseout", function () {
-                  // Reset bar chart or hide it
-                  d3.select(this).transition().duration(200)
-                          .attr("r", 5);
-                  plotBar.selectAll('#bars').remove(); // Clear the bar chart on mouse out
-                })
+        grouped.forEach((dYear, i) => {
+          dYear.ratings.sort((a, b) => d3.ascending(a.rating, b.rating))
+          var line = d3.line()
+                  .x(d => xScale(d.rating))
+                  .y(d => yScale(d.count))
 
-        // x-axis
-
-        linesA.append("g")
-                .attr("id", "x-axis-lines")
-                .attr("transform", "translate(0," + height + ")")
-                .call(d3.axisBottom(xScale))
-
-        linesA.append('text')
-                .attr('x', width / 2)
-                .attr('y', height + margin.bottom - 10)
-                .text('Rating')
-                .style("font-family", "sans-serif")
-                .style("font-weight", "bold")
-
-        //y-axis
-
-        linesA.append('g')
-                .attr("id", "y-axis-lines")
-                .call(d3.axisLeft(yScale))
-
-        linesA.append('text')
-                .attr('x', width / 2)
-                .attr('transform', "rotate(-90)")
-                .attr("y", -margin.left / 2 - 10)
-                .attr('x', -height / 2 - margin.top / 2)
-                .text('text-anchor', 'middle')
-                .text("Count")
-                .style("font-family", "sans-serif")
-                .style("font-weight", "bold")
-
-        //title
-        linesA.append('text')
-                .attr('id', 'line_chart_title')
-                .attr("x", width / 2)
-                .attr("y", -margin.top / 2)
-                .attr('text-anchor', 'middle')
-                .text('Board Games by Rating 2015-2019')
-        // credit
-        linesA.append('text')
-                .attr('id', 'credit')
-                .attr("x", width / 2)
-                .attr("y", -margin.top / 2 + 20)
-                .text('hpavlovich3')
-
-        //legend
-
-        var legendA = svgLine.append('g')
-                .attr('id', 'legend')
-
-        var years = [2015, 2016, 2017, 2018, 2019]
-        color = d3.schemeCategory10
-        for (var i = 0; i < years.length; i++) {
-          legendA.append("circle")
-                  .attr("cx", width - 35)
-                  .attr("cy", 25 * i)
+          linesA.append("path")
+                  .datum(dYear.ratings)
+                  //.attr("class", "line")
+                  .attr("d", line)
+                  .style("stroke", myColor(i))
+                  .style("fill", 'none')
+          // dots
+          var dotsA = linesA.append("g")
+                  .attr("id", "circles")
+          dotsA.selectAll(`.dot-${dYear.year}`)
+                  .data(dYear.ratings)
+                  .enter()
+                  .append("circle")
+                  .attr('class', `.dot-${dYear.year}`)
+                  .attr("cx", d => xScale(d.rating))
+                  .attr("cy", d => yScale(d.count))
                   .attr("r", 5)
-                  .style("fill", color[i])
-          legendA.append("text")
-                  .attr("x", width - 20)
-                  .attr("y", 25 * i)
-                  .text(years[i])
-                  .style("font-size", "14px").style("font-weight", "bold").style('font-family', 'sans-serif').attr("alignment-baseline", "middle")
-        }
-      })
+                  .style("fill", myColor(i))
+                  .on("mouseover", function (event, d) {
+                    // Call hoverBars on mouseover
+                    hoverBars(dYear.year, d)
+                    d3.select(this).transition().duration(200)
+                            .attr("r", 12);
+                    // console.log("what is d: ", d)
+                    //  console.log("what its calling:", dYear.year, +d)
+                  })
+                  .on("mouseout", function () {
+                    // Reset bar chart or hide it
+                    d3.select(this).transition().duration(200)
+                            .attr("r", 5);
+                    plotBar.selectAll('#bars').remove(); // Clear the bar chart on mouse out
+                  })
 
-      //console.log(data); // you should see the data in your browser's developer tools console
+          // x-axis
 
-    //-------------------------------END LINE CHART------------------------------//
+          linesA.append("g")
+                  .attr("id", "x-axis-lines")
+                  .attr("transform", "translate(0," + height + ")")
+                  .call(d3.axisBottom(xScale))
 
-    //-------------------------------START BAR CHART------------------------------//
+          linesA.append('text')
+                  .attr('x', width / 2)
+                  .attr('y', height + margin.bottom - 10)
+                  .text('Rating')
+                  .style("font-family", "sans-serif")
+                  .style("font-weight", "bold")
 
-      // bars
-      var svgBar = d3.select("#bar_chart")
+          //y-axis
 
-      var plotBar = svgBar.append('g')
-                .attr('id', 'container2')
+          linesA.append('g')
+                  .attr("id", "y-axis-lines")
+                  .call(d3.axisLeft(yScale))
 
-      var barGrouped_hold = d3.nest()
-              .key(d => d.year)
-              .key(d => d.average_rating)
-              .key(d => d.name)
-              .rollup(v => d3.sum(v,d => d.users_rated))
-              .entries(data)
+          linesA.append('text')
+                  .attr('x', width / 2)
+                  .attr('transform', "rotate(-90)")
+                  .attr("y", -margin.left / 2 - 10)
+                  .attr('x', -height / 2 - margin.top / 2)
+                  .text('text-anchor', 'middle')
+                  .text("Count")
+                  .style("font-family", "sans-serif")
+                  .style("font-weight", "bold")
 
-      var barGrouped = barGrouped_hold.map(barYear => {
-        var barRatings = barYear.values.map(barRating => {
-          var barGames = barRating.values.map(game => ({
-            name: game.key,
-            count:game.value
-          }))
+          //title
+          linesA.append('text')
+                  .attr('id', 'line_chart_title')
+                  .attr("x", width / 2)
+                  .attr("y", -margin.top / 2)
+                  .attr('text-anchor', 'middle')
+                  .text('Board Games by Rating 2015-2019')
+          // credit
+          linesA.append('text')
+                  .attr('id', 'credit')
+                  .attr("x", width / 2)
+                  .attr("y", -margin.top / 2 + 20)
+                  .text('hpavlovich3')
 
-          return{
-            rating :+barRating.key,
-            count: barGames
+          //legend
+
+          var legendA = svgLine.append('g')
+                  .attr('id', 'legend')
+
+          var years = [2015, 2016, 2017, 2018, 2019]
+          color = d3.schemeCategory10
+          for (var i = 0; i < years.length; i++) {
+            legendA.append("circle")
+                    .attr("cx", width - 35)
+                    .attr("cy", 25 * i)
+                    .attr("r", 5)
+                    .style("fill", color[i])
+            legendA.append("text")
+                    .attr("x", width - 20)
+                    .attr("y", 25 * i)
+                    .text(years[i])
+                    .style("font-size", "14px").style("font-weight", "bold").style('font-family', 'sans-serif').attr("alignment-baseline", "middle")
           }
         })
 
-        return{
-          year: +barYear.key,
-          ratings: barRatings
+        //console.log(data); // you should see the data in your browser's developer tools console
+
+        //-------------------------------END LINE CHART------------------------------//
+
+        //-------------------------------START BAR CHART------------------------------//
+
+        // bars
+        var svgBar = d3.select("#bar_chart")
+                .append('g')
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+
+        var plotBar = svgBar.append('g')
+                .attr('id', 'container_2')
+
+        var barGrouped_hold = d3.nest()
+                .key(d => d.year)
+                .key(d => d.average_rating)
+                .key(d => d.name)
+                .rollup(v => d3.sum(v, d => d.users_rated))
+                .entries(data)
+
+        var barGrouped = barGrouped_hold.map(barYear => {
+          var barRatings = barYear.values.map(barRating => {
+            var barGames = barRating.values.map(game => ({
+              name: game.key,
+              count: game.value
+            }))
+
+            return {
+              rating: +barRating.key,
+              count: barGames
+            }
+          })
+
+          return {
+            year: +barYear.key,
+            ratings: barRatings
+          }
+        });
+
+        function hoverBars(year, selected_rating) {
+          // console.log('moused over rating:',selected_rating)
+          var topFive_year = barGrouped.find(d => +d.year === +year)
+          if (!topFive_year) {
+            return
+          }
+          //    console.log("year: ", year, " rating: ", selected_rating)
+          //    console.log("topFive year: ", topFive_year)
+
+          var topFive_rating = topFive_year.ratings.find(d => +d.rating === +selected_rating)
+          if (!topFive_rating) {
+            console.log("nothing to see here rating, i selected: ", selected_rating)
+            return
+          }
+
+          var topFive = topFive_rating.count
+                  .sort((a, b) => b.count - a.count)
+                  .slice(0, 5)
+
+          // console.log("i selected rating:",selected_rating, "topFive: ", topFive)
+
+
+          // console.log(topFive)
+
+          plotBar.selectAll('#bars').remove();
+
+          var xScaleBar = d3.scaleLinear()
+                  .domain([0, d3.max(topFive, d => d.count)])
+                  .range([0, width])
+
+          var yScaleBar = d3.scaleBand()
+                  .domain(topFive.map(d => d.name))
+                  .range([0, height])
+                  .padding(0.1)
+
+          var bar = plotBar.append('g')
+                  .attr('id', 'bars')
+
+          bar.selectAll(".bar")
+                  .data(topFive)
+                  .enter()
+                  .append("rect")
+                  .attr("class", "bar")
+                  .attr("x", 0)
+                  .attr("y", d => yScaleBar(d.name))
+                  .attr("width", d => xScaleBar(d.count))
+                  .attr("height", yScaleBar.bandwidth())
+                  .style("fill", "rgba(0, 0, 255, 0.5)")
+                  .style("fill-opacity", '50')
+
+
+          // x-axis
+          bar.append("g")
+                  .attr("id", "x-axis-bars")
+                  .attr("transform", "translate(0," + height + ")")
+                  .call(d3.axisBottom(xScaleBar)
+                          .tickSize(-height))
+
+          bar.append('text')
+                  .attr('x', width / 2 - margin.left / 2)
+                  .attr('y', height + margin.bottom - 10)
+                  .text('Number of users')
+                  .style("font-family", "sans-serif")
+                  .style("font-weight", "bold")
+
+          //y-axis
+
+          bar.append('g')
+                  .attr("id", "y-axis-bars")
+                  .call(d3.axisLeft(yScaleBar)
+                          .tickFormat(d => d.substring(0, 10)))
+
+          bar.append('text')
+                  .attr('x', width / 2)
+                  .attr('transform', "rotate(-90)")
+                  .attr("y", -margin.left / 2 - 10)
+                  .attr('x', -height / 2 - margin.top / 2)
+                  .text('text-anchor', 'middle')
+                  .text("Games")
+                  .style("font-family", "sans-serif")
+                  .style("font-weight", "bold")
+          //title
+          bar.append('text')
+                  .attr('id', 'bar_chart_title')
+                  .attr("x", width / 2)
+                  .attr("y", -margin.top / 2)
+                  .attr('text-anchor', 'middle')
+                  .text(`Top 5 Most Rated Games of ${year} with Rating ${selected_rating}`)
+
         }
-      });
-  console.log(barGrouped)
-      function hoverBars(year, rating) {
-        var topFive_year = barGrouped.find(d => +d.year === +year)
-        if (!topFive_year){
-          console.log("nothing to see here year")
-          return
-        }
-        console.log("year: ", year, " rating: ",rating)
-        console.log("topFive year: ", topFive_year.ratings)
-
-        var topFive_rating = topFive_year.ratings.find(d => d.ratings === rating)
-        if(!topFive_rating){
-          console.log("nothing to see here rating, i selected: ", rating)
-          return
-        }
-        console.log("i selected rating:",rating, "topFive rating: ", topFive_rating)
-
-        var topFive = topFive_rating.count
-                .sort((a, b) => b.count - a.count)
-                .slice(0,5)
-
-     // console.log(topFive)
-
-        plotBar.selectAll('#bars').remove();
-
-        var xScaleBar = d3.scaleLinear()
-                .domain([0, d3.max(topFive, d => d.users_rated)])
-                .range([0, width])
-
-        var yScaleBar = d3.scaleBand()
-                .domain(topFive.map(d => d.name))
-                .range([height, 0])
-                .padding(0.1)
-
-        var bar = plotBar.append('g')
-                .attr('id', 'bars')
-
-        bar.selectAll(".bar")
-                .data(topFive)
-                .enter()
-                .append("rect")
-                .attr("class", "bar")
-                .attr("x", margin.left)
-                .attr("y", d => yScaleBar(d.name))
-                .attr("width", d => xScaleBar(d.users_rated))
-                .attr("height", yScaleBar.bandwidth())
-                .attr("fill", d => myColor(d.name));
-
-
-        // x-axis
-        bar.append("g")
-                .attr("id", "x-axis-bars")
-                .attr("transform", "translate("+margin.left+"," + height + ")")
-                .call(d3.axisBottom(xScaleBar))
-
-        bar.append('text')
-                .attr('x', width / 2)
-                .attr('transform', "rotate(-90)")
-                .attr("y", -margin.left / 2 - 10)
-                .attr('x', -height / 2 - margin.top/2)
-                .text('text-anchor', 'middle')
-                .text("Count")
-                .style("font-family", "sans-serif")
-                .style("font-weight", "bold")
-
-        //y-axis
-
-        bar.append('g')
-                .attr("id", "y-axis-bars")
-                .attr("transform", `translate(${margin.left},0)`)
-                .call(d3.axisLeft(yScaleBar))
-
-        bar.append('text')
-                .attr('id', 'bar_y_axis_label')
-                .attr('x', width / 2)
-                .attr('transform', "rotate(-90)")
-                .attr("y", -margin.left / 2 - 10)
-                .attr('x', -height / 2 - margin.top / 2)
-                .text('text-anchor', 'middle')
-                .text("Count")
-                .style("font-family", "sans-serif")
-                .style("font-weight", "bold")
-
-        //title
-        bar.append('text')
-                .attr('id', 'bar_chart_title')
-                .attr("x", width / 2)
-                .attr("y", -margin.top / 2)
-                .attr('text-anchor', 'middle')
-                .text('WELL THIS SI TRICKY')
-
-
-      }
-
+      
 
     //-------------------------------END BAR CHART------------------------------//
 
