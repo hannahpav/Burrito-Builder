@@ -9,21 +9,14 @@
           stroke-width: 1.5;
         }
 
-    #line_chart_title {
+    #line_chart_title, #bar_chart_title {
       font-size: 18px;
       text-anchor: middle;
       font-family: sans-serif;
       font-weight: bold;
     }
 
-    #x_axis_label{
-      font-size: 14px;
-      text-anchor: middle;
-      font-family: sans-serif;
-      font-weight: bold;
-    }
-
-    #y_axis_label {
+    #x_axis_label,#y_axis_label,#bar_x_axis_label,#bar_y_axis_label {
       font-size: 14px;
       text-anchor: middle;
       font-family: sans-serif;
@@ -65,10 +58,11 @@
   <!-- svg_element.style()-->
 
   <svg id ="line_chart" width = "800" height = "400"></svg>
+
+  <div id="bar_chart_title"></div>
   <svg id ="bar_chart" width = "800" height = "400"></svg>  <script>
 
   // get data
-    var pathToCsv = "boardgame_ratings.csv" 	// path to csv
 
   // Fetch the data
 	var pathToCsv = "average-rating.csv";
@@ -77,7 +71,7 @@
       data_raw.forEach(d => {
         d.name = d.name
         d.year = +d.year
-        d.average_rating = +Math.floor(d.average_rating)
+        d.average_rating = Math.floor(+d.average_rating)
         d.users_rated = +d.users_rated
       })
 
@@ -108,14 +102,14 @@
       var grouped = grouped_hold.map(dYear => {
         var dCounts = Object.fromEntries(dYear.values.map(count => [count.key, count.value]));
 
-        var dRatings = Array.from({ length: d3.max(data, d => d.average_rating) + 1 }, (_, i) => ({
+        var ratings = Array.from({ length: d3.max(data, d => d.average_rating) + 1 }, (_, i) => ({
           rating: i,
           count: dCounts[i] || 0
         }));
 
         return {
           year: +dYear.key,
-          ratings: dRatings
+          ratings: ratings
         };
       });
 
@@ -143,32 +137,41 @@
       var linesA = plotLine.append("g")
               .attr("id", "lines")
 
-      grouped.forEach((year_group, i) => {
-        year_group.ratings.sort((a,b) => d3.ascending(a.rating, b.rating))
+      grouped.forEach((dYear, i) => {
+        dYear.ratings.sort((a,b) => d3.ascending(a.rating, b.rating))
         var line = d3.line()
                 .x(d => xScale(d.rating))
                 .y(d => yScale(d.count))
 
         linesA.append("path")
-                .datum(year_group.ratings)
+                .datum(dYear.ratings)
                 .attr("id", "line")
                 .attr("d", line)
                 .style("stroke", myColor(i))
+        console.log(grouped)
 
       // dots
       var dotsA = linesA.append("g")
         .attr("id", "circles")
 
       dotsA.selectAll('dot')
-        .data(year_group.ratings)
+        .data(dYear.ratings)
         .enter()
         .append("circle")
         .attr("cx", d => xScale(d.rating))
         .attr("cy", d => yScale(d.count))
-        .attr("r", 3)
-        .style("fill", myColor(i));
-
-      })
+        .attr("r", 5)
+        .style("fill", myColor(i))
+        .on("mouseover", function(event, d) {
+          // Call hoverBars on mouseover
+          hoverBars(dYear.year, d.rating)
+          d3.select(this).transition().duration(200).attr("r", 12);
+        })
+        .on("mouseout", function() {
+          // Reset bar chart or hide it
+          d3.select(this).transition().duration(200).attr("r", 5);
+          plotBar.selectAll('#bars').remove(); // Clear the bar chart on mouse out
+        })
 
       // x-axis
 
@@ -242,15 +245,98 @@
     //-------------------------------START BAR CHART------------------------------//
 
 
+      // bars
+      var svgBar = d3.select("#bar_chart")
 
+      var plotBar = svgBar.append('g')
+                .attr('id', 'container2')
+
+      function hoverBars(year, rating) {
+        var selectedData = grouped.filter(d => d.year === year && d.rating === rating)
+                .sort((a, b) => b.rating - a.rating)
+
+        var top5 = selectedData.slice(0, 5)
+
+        if (top5.length === 0) {
+          plotBar.selectAll('#bars').remove()
+        }
+
+        var xScaleBar = d3.scaleLinear()
+                .domain([0, d3.max(top5, d => d3.max(d.users_rated))])
+                .range([0, width])
+
+        var yScaleBar = d3.scaleBand()
+                .domain(top5.map(d => d.name))
+                .range([height, 0])
+                .padding(0.1)
+        console.log(top5)
+        plotBar.selectAll('#bars').remove();
+
+        var bar = plotBar.append('g')
+                .attr('id', 'bars')
+
+        bar.selectAll(".bar")
+                .data(top5)
+                .enter()
+                .append("rect")
+                // .attr("class", "bar")
+                .attr("x", 0)
+                .attr("y", d => yScaleBar(d.name))
+                .attr("width", d => xScaleBar(d.users_rated))
+                .attr("height", yScaleBar.bandwidth())
+                .attr("fill", d => myColor(d.name));
+
+
+        // x-axis
+
+        bar.append("g")
+                .attr("id", "x-axis-bars")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(xScaleBar()))
+
+        bar.append('text')
+                .attr('id', 'bar_x_axis_label')
+                .attr('x', width / 2)
+                .attr('y', height + margin.bottom - 10)
+                .text('Number of Users')
+                .style("font-family", "sans-serif")
+                .style("font-weight", "bold")
+
+        //y-axis
+
+        bar.append('g')
+                .attr("id", "y-axis-bars")
+                .attr("transform", "translate(0,0)")
+                .call(d3.axisLeft(yScaleBar))
+
+        bar.append('text')
+                .attr('id', 'bar_y_axis_label')
+                .attr('x', width / 2)
+                .attr('transform', "rotate(-90)")
+                .attr("y", -margin.left / 2 - 10)
+                .attr('x', -height / 2 - margin.top / 2)
+                .text('text-anchor', 'middle')
+                .text("Count")
+                .style("font-family", "sans-serif")
+                .style("font-weight", "bold")
+
+        //title
+        bar.append('text')
+                .attr('id', 'bar_chart_title')
+                .attr("x", width / 2)
+                .attr("y", -margin.top / 2)
+                .attr('text-anchor', 'middle')
+                .text('WELL THIS SI TRICKY')
+
+
+      }
+   })
 
     //-------------------------------END BAR CHART------------------------------//
 
-
-
-    }).catch(function (error) {
+      }).catch(function (error) {
       console.log(error);
-    });
+    })
 
 
   </script>
