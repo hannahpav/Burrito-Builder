@@ -137,7 +137,7 @@
               .attr("id", "lines")
 
       grouped.forEach((dYear, i) => {
-        dYear.ratings.sort((a,b) => d3.ascending(a.rating, b.rating))
+        dYear.ratings.sort((a, b) => d3.ascending(a.rating, b.rating))
         var line = d3.line()
                 .x(d => xScale(d.rating))
                 .y(d => yScale(d.count))
@@ -147,96 +147,96 @@
                 .attr("id", "line")
                 .attr("d", line)
                 .style("stroke", myColor(i))
+        console.log("dYear: ", dYear)
+        // dots
+        var dotsA = linesA.append("g")
+                .attr("id", "circles")
+        dotsA.selectAll(`.dot-${dYear.year}`)
+                .data(dYear.ratings)
+                .enter()
+                .append("circle")
+                .attr('class', `.dot-${dYear.year}`)
+                .attr("cx", d => xScale(d.rating))
+                .attr("cy", d => yScale(d.count))
+                .attr("r", 5)
+                .style("fill", myColor(i))
+                .on("mouseover", function (event, d) {
+                  // Call hoverBars on mouseover
+                  hoverBars(dYear.year, dYear.ratings)
+                  d3.select(this).transition().duration(200)
+                          .attr("r", 12);
+                })
+                .on("mouseout", function () {
+                  // Reset bar chart or hide it
+                  d3.select(this).transition().duration(200)
+                          .attr("r", 5);
+                  plotBar.selectAll('#bars').remove(); // Clear the bar chart on mouse out
+                })
 
-      // dots
-      var dotsA = linesA.append("g")
-        .attr("id", "circles")
+        // x-axis
 
-      dotsA.selectAll(`.dot-${dYear.year}`)
-        .data(dYear.ratings)
-        .enter()
-        .append("circle")
-        .attr('class',`.dot-${dYear.year}`)
-        .attr("cx", d => xScale(d.rating))
-        .attr("cy", d => yScale(d.count))
-        .attr("r", 5)
-        .style("fill", myColor(i))
-        .on("mouseover", function(event, d) {
-          // Call hoverBars on mouseover
-          hoverBars(dYear.year, d.rating)
-          d3.select(this).transition().duration(200)
-                  .attr("r", 12);
-        })
-        .on("mouseout", function() {
-          // Reset bar chart or hide it
-          d3.select(this).transition().duration(200)
-                  .attr("r", 5);
-          plotBar.selectAll('#bars').remove(); // Clear the bar chart on mouse out
-        })
+        linesA.append("g")
+                .attr("id", "x-axis-lines")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(xScale))
 
-      // x-axis
+        linesA.append('text')
+                .attr('x', width / 2)
+                .attr('y', height + margin.bottom - 10)
+                .text('Rating')
+                .style("font-family", "sans-serif")
+                .style("font-weight", "bold")
 
-      linesA.append("g")
-              .attr("id", "x-axis-lines")
-              .attr("transform", "translate(0," + height + ")")
-              .call(d3.axisBottom(xScale))
+        //y-axis
 
-      linesA.append('text')
-              .attr('x', width / 2)
-              .attr('y', height + margin.bottom-10)
-              .text('Rating')
-              .style("font-family", "sans-serif")
-              .style("font-weight", "bold")
+        linesA.append('g')
+                .attr("id", "y-axis-lines")
+                .call(d3.axisLeft(yScale))
 
-      //y-axis
+        linesA.append('text')
+                .attr('x', width / 2)
+                .attr('transform', "rotate(-90)")
+                .attr("y", -margin.left / 2 - 10)
+                .attr('x', -height / 2 - margin.top / 2)
+                .text('text-anchor', 'middle')
+                .text("Count")
+                .style("font-family", "sans-serif")
+                .style("font-weight", "bold")
 
-      linesA.append('g')
-              .attr("id", "y-axis-lines")
-              .call(d3.axisLeft(yScale))
+        //title
+        linesA.append('text')
+                .attr('id', 'line_chart_title')
+                .attr("x", width / 2)
+                .attr("y", -margin.top / 2)
+                .attr('text-anchor', 'middle')
+                .text('Board Games by Rating 2015-2019')
+        // credit
+        linesA.append('text')
+                .attr('id', 'credit')
+                .attr("x", width / 2)
+                .attr("y", -margin.top / 2 + 20)
+                .text('hpavlovich3')
 
-      linesA.append('text')
-              .attr('x', width / 2)
-              .attr('transform', "rotate(-90)")
-              .attr("y", -margin.left / 2 - 10)
-              .attr('x', -height / 2 - margin.top/2)
-              .text('text-anchor', 'middle')
-              .text("Count")
-              .style("font-family", "sans-serif")
-              .style("font-weight", "bold")
+        //legend
 
-      //title
-      linesA.append('text')
-              .attr('id', 'line_chart_title')
-              .attr("x", width / 2)
-              .attr("y", -margin.top/2)
-              .attr('text-anchor', 'middle')
-              .text('Board Games by Rating 2015-2019')
-      // credit
-      linesA.append('text')
-              .attr('id', 'credit')
-              .attr("x", width / 2)
-              .attr("y", -margin.top/2+20)
-              .text('hpavlovich3')
+        var legendA = svgLine.append('g')
+                .attr('id', 'legend')
 
-      //legend
-
-      var legendA = svgLine.append('g')
-              .attr('id', 'legend')
-
-      var years = [2015,2016,2017,2018,2019]
-      color = d3.schemeCategory10
-      for (var i = 0; i < years.length; i++) {
+        var years = [2015, 2016, 2017, 2018, 2019]
+        color = d3.schemeCategory10
+        for (var i = 0; i < years.length; i++) {
           legendA.append("circle")
-                  .attr("cx",width-35)
-                  .attr("cy",25*i)
+                  .attr("cx", width - 35)
+                  .attr("cy", 25 * i)
                   .attr("r", 5)
                   .style("fill", color[i])
           legendA.append("text")
-                  .attr("x", width-20)
-                  .attr("y", 25*i)
+                  .attr("x", width - 20)
+                  .attr("y", 25 * i)
                   .text(years[i])
-                  .style("font-size", "14px").style("font-weight","bold").style('font-family', 'sans-serif').attr("alignment-baseline","middle")
-      }
+                  .style("font-size", "14px").style("font-weight", "bold").style('font-family', 'sans-serif').attr("alignment-baseline", "middle")
+        }
+      })
 
       //console.log(data); // you should see the data in your browser's developer tools console
 
@@ -244,17 +244,59 @@
 
     //-------------------------------START BAR CHART------------------------------//
 
-
       // bars
       var svgBar = d3.select("#bar_chart")
 
       var plotBar = svgBar.append('g')
                 .attr('id', 'container2')
 
+      var barGrouped_hold = d3.nest()
+              .key(d => d.year)
+              .key(d => d.average_rating)
+              .key(d => d.name)
+              .rollup(v => d3.sum(v,d => d.users_rated))
+              .entries(data)
+
+      var barGrouped = barGrouped_hold.map(barYear => {
+        var barRatings = barYear.values.map(barRating => {
+          var barGames = barRating.values.map(game => ({
+            name: game.key,
+            count:game.value
+          }))
+
+          return{
+            rating :+barRating.key,
+            count: barGames
+          }
+        })
+
+        return{
+          year: +barYear.key,
+          ratings: barRatings
+        }
+      });
+  console.log(barGrouped)
       function hoverBars(year, rating) {
-        var topFive = data.filter(d => d.year === year && d.user_rating === rating)
-                .sort((a, b) => b.rating - a.rating)
+        var topFive_year = barGrouped.find(d => +d.year === +year)
+        if (!topFive_year){
+          console.log("nothing to see here year")
+          return
+        }
+        console.log("year: ", year, " rating: ",rating)
+        console.log("topFive year: ", topFive_year.ratings)
+
+        var topFive_rating = topFive_year.ratings.find(d => d.ratings === rating)
+        if(!topFive_rating){
+          console.log("nothing to see here rating, i selected: ", rating)
+          return
+        }
+        console.log("i selected rating:",rating, "topFive rating: ", topFive_rating)
+
+        var topFive = topFive_rating.count
+                .sort((a, b) => b.count - a.count)
                 .slice(0,5)
+
+     // console.log(topFive)
 
         plotBar.selectAll('#bars').remove();
 
@@ -302,7 +344,7 @@
 
         bar.append('g')
                 .attr("id", "y-axis-bars")
-                .attr("transform", "translate("+margin.left+", 0 )")
+                .attr("transform", `translate(${margin.left},0)`)
                 .call(d3.axisLeft(yScaleBar))
 
         bar.append('text')
@@ -326,7 +368,7 @@
 
 
       }
-   })
+
 
     //-------------------------------END BAR CHART------------------------------//
 
