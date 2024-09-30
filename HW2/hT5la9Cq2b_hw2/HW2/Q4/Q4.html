@@ -133,7 +133,6 @@
       // lines
       var myColor = d3.scaleOrdinal(d3.schemeCategory10)
 
-
       var linesA = plotLine.append("g")
               .attr("id", "lines")
 
@@ -148,16 +147,16 @@
                 .attr("id", "line")
                 .attr("d", line)
                 .style("stroke", myColor(i))
-        console.log(grouped)
 
       // dots
       var dotsA = linesA.append("g")
         .attr("id", "circles")
 
-      dotsA.selectAll('dot')
+      dotsA.selectAll(`.dot-${dYear.year}`)
         .data(dYear.ratings)
         .enter()
         .append("circle")
+        .attr('class',`.dot-${dYear.year}`)
         .attr("cx", d => xScale(d.rating))
         .attr("cy", d => yScale(d.count))
         .attr("r", 5)
@@ -165,11 +164,13 @@
         .on("mouseover", function(event, d) {
           // Call hoverBars on mouseover
           hoverBars(dYear.year, d.rating)
-          d3.select(this).transition().duration(200).attr("r", 12);
+          d3.select(this).transition().duration(200)
+                  .attr("r", 12);
         })
         .on("mouseout", function() {
           // Reset bar chart or hide it
-          d3.select(this).transition().duration(200).attr("r", 5);
+          d3.select(this).transition().duration(200)
+                  .attr("r", 5);
           plotBar.selectAll('#bars').remove(); // Clear the bar chart on mouse out
         })
 
@@ -191,7 +192,6 @@
 
       linesA.append('g')
               .attr("id", "y-axis-lines")
-              .attr("transform", "translate(0,0)")
               .call(d3.axisLeft(yScale))
 
       linesA.append('text')
@@ -252,35 +252,30 @@
                 .attr('id', 'container2')
 
       function hoverBars(year, rating) {
-        var selectedData = grouped.filter(d => d.year === year && d.rating === rating)
+        var topFive = data.filter(d => d.year === year && d.user_rating === rating)
                 .sort((a, b) => b.rating - a.rating)
+                .slice(0,5)
 
-        var top5 = selectedData.slice(0, 5)
-
-        if (top5.length === 0) {
-          plotBar.selectAll('#bars').remove()
-        }
+        plotBar.selectAll('#bars').remove();
 
         var xScaleBar = d3.scaleLinear()
-                .domain([0, d3.max(top5, d => d3.max(d.users_rated))])
+                .domain([0, d3.max(topFive, d => d.users_rated)])
                 .range([0, width])
 
         var yScaleBar = d3.scaleBand()
-                .domain(top5.map(d => d.name))
+                .domain(topFive.map(d => d.name))
                 .range([height, 0])
                 .padding(0.1)
-        console.log(top5)
-        plotBar.selectAll('#bars').remove();
 
         var bar = plotBar.append('g')
                 .attr('id', 'bars')
 
         bar.selectAll(".bar")
-                .data(top5)
+                .data(topFive)
                 .enter()
                 .append("rect")
-                // .attr("class", "bar")
-                .attr("x", 0)
+                .attr("class", "bar")
+                .attr("x", margin.left)
                 .attr("y", d => yScaleBar(d.name))
                 .attr("width", d => xScaleBar(d.users_rated))
                 .attr("height", yScaleBar.bandwidth())
@@ -288,17 +283,18 @@
 
 
         // x-axis
-
         bar.append("g")
                 .attr("id", "x-axis-bars")
-                .attr("transform", "translate(0," + height + ")")
-                .call(d3.axisBottom(xScaleBar()))
+                .attr("transform", "translate("+margin.left+"," + height + ")")
+                .call(d3.axisBottom(xScaleBar))
 
         bar.append('text')
-                .attr('id', 'bar_x_axis_label')
                 .attr('x', width / 2)
-                .attr('y', height + margin.bottom - 10)
-                .text('Number of Users')
+                .attr('transform', "rotate(-90)")
+                .attr("y", -margin.left / 2 - 10)
+                .attr('x', -height / 2 - margin.top/2)
+                .text('text-anchor', 'middle')
+                .text("Count")
                 .style("font-family", "sans-serif")
                 .style("font-weight", "bold")
 
@@ -306,7 +302,7 @@
 
         bar.append('g')
                 .attr("id", "y-axis-bars")
-                .attr("transform", "translate(0,0)")
+                .attr("transform", "translate("+margin.left+", 0 )")
                 .call(d3.axisLeft(yScaleBar))
 
         bar.append('text')
