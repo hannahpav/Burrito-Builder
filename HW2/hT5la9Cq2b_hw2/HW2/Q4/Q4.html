@@ -16,7 +16,7 @@
       font-weight: bold;
     }
 
-    #x_axis_label,#y_axis_label,#bar_x_axis_label,#bar_y_axis_label {
+    #x_axis_label,#y_axis_label, #bar_x_axis_label, #bar_y_axis_label {
       font-size: 14px;
       text-anchor: middle;
       font-family: sans-serif;
@@ -57,11 +57,28 @@
   <!-- Example of styling an element -->
   <!-- svg_element.style()-->
 
-  <svg id ="line_chart" width = "800" height = "400"></svg>
-    <g id = "container"></g>
-
+  <svg id ="line_chart" width = "800" height = "400">
+    <g id = "container">
+      <g id = "lines"></g>
+      <g id= "x-axis-lines"></g>
+      <g id= "y-axis-lines"></g>
+      <g id= "circles"></g>
+      <text id="line_chart_title"></text>
+      <text id="credit"></text>
+      <g id="legend"></g>
+      </g>
+  </svg>
   <div id="bar_chart_title"></div>
-  <svg id ="bar_chart" width = "800" height = "400"></svg>  <script>
+  <svg id ="bar_chart" width = "800" height = "400">
+    <g id="container_2"></g>
+      <g id="bars"></g>
+      <g id="x-axis-bars"></g>
+      <g id="y-axis-bars"></g>
+      <text id ="bar_x_axis_label"></text>
+      <text id="bar_y_axis_label"></text>
+  </svg>
+
+  <script>
 
   // get data
 
@@ -115,7 +132,8 @@
         });
 
         var svgLine = d3.select("#line_chart")
-                .append('g')
+
+        var container = svgLine.select("#container")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 
         var xScale = d3.scaleLinear()
@@ -128,15 +146,11 @@
 
         //.attr("transform", "translate(${margin.left}, ${margin.top})")
 
-        // Container group
-        var plotLine = svgLine.append('g')
-                .attr('id', 'container');
 
         // lines
         var myColor = d3.scaleOrdinal(d3.schemeCategory10)
 
-        var linesA = plotLine.append("g")
-                .attr("id", "lines")
+        var linesA = container.select("#lines")
 
         grouped.forEach((dYear, i) => {
           dYear.ratings.sort((a, b) => d3.ascending(a.rating, b.rating))
@@ -146,13 +160,11 @@
 
           linesA.append("path")
                   .datum(dYear.ratings)
-                  //.attr("class", "line")
-                  .attr("d", line)
                   .style("stroke", myColor(i))
                   .style("fill", 'none')
+                  .attr("d", line)
           // dots
-          var dotsA = linesA.append("g")
-                  .attr("id", "circles")
+          var dotsA = container.select("#circles")
           dotsA.selectAll(`.dot-${dYear.year}`)
                   .data(dYear.ratings)
                   .enter()
@@ -179,12 +191,11 @@
 
           // x-axis
 
-          linesA.append("g")
-                  .attr("id", "x-axis-lines")
+          var xAxisL = container.select("#x-axis-lines")
                   .attr("transform", "translate(0," + height + ")")
                   .call(d3.axisBottom(xScale))
 
-          linesA.append('text')
+          xAxisL.append('text')
                   .attr('x', width / 2)
                   .attr('y', height + margin.bottom - 10)
                   .text('Rating')
@@ -193,11 +204,10 @@
 
           //y-axis
 
-          linesA.append('g')
-                  .attr("id", "y-axis-lines")
+          var yAxisL = container.select("#y-axis-lines")
                   .call(d3.axisLeft(yScale))
 
-          linesA.append('text')
+          yAxisL.append('text')
                   .attr('x', width / 2)
                   .attr('transform', "rotate(-90)")
                   .attr("y", -margin.left / 2 - 10)
@@ -208,26 +218,23 @@
                   .style("font-weight", "bold")
 
           //title
-          linesA.append('text')
-                  .attr('id', 'line_chart_title')
+          yAxisL.select('#line_chart_title')
                   .attr("x", width / 2)
                   .attr("y", -margin.top / 2)
                   .attr('text-anchor', 'middle')
                   .text('Board Games by Rating 2015-2019')
           // credit
-          linesA.append('text')
-                  .attr('id', 'credit')
+          container.select('#credit')
                   .attr("x", width / 2)
                   .attr("y", -margin.top / 2 + 20)
                   .text('hpavlovich3')
 
           //legend
 
-          var legendA = svgLine.append('g')
-                  .attr('id', 'legend')
+          var legendA = container.select("#legend")
 
           var years = [2015, 2016, 2017, 2018, 2019]
-          color = d3.schemeCategory10
+          color = ["#648FFF", "#648FFF", "#DC267F", "#FE6100", "#FFB000"]
           for (var i = 0; i < years.length; i++) {
             legendA.append("circle")
                     .attr("cx", width - 35)
@@ -250,11 +257,9 @@
 
         // bars
         var svgBar = d3.select("#bar_chart")
-                .append('g')
-                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 
-        var plotBar = svgBar.append('g')
-                .attr('id', 'container_2')
+        var container_2 = svgBar.select("#container_2")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 
         var barGrouped_hold = d3.nest()
                 .key(d => d.year)
@@ -317,7 +322,7 @@
                   .range([0, height])
                   .padding(0.1)
 
-          var bar = plotBar.append('g')
+          var bar = container_2.select("#bars")
                   .attr('id', 'bars')
 
           bar.selectAll(".bar")
@@ -372,7 +377,7 @@
                   .text(`Top 5 Most Rated Games of ${year} with Rating ${selected_rating}`)
 
         }
-      
+
 
     //-------------------------------END BAR CHART------------------------------//
 

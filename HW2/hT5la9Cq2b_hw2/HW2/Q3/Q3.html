@@ -141,15 +141,14 @@
 
 
       // x-axis
-
-      plotA.append("g")
+      var xAxisA = plotA.append("g")
               .attr("id", "x-axis-a")
               .attr("transform", "translate(0," + height + ")")
               .call(d3.axisBottom(xScale)
                       .ticks(d3.timeMonth.every(3))
                       .tickFormat(d3.timeFormat("%b %y")))
 
-      plotA.append('text')
+      xAxisA.append('text')
               .attr('x', width / 2)
               .attr('y', height + margin.bottom)
               .text('Month')
@@ -159,12 +158,12 @@
 
       //y-axis
 
-      plotA.append('g')
+      var yAxisA = plotA.append('g')
               .attr("id", "y-axis-a")
               .attr("transform", "translate(0,0)")
               .call(d3.axisLeft(yScale))
 
-      plotA.append('text')
+      yAxisA.append('text')
               .attr('x', width / 2)
               .attr('transform', "rotate(-90)")
               .attr("y", -margin.left / 2 - 10)
