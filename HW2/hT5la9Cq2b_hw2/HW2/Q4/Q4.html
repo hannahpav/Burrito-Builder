@@ -37,13 +37,6 @@
 
     }
 
-    #dotText{
-      font-size:10px;
-      text-anchor: middle;
-      font-family: sans-serif;
-      fill: white;
-    }
-
   </style>
 </head>
 
@@ -68,14 +61,15 @@
       <g id="legend"></g>
       </g>
   </svg>
-  <div id="bar_chart_title"></div>
+  <div id="bar_chart_title" style="text-align: center; margin-top: 40px;"></div>
   <svg id ="bar_chart" width = "800" height = "400">
-    <g id="container_2"></g>
+    <g id="container_2">
       <g id="bars"></g>
       <g id="x-axis-bars"></g>
       <g id="y-axis-bars"></g>
       <text id ="bar_x_axis_label"></text>
       <text id="bar_y_axis_label"></text>
+      </g>
   </svg>
 
   <script>
@@ -148,7 +142,7 @@
 
 
         // lines
-        var myColor = d3.scaleOrdinal(d3.schemeCategory10)
+        var myColor = d3.scaleOrdinal(["#648FFF", "#785EF0", "#DC267F", "#FE6100", "#FFB000"])
 
         var linesA = container.select("#lines")
 
@@ -186,7 +180,7 @@
                     // Reset bar chart or hide it
                     d3.select(this).transition().duration(200)
                             .attr("r", 5);
-                    plotBar.selectAll('#bars').remove(); // Clear the bar chart on mouse out
+                    container.selectAll('#bars').remove(); // Clear the bar chart on mouse out
                   })
 
           // x-axis
@@ -218,11 +212,11 @@
                   .style("font-weight", "bold")
 
           //title
-          yAxisL.select('#line_chart_title')
+          container.select('#line_chart_title')
                   .attr("x", width / 2)
                   .attr("y", -margin.top / 2)
                   .attr('text-anchor', 'middle')
-                  .text('Board Games by Rating 2015-2019')
+                  .text('Board games by Rating 2015-2019')
           // credit
           container.select('#credit')
                   .attr("x", width / 2)
@@ -233,8 +227,8 @@
 
           var legendA = container.select("#legend")
 
-          var years = [2015, 2016, 2017, 2018, 2019]
-          color = ["#648FFF", "#648FFF", "#DC267F", "#FE6100", "#FFB000"]
+          years = ['2015', '2016', '2017', '2018', '2019']
+          color = ["#648FFF", "#785EF0", "#DC267F", "#FE6100", "#FFB000"]
           for (var i = 0; i < years.length; i++) {
             legendA.append("circle")
                     .attr("cx", width - 35)
@@ -293,25 +287,34 @@
           if (!topFive_year) {
             return
           }
-          //    console.log("year: ", year, " rating: ", selected_rating)
-          //    console.log("topFive year: ", topFive_year)
+            //  console.log("year: ", year, " rating: ", selected_rating)
+            //  console.log("topFive year: ", topFive_year)
 
           var topFive_rating = topFive_year.ratings.find(d => +d.rating === +selected_rating)
           if (!topFive_rating) {
-            console.log("nothing to see here rating, i selected: ", selected_rating)
-            return
-          }
 
+            d3.select("#bar_chart").style("display", "none"); // Set to 'none'
+
+            container_2.select("#bars").selectAll("*").remove();
+
+            // Clear the axes
+            container_2.select("#x-axis-bars").selectAll("*").remove();
+            container_2.select("#y-axis-bars").selectAll("*").remove();
+
+            // Clear any titles or labels
+            d3.select("#bar_chart_title").text("")
+            d3.select("#bar_x_axis_label").text("")
+            d3.select("#bar_y_axis_label").text("")// Clear the title
+            return; // Exit the function
+          }
+          d3.select("#bar_chart").style("display", "block")
           var topFive = topFive_rating.count
                   .sort((a, b) => b.count - a.count)
                   .slice(0, 5)
 
-          // console.log("i selected rating:",selected_rating, "topFive: ", topFive)
-
-
+          //console.log("i selected rating:",selected_rating, "topFive: ", topFive)
           // console.log(topFive)
-
-          plotBar.selectAll('#bars').remove();
+          container_2.select("#bars").selectAll("*").remove();
 
           var xScaleBar = d3.scaleLinear()
                   .domain([0, d3.max(topFive, d => d.count)])
@@ -323,7 +326,6 @@
                   .padding(0.1)
 
           var bar = container_2.select("#bars")
-                  .attr('id', 'bars')
 
           bar.selectAll(".bar")
                   .data(topFive)
@@ -339,42 +341,46 @@
 
 
           // x-axis
-          bar.append("g")
-                  .attr("id", "x-axis-bars")
-                  .attr("transform", "translate(0," + height + ")")
+
+          var xAxisB = container_2.select("#x-axis-bars")
+
+          xAxisB.attr("transform", "translate(0," + height + ")")
                   .call(d3.axisBottom(xScaleBar)
                           .tickSize(-height))
 
-          bar.append('text')
+          //y-axis
+          var yAxisB = container_2.select("#y-axis-bars")
+
+          yAxisB.call(d3.axisLeft(yScaleBar)
+                          .tickFormat(d => d.substring(0, 10)))
+
+          // axis text
+          var xAxisText = container_2.select("#bar_x_axis_label")
+
+          xAxisText.selectAll("*").remove()
+          xAxisText.text('Number of users')
                   .attr('x', width / 2 - margin.left / 2)
                   .attr('y', height + margin.bottom - 10)
-                  .text('Number of users')
+
                   .style("font-family", "sans-serif")
                   .style("font-weight", "bold")
 
-          //y-axis
-
-          bar.append('g')
-                  .attr("id", "y-axis-bars")
-                  .call(d3.axisLeft(yScaleBar)
-                          .tickFormat(d => d.substring(0, 10)))
-
-          bar.append('text')
+          var yAxisText = container_2.select("#bar_y_axis_label")
+          yAxisText.selectAll("*").remove()
+          yAxisText.text("Games")
                   .attr('x', width / 2)
                   .attr('transform', "rotate(-90)")
                   .attr("y", -margin.left / 2 - 10)
                   .attr('x', -height / 2 - margin.top / 2)
-                  .text('text-anchor', 'middle')
-                  .text("Games")
+                  .attr('text-anchor', 'middle')
                   .style("font-family", "sans-serif")
                   .style("font-weight", "bold")
+
           //title
-          bar.append('text')
-                  .attr('id', 'bar_chart_title')
-                  .attr("x", width / 2)
-                  .attr("y", -margin.top / 2)
-                  .attr('text-anchor', 'middle')
-                  .text(`Top 5 Most Rated Games of ${year} with Rating ${selected_rating}`)
+          var bar_title = d3.select("#bar_chart_title")
+
+          bar_title.text(`Top 5 Most Rated Games of ${year} with Rating ${selected_rating}`)
+
 
         }
 
