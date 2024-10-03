@@ -37,7 +37,7 @@
     
     <!-- Create dropdown element here. Options should be added after reading in game file, they should not be created here.-->
     <select id ="gameDropdown">
-        <option>Select a game</option>
+        <option></option>
     </select>
     <svg id ="choropleth" width = "1400" height = "700">
         <g id = "countries">
@@ -66,15 +66,15 @@
 
         var countries = svg.select("#countries")
             .attr("transform", "translate(" + margin.left + ", "+ 1.5*margin.bottom+")")
-
         // enter code to create color scale
         var myColors = ["#feedde","#fdbe85","#fd8d3c","#d94701"]
         var colorScale = d3.scaleThreshold()
             .range(myColors)
+
         // enter code to define tooltip
-        var tooltip = d3.select("#tooltip")
-            .style('opacity', 0)
-            .style('position', 'absolute')
+        var tooltip = d3.select("#tooltip") //div
+            .enter()
+            .attr('class', 'tip')
 
         // enter code to define projection and path required for Choropleth
         // For grading, set the name of functions for projection and path as "projection" and "path"
@@ -83,10 +83,11 @@
             .translate([width/2, height/2])
             .scale(150)
 
-        var path = d3.geoPath(projection);
+        var path = d3.geoPath(projection)
 
         // define any other global variables
-
+        var world, gameData
+        var games = new Set()
 
         Promise.all([d3.json("world_countries.json"), d3.csv("ratings-by-country.csv")
         ]).then(data => {
@@ -98,12 +99,15 @@
 
         function ready(error, world, gameData) { //ready(error, world, gameData)
             if (error) throw error
+
             var games = gameData.map(d=> d.Game) // map games
             var gameSet = new Set(games) // only unique
             let gamesList = Array.from(gameSet)
             var game1 = gamesList[0]
-            var dropOption = d3.select("#gameDropdown")
 
+            var nextGame = game1
+
+            var dropOption = d3.select("#gameDropdown")
             dropOption.selectAll("option1")
                 .data(gamesList.sort(d3.ascending))
                 .enter()
@@ -111,7 +115,6 @@
                 .text(d=>d)
                 .attr("value", d=>d)
 
-            //var game1 = games[0]
             tooltip.html(function(d) {
                 var avgRating = "N/A"
                 var numUsers = "N/A"
@@ -129,97 +132,100 @@
                     + "</br> Number of users: " + numUsers
                 })
 
-            dropOption.on("change", function() {
-                var selectedGame = d3.select(this).property("value")
-                createMapAndLegend(world, gameData, selectedGame)
-            })
+            var switchOption = function(){
+                game1 = d3.select(this).property('value')
+                createMapAndLegend(world, gameData, game1)
+            }
 
-
+            createMapAndLegend(world, gameData, game1)
+            dropOption.on("change", switchOption)
 
         }
 
         // this function should create a Choropleth and legend using the world and gameData arguments for a selectedGame
         // also use this function to update Choropleth and legend when a different game is selected from the dropdown
         function createMapAndLegend(world, gameData, selectedGame){
-
-            var filteredData = game.Data.filter(d=> d.Game === selectedGame)
-
-            var ratingsCountry = d3.nest()
+            var nestedData = d3.nest()
+                .key(d => d.Game)
                 .key(d => d.Country)
-                .rollup(v => ({
-                    avgRating: d3.mean(v, d => +d['Average Rating']),
-                    numUsers: d3.sum(v, d => +d['Number of Users'])
-                })).entries(filteredData)
+                .rollup(v => d3.mean(v, d => +d['Average Rating']))
+                .entries(gameData);
 
-            var countryMap = ratingsCountry.map(d => d.key); // Extract country names
-            var allRatings = ratingsCountry.map(d => d.value.avgRating)
-            var hold = ratingsCountry.map(d => d.value.avgRating)
+            // Filter for the selected game and extract the country names and average ratings
+            var selectedGameData = nestedData.find(d => d.key === selectedGame);
 
-            countryPath = countries.select("#lines")
-                .data(world.features)
-
-            countryPath.append("path")
-                .attr("d", path)
-                .attr("stroke", "black")
-                .attr("fill", "gray")
-
-                .attr("d", path)
-                .attr("fill", d=> {
-                    var rating  = countryMap[d.properties.name]
-                    return rating ? colorScale(allRatings.avgRating) : "gray"
-                })
-
-                .on("mouseover", d => {
-                    tooltip.hide(d)
-                    d3.select(this)
-                        .style('stroke-width', 4)
-                })
-                .on("mouseout", d=> {
-                    tooltip.hide(d)
-                    d3.select(this)
-                        .style('stroke-width', 1)
-                })
+            var countryMap = selectedGameData ? selectedGameData.values.map(d => d.key) : [];
+            var hold = selectedGameData ? selectedGameData.values.map(d => d.value) : [];
+            var ratingsCountry = hold;
 
             var quantileSort = d3.scaleQuantile()
                 .domain(hold.sort(d3.ascending))
                 .range(colorScale)
+            var ratingSort = hold.sort(d3.ascending)
 
-            colorScale.domain(temp.sort(d3.ascending))
+            var countryPath = countries.select("#lines")
+                .selectAll("path")
+                .data(world.features)
 
+
+            var gameSelection = countryPath.enter()
+                .append("path")
+                .attr("d", path)
+                .attr("stroke", "black")
+                .attr("fill", "gray")
+
+            countryPath.merge(gameSelection)
+                .attr("d", path)
+                //.style("fill", d => {
+              //          var countryRating = ratingsCountry.find(r => r.key === d.properties.name);
+            //            return countryRating ? quantileSort(countryRating.value.avgRating) : "gray";
+             //  })
+
+                .on("mouseover", function(event, d) {
+                    tooltip.transition().duration(200).style("opacity", .9);
+                    tooltip.html(/* tooltip content here */)
+                        .style("left", (event.pageX + 5) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", function(d) {
+                    tooltip.transition().duration(500).style("opacity", 0);
+                });
+            countryPath.exit().remove()
+
+
+            colorScale.domain(hold.sort(d3.ascending))
                         // Format function for rounding
             var Dec2 = d3.format(".2f");
 
-            var first = Dec2(d3.quantile(rating_sort,0)) + " to " + f(d3.quantile(rating_sort, 0.25));
-            var second = Dec2(d3.quantile(rating_sort,0.25)) + " to " + f(d3.quantile(rating_sort, 0.50));
-            var third = Dec2(d3.quantile(rating_sort,0.50)) + " to " + f(d3.quantile(rating_sort, 0.75));
-            var fourth = Dec2(d3.quantile(rating_sort,0.75)) + " to " + f(d3.quantile(rating_sort, 1));
+            var first = Dec2(d3.quantile(ratingSort,0)) + " to " + Dec2(d3.quantile(ratingSort, 0.25));
+            var second = Dec2(d3.quantile(ratingSort,0.25)) + " to " + Dec2(d3.quantile(ratingSort, 0.50));
+            var third = Dec2(d3.quantile(ratingSort,0.50)) + " to " + Dec2(d3.quantile(ratingSort, 0.75));
+            var fourth = Dec2(d3.quantile(ratingSort,0.75)) + " to " + Dec2(d3.quantile(ratingSort, 1));
             var labels = [first,second,third,fourth]
 
             var legend = svg.select("#legend")
-                .attr('class', 'legendQuant')
-                .attr("transform", "translate(20,20)");
 
-            var legend_hold = d3.legendColor()
-                .labels(d=> {
-                    return labels[d.i]
-                })
-                      .shapeWidth(30)
-                      .orient('horizontal')
-                      .scale(colorScale);
-            legend.call(legend_hold)
+            legend.attr("class", "legendQuant")
+                .attr("transform", "translate(20,20)")
 
+            var legendColor = d3.legendColor()
+                .labels(function(d) {return labels[d.i]}) // Use custom labels
+                 .shapeWidth(20)
+                 .orient("vertical")
+                 .title("Average Rating")
+                 .scale(colorScale)
+                 // Apply the color scale
 
-
-            svg.select(".legendColor")
-                .call(legend)
+            legend.call(legendColor)
+            console.log(ratingsCountry)
 
             countryPath.style("fill", d=>{
-                var emptyCountry = countries.indexOf(d.properties.name)
+                var emptyCountry = countryMap.indexOf(d.properties.name)
                 if (emptyCountry == -1) {
                     return "gray"
                 }
                 else{
-                    var rating = allRatings[index]
+                    var rating = ratingsCountry[emptyCountry]
                     return quantileSort(rating)
                 }
             })

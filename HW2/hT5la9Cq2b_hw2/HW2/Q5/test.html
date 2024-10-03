@@ -58,7 +58,6 @@
 		            .append("g")
 					.attr('id',"countries")
 		            .attr("transform", "translate(" + margin.left + ", "+ 1.5*margin.bottom+")")
-
 				// enter code to create color scale
 				var colors = ['#ffdcc8','#ffc7a7','#ff9b62','#fd5d01'];
 		   		 var color_scale = d3.scaleThreshold()
@@ -166,8 +165,6 @@
 						}
 					});
 
-					//console.log(gameData)
-
 					// building choropleth
 					var choropleth = svg.append("g")
 					                    .selectAll("path")
@@ -191,8 +188,7 @@
 					var quantile_scale = d3.scaleQuantile()
 					                       .domain(temp.sort(d3.ascending))
 																 .range(colors);
-
-					//legend
+	console.log(choropleth)				//legend
 					svg.append("g")
 						.attr("id", "legend")
 						 .attr("class","legendQuant")
@@ -230,7 +226,6 @@
 
 					// Set the domain of the color scale
 					color_scale.domain(temp.sort(d3.ascending))
-
 					// Apply the color scale
 					choropleth.style("fill", function(d){
 						var gray = "gray";
