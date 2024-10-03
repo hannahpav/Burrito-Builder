@@ -16,8 +16,8 @@
             font-family: sans-serif;
         }
         #tooltip {
-            position: absolute;
-            text-align: center;
+
+            text-align: left;
             padding: 8px;
             background: lightsteelblue;
             border: 2px;
@@ -34,18 +34,18 @@
 
 
     <h1>Games Rating by Country 2015-2019</h1>
-    
+
     <!-- Create dropdown element here. Options should be added after reading in game file, they should not be created here.-->
     <select id ="gameDropdown">
         <option></option>
     </select>
     <svg id ="choropleth" width = "1400" height = "700">
         <g id = "countries">
-            <path id = "lines"></path>
+            <path></path>
             </g>
         <g id= "legend"></g>
     </svg>
-    <div id= "tooltip"></div>
+    <div id= "tooltip" display = "block" pointer-events = "none"></div>
 
 
 
@@ -67,20 +67,26 @@
         var countries = svg.select("#countries")
             .attr("transform", "translate(" + margin.left + ", "+ 1.5*margin.bottom+")")
         // enter code to create color scale
-        var myColors = ["#feedde","#fdbe85","#fd8d3c","#d94701"]
+        var myColors = ["#feedde","#fdbe85","#fd8d3c","#e6550d"]
+
         var colorScale = d3.scaleThreshold()
             .range(myColors)
 
+        console.log(colorScale)
+
         // enter code to define tooltip
         var tooltip = d3.select("#tooltip") //div
-            .enter()
-            .attr('class', 'tip')
-
+            .attr('class', 'tooltip')
+            .style("opacity", 0)
+            .style("position", "absolute")
+            .style("background", "lightgray") // Example styling
+            .style("padding", "5px")
+            .style("border-radius", "5px");
         // enter code to define projection and path required for Choropleth
         // For grading, set the name of functions for projection and path as "projection" and "path"
 
         var projection = d3.geoEqualEarth()
-            .translate([width/2, height/2])
+            .translate([width/2.5, height/2])
             .scale(150)
 
         var path = d3.geoPath(projection)
@@ -105,32 +111,13 @@
             let gamesList = Array.from(gameSet)
             var game1 = gamesList[0]
 
-            var nextGame = game1
-
             var dropOption = d3.select("#gameDropdown")
-            dropOption.selectAll("option1")
+            dropOption.selectAll("options")
                 .data(gamesList.sort(d3.ascending))
                 .enter()
                 .append("option")
                 .text(d=>d)
                 .attr("value", d=>d)
-
-            tooltip.html(function(d) {
-                var avgRating = "N/A"
-                var numUsers = "N/A"
-                var dataPresent = false
-                gameData.forEach(v => {
-                    if (v.Country == d.properties.name && v.Game == game1) {
-                        numUsers = +v['Number of Users']
-                        avgRating = +v['Average Rating']
-                        dataPresent = true
-                    }
-                })
-                return "Country: " + d.properties.name
-                    + "<br/> Game:" + game1
-                    + "<br/> Avg Rating: " + avgRating
-                    + "</br> Number of users: " + numUsers
-                })
 
             var switchOption = function(){
                 game1 = d3.select(this).property('value')
@@ -138,8 +125,8 @@
             }
 
             createMapAndLegend(world, gameData, game1)
-            dropOption.on("change", switchOption)
-
+            d3.select("#gameDropdown")
+                .on("change", switchOption);
         }
 
         // this function should create a Choropleth and legend using the world and gameData arguments for a selectedGame
@@ -154,46 +141,70 @@
             // Filter for the selected game and extract the country names and average ratings
             var selectedGameData = nestedData.find(d => d.key === selectedGame);
 
+
             var countryMap = selectedGameData ? selectedGameData.values.map(d => d.key) : [];
             var hold = selectedGameData ? selectedGameData.values.map(d => d.value) : [];
             var ratingsCountry = hold;
 
-            var quantileSort = d3.scaleQuantile()
-                .domain(hold.sort(d3.ascending))
-                .range(colorScale)
             var ratingSort = hold.sort(d3.ascending)
 
-            var countryPath = countries.select("#lines")
-                .selectAll("path")
-                .data(world.features)
+            var quantileSort = d3.scaleQuantile()
+                .domain(ratingsCountry)
+                .range(myColors)
 
+            var countryPath = svg.append("g")
+                .selectAll("paths")
+                    .data(world.features)
+                    .enter()
+                    .append("path")
+                    .attr("d", path)
+                    .attr("stroke","black")
+                    .on("mouseover", function(d, event) {
+                        tooltip.transition().duration(200).style("opacity", .9);
 
-            var gameSelection = countryPath.enter()
-                .append("path")
-                .attr("d", path)
-                .attr("stroke", "black")
-                .attr("fill", "gray")
+                        // Tooltip content logic
+                        var avgRating = "N/A";
+                        var numUsers = "N/A";
+                        var dataExists = false
 
-            countryPath.merge(gameSelection)
-                .attr("d", path)
-                //.style("fill", d => {
-              //          var countryRating = ratingsCountry.find(r => r.key === d.properties.name);
-            //            return countryRating ? quantileSort(countryRating.value.avgRating) : "gray";
-             //  })
+                        gameData.forEach(v => {
+                            if (v.Country === d.properties.name && v.Game === selectedGame) {
+                                numUsers = +v['Number of Users'];
+                                avgRating = +v['Average Rating'];
+                                dataExists = true
+                            }
+                        });
 
-                .on("mouseover", function(event, d) {
-                    tooltip.transition().duration(200).style("opacity", .9);
-                    tooltip.html(/* tooltip content here */)
-                        .style("left", (event.pageX + 5) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", function(d) {
-                    tooltip.transition().duration(500).style("opacity", 0);
+                        tooltip.html("Country: " + d.properties.name
+                                + "<br/> Game: " + selectedGame
+                                + "<br/> Avg Rating: " + avgRating
+                                + "<br/> Number of users: " + numUsers)
+                            d3.select(this)
+                            .style('stroke-width',3)
+                            .style("left", (event.pageX + 5) + "px")
+                            .style("top", (event.pageY - 28) + "px");
+                    })
+                    .on("mousemove", function(event) {
+                        tooltip.style("left", "4px")
+                               .style("top", (event.pageY - 28) + "px");
+                    })
+                    .on("mouseout", function(d) {
+                        tooltip.transition().duration(500).style("opacity", 0);
+                        d3.select(this)
+                            .style('stroke-width', 1)
                 });
-            countryPath.exit().remove()
 
-
-            colorScale.domain(hold.sort(d3.ascending))
+            console.log("my color domain: " + colorScale)
+            countryPath.style("fill", d=>{
+                var emptyCountry = countryMap.indexOf(d.properties.name)
+                if (emptyCountry == -1) {
+                    return "lightgray"
+                }
+                else{
+                    var rating = ratingsCountry[emptyCountry]
+                    return quantileSort(rating)
+                }
+            })
                         // Format function for rounding
             var Dec2 = d3.format(".2f");
 
@@ -206,29 +217,17 @@
             var legend = svg.select("#legend")
 
             legend.attr("class", "legendQuant")
-                .attr("transform", "translate(20,20)")
+                .attr("transform", "translate(" +width/1.4+", 20)")
 
             var legendColor = d3.legendColor()
                 .labels(function(d) {return labels[d.i]}) // Use custom labels
                  .shapeWidth(20)
                  .orient("vertical")
                  .title("Average Rating")
-                 .scale(colorScale)
+                 .scale(quantileSort)
                  // Apply the color scale
 
             legend.call(legendColor)
-            console.log(ratingsCountry)
-
-            countryPath.style("fill", d=>{
-                var emptyCountry = countryMap.indexOf(d.properties.name)
-                if (emptyCountry == -1) {
-                    return "gray"
-                }
-                else{
-                    var rating = ratingsCountry[emptyCountry]
-                    return quantileSort(rating)
-                }
-            })
 
             svg.append("text")
                 .attr("transform", "translate(500,510)")
