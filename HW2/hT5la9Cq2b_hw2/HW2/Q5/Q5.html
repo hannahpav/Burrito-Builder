@@ -37,7 +37,7 @@
     <select id ="gameDropdown">
 
     </select>
-    <svg id ="choropleth" width = "1400" height = "700">
+    <svg id ="choropleth" width = "960" height = "500">
         <g id = "countries">
             <path></path>
             </g>
@@ -63,9 +63,10 @@
             .attr("height", height)
 
         var countries = svg.select("#countries")
-            .attr("transform", "translate(" + margin.left + ", "+ 1.5*margin.bottom+")")
+           // .attr("transform", "translate(" + margin.left + ", "+ 1.5*margin.bottom+")")
         // enter code to create color scale
         var myColors = ["#feedde","#fdbe85","#fd8d3c","#e6550d"]
+        var colorQuantile = d3.scaleQuantile().range(myColors)
 
         // enter code to define tooltip
         var tooltip = d3.select("#tooltip") //div
@@ -82,51 +83,76 @@
             .translate([width/2.5, height/2])
             .scale(150)
 
-        var path = d3.geoPath(projection)
+        var path = d3.geoPath().projection(projection)
 
-        // define any other global variables
-        var world, gameData
-        var games = new Set()
-
-        Promise.all([d3.json("world_countries.json"), d3.csv("ratings-by-country.csv")
+        Promise.all([d3.csv("ratings-by-country.csv"), d3.json("world_countries.json")
         ]).then(data => {
-            console.log(data[0].features)
-            world = data[0].features
-            gameData = data[1]
+            var gameData = data[0]
+            var world = data[1]
+            var nestedRatings = d3.nest()
+                .key(d => d.Country)
+                .entries(gameData)
+
+            var countryMap = new Map();
+
+            world.features.forEach(feature => {
+                countryMap.set(feature.properties.name, feature)
+                    feature.properties.ratingValue = []
+                    feature.properties.gameList = []
+                    feature.properties.numUsers = []
+            })
+
+            nestedRatings.forEach(d => {
+                var countryName = d.key;
+                var feature = countryMap.get(countryName);
+                if (feature) {
+                    d.values.forEach(rate => {
+                        var rateValue = parseFloat(rate["Average Rating"]);
+                        var rateUser = parseFloat(rate["Number of Users"]);
+                        feature.properties.ratingValue.push(rateValue);
+                        feature.properties.gameList.push(rate.Game);
+                        feature.properties.numUsers.push(rateUser);
+                    });
+                }
+            })
 
             ready(null, world, gameData)
             })
 
-        function ready(error, world, gameData) { //ready(error, world, gameData)
+        function ready(error, world, gameData) {
+            console.log("i'm in ready function")//ready(error, world, gameData)
             if (error) throw error
 
-            var games = gameData.map(d=> d.Game) // map games
-            var gameSet = new Set(games) // only unique
-            let gamesList = Array.from(gameSet)
-            var defaultGame = gamesList[0]
-            var game1 = defaultGame
+            var gameNames = d3.map(gameData, d=>{ return d.Game; }).keys().sort(d3.ascending)
+
+            var defaultGame = gameData[0]
 
             var dropOption = d3.select("#gameDropdown")
-            dropOption.selectAll("options")
-                .data(gamesList.sort(d3.ascending))
+            dropOption.selectAll("option")
+                .data(gameNames)
                 .enter()
                 .append("option")
                 .text(d=>d)
                 .attr("value", d=>d)
 
             var switchOption = function(){
-                game1 = d3.select(this).property('value')
+                var game1 = d3.select(this).property('value')
                 createMapAndLegend(world, gameData, game1)
             }
 
             createMapAndLegend(world, gameData, defaultGame)
             d3.select("#gameDropdown")
                 .on("change", switchOption);
+
+
+
+
         }
 
         // this function should create a Choropleth and legend using the world and gameData arguments for a selectedGame
         // also use this function to update Choropleth and legend when a different game is selected from the dropdown
         function createMapAndLegend(world, gameData, selectedGame){
+            console.log("i'm in createmaplegend function")
 
           //  var nestedData = d3.nest()
             //    .key(d => d.Game)
@@ -141,7 +167,7 @@
             var countryMap = filteredData.map(d => d.Country);
             var ratingsCountry = filteredData.map(d => +d['Average Rating']);
             var hold = ratingsCountry
-
+console.log("ratingsCountry " + ratingsCountry)
          //   var countryMap = selectedGameData ? selectedGameData.values.map(d => d.key) : [];
           //  var hold = selectedGameData ? selectedGameData.values.map(d => d.value) : [];
            // var ratingsCountry = hold;
@@ -151,7 +177,7 @@
             var quantileSort = d3.scaleQuantile()
                 .domain(ratingsCountry)
                 .range(myColors)
-
+console.log("right before countrypath")
             var countryPath = svg.append("g")
                 .selectAll("paths")
                     .data(world)
@@ -160,40 +186,34 @@
                     .attr("d", path)
                     .attr("stroke","black")
                     .on("mouseover", function(d, event) {
-                        tooltip.transition().duration(200).style("opacity", .9);
-
-                        // Tooltip content logic
-                        var avgRating = "N/A";
-                        var numUsers = "N/A";
-                        var dataExists = false
-
-                        filteredData.forEach(v => {
-                            if (v.Country === d.properties.name && v.Game === selectedGame) {
-                                numUsers = +v['Number of Users'];
-                                avgRating = +v['Average Rating'];
-                                dataExists = true
-                            }
-                        });
-
-                        tooltip.html("Country: " + d.properties.name
-                                + "<br/> Game: " + selectedGame
-                                + "<br/> Avg Rating: " + avgRating
-                                + "<br/> Number of users: " + numUsers)
-                            d3.select(this)
+                        tooltip.show(d)
+                        d3.select(this)
                             .style('stroke-width',3)
                             .style("left", (event.pageX + 5) + "px")
                             .style("top", (event.pageY - 28) + "px");
-                    })
+
+                   //     // Tooltip content logic
+                  //      var avgRating = "N/A";
+                 //       var numUsers = "N/A";
+                 //       var dataExists = false
+//
+                 //       filteredData.forEach(v => {
+                 //           if (v.Country === d.properties.name && v.Game === selectedGame) {
+                  //              numUsers = +v['Number of Users'];
+                   //             avgRating = +v['Average Rating'];
+                    //            dataExists = true
+
+                        })
                     .on("mousemove", function(event) {
                         tooltip.style("left", "4px")
                                .style("top", (event.pageY - 28) + "px");
                     })
                     .on("mouseout", function(d) {
-                        tooltip.transition().duration(500).style("opacity", 0);
+                        tooltip.hide(d)
                         d3.select(this)
                             .style('stroke-width', 1)
                 });
-                        // Format function for rounding
+          // Format function for rounding
             var Dec2 = d3.format(".2f");
 
             var first = Dec2(d3.quantile(ratingSort,0)) + " to " + Dec2(d3.quantile(ratingSort, 0.25));
@@ -228,14 +248,14 @@
 
             countryPath.style("fill", d=>{
                 var emptyCountry = countryMap.indexOf(d.properties.name)
-             //   console.log("emptyCountry variable: " + emptyCountry)
+               // console.log("emptyCountry variable: " + emptyCountry)
                 if (emptyCountry == -1) {
                     return "lightgray"
                 }
                 else{
                     var rating = ratingsCountry[emptyCountry]
-                    console.log("in color find rating: " +emptyCountry +rating)
-                    console.log("colorScale: " + colorScale(rating))
+                 //   console.log("in color find rating: " +emptyCountry +rating)
+                 //   console.log("colorScale: " + colorScale(rating))
                     return colorScale(rating)
                 }
             })

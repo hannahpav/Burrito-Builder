@@ -91,6 +91,7 @@
 					 d3.csv("ratings-by-country.csv")
 		    ]).then(function(data){
 							world = data[0];
+                            console.log("world "+world)
 							gameData = data[1];
 							// enter code to call ready() with required arguments
 							ready(null, world, gameData);
@@ -102,6 +103,7 @@
 
 		    function ready(error, world, gameData) {
 						if (error) throw error;
+                        console.log("world "+ world)
 		        // enter code to extract all unique games from gameData
 						var games = gameData.map(function(d){return d.Game})
 						games_set = new Set(games) //only unique values
@@ -187,7 +189,8 @@
 																  .style('stroke-width',1);
 															});
 
-					// quantile rating
+
+                    // quantile rating
 					var quantile_scale = d3.scaleQuantile()
 					                       .domain(temp.sort(d3.ascending))
 																 .range(colors);
