@@ -90,8 +90,8 @@
 
         Promise.all([d3.json("world_countries.json"), d3.csv("ratings-by-country.csv")
         ]).then(data => {
-            console.log(data[0])
-            world = data[0]
+            console.log(data[0].features)
+            world = data[0].features
             gameData = data[1]
 
             ready(null, world, gameData)
@@ -100,8 +100,9 @@
         function ready(error, world, gameData) { //ready(error, world, gameData)
             if (error) throw error
 
-            var games = gameData.map(d => d.Game) // map games
-            var gamesList = Array.from(new Set(games)) // only unique
+            var games = gameData.map(d=> d.Game) // map games
+            var gameSet = new Set(games) // only unique
+            let gamesList = Array.from(gameSet)
             var defaultGame = gamesList[0]
             var game1 = defaultGame
 
@@ -110,37 +111,17 @@
                 .data(gamesList.sort(d3.ascending))
                 .enter()
                 .append("option")
-                .text(d => d)
-                .attr("value", d => d)
+                .text(d=>d)
+                .attr("value", d=>d)
 
+            var switchOption = function(){
+                game1 = d3.select(this).property('value')
+                createMapAndLegend(world, gameData, game1)
+            }
 
-            tooltip.html(d => {
-                // Tooltip content logic
-                var avgRating = "N/A";
-                var numUsers = "N/A";
-                var dataExists = false
-                gameData.map(v => {
-                    if (v.Country === d.properties.name && v.Game === game1) {
-                        numUsers = +v['Number of Users'];
-                        avgRating = +v['Average Rating'];
-                        dataExists = true
-                    }
-
-                    return "Country: " + d.properties.name
-                        + "<br/> Game: " + selectedGame
-                        + "<br/> Avg Rating: " + avgRating
-                        + "<br/> Number of users: " + numUsers
-                })
-
-                var switchOption = function () {
-                    game1 = d3.select(this).property('value')
-                    createMapAndLegend(world, gameData, game1)
-                }
-
-                createMapAndLegend(world, gameData, defaultGame)
-                d3.select("#gameDropdown")
-                    .on("change", switchOption);
-            })
+            createMapAndLegend(world, gameData, defaultGame)
+            d3.select("#gameDropdown")
+                .on("change", switchOption);
         }
 
         // this function should create a Choropleth and legend using the world and gameData arguments for a selectedGame
@@ -173,33 +154,36 @@
 
             var countryPath = svg.append("g")
                 .selectAll("paths")
-                    .data(world.features)
+                    .data(world)
                     .enter()
                     .append("path")
                     .attr("d", path)
                     .attr("stroke","black")
                     .on("mouseover", function(d, event) {
-                        tooltip.transition(d).duration(200).style("opacity", .9);
+                        tooltip.transition().duration(200).style("opacity", .9);
 
                         // Tooltip content logic
-                    //    var avgRating = "N/A";
-                     //   var numUsers = "N/A";
-                      //  var dataExists = false
+                        var avgRating = "N/A";
+                        var numUsers = "N/A";
+                        var dataExists = false
 
-  //                      filteredData.forEach(v => {
-    //                        if (v.Country === d.properties.name && v.Game === selectedGame) {
-      //                          numUsers = +v['Number of Users'];
-        //                        avgRating = +v['Average Rating'];
-          //                      dataExists = true
+                        filteredData.forEach(v => {
+                            if (v.Country === d.properties.name && v.Game === selectedGame) {
+                                numUsers = +v['Number of Users'];
+                                avgRating = +v['Average Rating'];
+                                dataExists = true
                             }
-                        )
+                        });
 
-
-                            //d3.select(this)
-                           // .style('stroke-width',3)
-                            //.style("left", (event.pageX + 5) + "px")
-                            //.style("top", (event.pageY - 28) + "px");
-
+                        tooltip.html("Country: " + d.properties.name
+                                + "<br/> Game: " + selectedGame
+                                + "<br/> Avg Rating: " + avgRating
+                                + "<br/> Number of users: " + numUsers)
+                            d3.select(this)
+                            .style('stroke-width',3)
+                            .style("left", (event.pageX + 5) + "px")
+                            .style("top", (event.pageY - 28) + "px");
+                    })
                     .on("mousemove", function(event) {
                         tooltip.style("left", "4px")
                                .style("top", (event.pageY - 28) + "px");
