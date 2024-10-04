@@ -2,14 +2,14 @@
 <meta charset="utf-8">
 <head>
     <title>Games Rating: 2015 - 2019</title>
-    <meta charset="utf-8">
-    
-    <script type="text/javascript" src="../lib/d3.v5.min.js"></script>
-    <script type="text/javascript" src="../lib/d3-dsv.min.js"></script>
-    <script src="../lib/d3-geo-projection.v2.min.js"></script>
-    <script src="../lib/d3-legend.min.js"></script>
+
+    <script src = "../lib/d3.v5.min.js"></script>
     <script src="../lib/d3-tip.min.js"></script>
+    <script src="../lib/d3-dsv.min.js"></script>
+    <script src="../lib/d3-geo-projection.v2.min.js"></script>
     <script src="../lib/topojson.v2.min.js"></script>
+    <script src="../lib/d3-legend.min.js"></script>
+
 
     <style>
         body {
@@ -27,17 +27,15 @@
     
     </style>
 
-    <title></title>
 
 </head>
 <body>
-
 
     <h1>Games Rating by Country 2015-2019</h1>
 
     <!-- Create dropdown element here. Options should be added after reading in game file, they should not be created here.-->
     <select id ="gameDropdown">
-        <option></option>
+
     </select>
     <svg id ="choropleth" width = "1400" height = "700">
         <g id = "countries">
@@ -69,11 +67,6 @@
         // enter code to create color scale
         var myColors = ["#feedde","#fdbe85","#fd8d3c","#e6550d"]
 
-        var colorScale = d3.scaleThreshold()
-            .range(myColors)
-
-        console.log(colorScale)
-
         // enter code to define tooltip
         var tooltip = d3.select("#tooltip") //div
             .attr('class', 'tooltip')
@@ -85,7 +78,7 @@
         // enter code to define projection and path required for Choropleth
         // For grading, set the name of functions for projection and path as "projection" and "path"
 
-        var projection = d3.geoEqualEarth()
+        var projection = d3.geoNaturalEarth()
             .translate([width/2.5, height/2])
             .scale(150)
 
@@ -97,6 +90,7 @@
 
         Promise.all([d3.json("world_countries.json"), d3.csv("ratings-by-country.csv")
         ]).then(data => {
+            console.log(data[0])
             world = data[0]
             gameData = data[1]
 
@@ -106,45 +100,70 @@
         function ready(error, world, gameData) { //ready(error, world, gameData)
             if (error) throw error
 
-            var games = gameData.map(d=> d.Game) // map games
-            var gameSet = new Set(games) // only unique
-            let gamesList = Array.from(gameSet)
-            var game1 = gamesList[0]
+            var games = gameData.map(d => d.Game) // map games
+            var gamesList = Array.from(new Set(games)) // only unique
+            var defaultGame = gamesList[0]
+            var game1 = defaultGame
 
             var dropOption = d3.select("#gameDropdown")
             dropOption.selectAll("options")
                 .data(gamesList.sort(d3.ascending))
                 .enter()
                 .append("option")
-                .text(d=>d)
-                .attr("value", d=>d)
+                .text(d => d)
+                .attr("value", d => d)
 
-            var switchOption = function(){
-                game1 = d3.select(this).property('value')
-                createMapAndLegend(world, gameData, game1)
-            }
 
-            createMapAndLegend(world, gameData, game1)
-            d3.select("#gameDropdown")
-                .on("change", switchOption);
+            tooltip.html(d => {
+                // Tooltip content logic
+                var avgRating = "N/A";
+                var numUsers = "N/A";
+                var dataExists = false
+                gameData.map(v => {
+                    if (v.Country === d.properties.name && v.Game === game1) {
+                        numUsers = +v['Number of Users'];
+                        avgRating = +v['Average Rating'];
+                        dataExists = true
+                    }
+
+                    return "Country: " + d.properties.name
+                        + "<br/> Game: " + selectedGame
+                        + "<br/> Avg Rating: " + avgRating
+                        + "<br/> Number of users: " + numUsers
+                })
+
+                var switchOption = function () {
+                    game1 = d3.select(this).property('value')
+                    createMapAndLegend(world, gameData, game1)
+                }
+
+                createMapAndLegend(world, gameData, defaultGame)
+                d3.select("#gameDropdown")
+                    .on("change", switchOption);
+            })
         }
 
         // this function should create a Choropleth and legend using the world and gameData arguments for a selectedGame
         // also use this function to update Choropleth and legend when a different game is selected from the dropdown
         function createMapAndLegend(world, gameData, selectedGame){
-            var nestedData = d3.nest()
-                .key(d => d.Game)
-                .key(d => d.Country)
-                .rollup(v => d3.mean(v, d => +d['Average Rating']))
-                .entries(gameData);
+
+          //  var nestedData = d3.nest()
+            //    .key(d => d.Game)
+             //   .key(d => d.Country)
+             //   .rollup(v => d3.mean(v, d => +d['Average Rating']))
+             //   .entries(gameData);
 
             // Filter for the selected game and extract the country names and average ratings
-            var selectedGameData = nestedData.find(d => d.key === selectedGame);
+          //  var selectedGameData = nestedData.find(d => d.key === selectedGame);
+            var filteredData = gameData.filter(d => d.Game === selectedGame);
 
+            var countryMap = filteredData.map(d => d.Country);
+            var ratingsCountry = filteredData.map(d => +d['Average Rating']);
+            var hold = ratingsCountry
 
-            var countryMap = selectedGameData ? selectedGameData.values.map(d => d.key) : [];
-            var hold = selectedGameData ? selectedGameData.values.map(d => d.value) : [];
-            var ratingsCountry = hold;
+         //   var countryMap = selectedGameData ? selectedGameData.values.map(d => d.key) : [];
+          //  var hold = selectedGameData ? selectedGameData.values.map(d => d.value) : [];
+           // var ratingsCountry = hold;
 
             var ratingSort = hold.sort(d3.ascending)
 
@@ -160,30 +179,27 @@
                     .attr("d", path)
                     .attr("stroke","black")
                     .on("mouseover", function(d, event) {
-                        tooltip.transition().duration(200).style("opacity", .9);
+                        tooltip.transition(d).duration(200).style("opacity", .9);
 
                         // Tooltip content logic
-                        var avgRating = "N/A";
-                        var numUsers = "N/A";
-                        var dataExists = false
+                    //    var avgRating = "N/A";
+                     //   var numUsers = "N/A";
+                      //  var dataExists = false
 
-                        gameData.forEach(v => {
-                            if (v.Country === d.properties.name && v.Game === selectedGame) {
-                                numUsers = +v['Number of Users'];
-                                avgRating = +v['Average Rating'];
-                                dataExists = true
+  //                      filteredData.forEach(v => {
+    //                        if (v.Country === d.properties.name && v.Game === selectedGame) {
+      //                          numUsers = +v['Number of Users'];
+        //                        avgRating = +v['Average Rating'];
+          //                      dataExists = true
                             }
-                        });
+                        )
 
-                        tooltip.html("Country: " + d.properties.name
-                                + "<br/> Game: " + selectedGame
-                                + "<br/> Avg Rating: " + avgRating
-                                + "<br/> Number of users: " + numUsers)
-                            d3.select(this)
-                            .style('stroke-width',3)
-                            .style("left", (event.pageX + 5) + "px")
-                            .style("top", (event.pageY - 28) + "px");
-                    })
+
+                            //d3.select(this)
+                           // .style('stroke-width',3)
+                            //.style("left", (event.pageX + 5) + "px")
+                            //.style("top", (event.pageY - 28) + "px");
+
                     .on("mousemove", function(event) {
                         tooltip.style("left", "4px")
                                .style("top", (event.pageY - 28) + "px");
@@ -193,18 +209,6 @@
                         d3.select(this)
                             .style('stroke-width', 1)
                 });
-
-            console.log("my color domain: " + colorScale)
-            countryPath.style("fill", d=>{
-                var emptyCountry = countryMap.indexOf(d.properties.name)
-                if (emptyCountry == -1) {
-                    return "lightgray"
-                }
-                else{
-                    var rating = ratingsCountry[emptyCountry]
-                    return quantileSort(rating)
-                }
-            })
                         // Format function for rounding
             var Dec2 = d3.format(".2f");
 
@@ -232,6 +236,25 @@
             svg.append("text")
                 .attr("transform", "translate(500,510)")
                 .text("hpavlovich3");
+
+
+            var colorScale = d3.scaleThreshold()
+                .domain(hold.sort(d3.descending))
+                .range(myColors)
+
+            countryPath.style("fill", d=>{
+                var emptyCountry = countryMap.indexOf(d.properties.name)
+             //   console.log("emptyCountry variable: " + emptyCountry)
+                if (emptyCountry == -1) {
+                    return "lightgray"
+                }
+                else{
+                    var rating = ratingsCountry[emptyCountry]
+                    console.log("in color find rating: " +emptyCountry +rating)
+                    console.log("colorScale: " + colorScale(rating))
+                    return colorScale(rating)
+                }
+            })
             
         }//.catch(function (error) {
       //console.log(error);

@@ -120,6 +120,7 @@
 						var selectedGame = default_game
 
 						tooltip.html(function(d){
+                            console.log("tooltipd "+ d)
 									var avg_rating = "N/A";
 									var user_data = "N/A";
 									var data_avail = false;
@@ -165,6 +166,8 @@
 						}
 					});
 
+					//console.log(gameData)
+
 					// building choropleth
 					var choropleth = svg.append("g")
 					                    .selectAll("path")
@@ -188,7 +191,8 @@
 					var quantile_scale = d3.scaleQuantile()
 					                       .domain(temp.sort(d3.ascending))
 																 .range(colors);
-	console.log(choropleth)				//legend
+
+					//legend
 					svg.append("g")
 						.attr("id", "legend")
 						 .attr("class","legendQuant")
