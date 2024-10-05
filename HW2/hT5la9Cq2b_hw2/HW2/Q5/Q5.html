@@ -2,53 +2,49 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Average Rating of Board Games Across the World</title>
+    <title>Games Rating by Country 2015-2019</title>
     <script src="https://d3js.org/d3.v5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.9.1/d3-tip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.25.6/d3-legend.min.js"></script>
     <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
     <style>
-        body{
-            font-family: sans-serif
+        body {
+            font-family: sans-serif;
         }
-        .divtip {
-            line-height: 1;
-            padding: 12px;
+        #tooltip {
+            position: absolute;
+            padding: 10px;
             background: indianred;
             color: black;
             border-radius: 3px;
             pointer-events: none;
+            opacity: 0;
         }
-
-        .country{
-            stroke:black;
-            stroke-width: .5px
+        .country {
+            stroke: black;
+            stroke-width: .5px;
         }
-
         #credit {
-          font-size: 12px;
-          text-anchor: middle;
-          font-family: sans-serif
+            font-size: 12px;
+            text-anchor: middle;
+            font-family: sans-serif;
+        }
     </style>
 </head>
 <body>
     <h1>Games Rating by Country 2015-2019</h1>
-    <select id ="gameDropdown"></select>
-    <svg id ="choropleth" width = "1400" height = "700">
-        <g id = "countries">
-            <path></path>
-            </g>
-        <g id= "legend"></g>
+    <select id="gameDropdown"></select>
+    <svg id="choropleth" width="1400" height="700">
+        <g id="countries"></g>
+        <g id="legend"></g>
     </svg>
-    <div id= "tooltip" display = "block" pointer-events = "none"></div>
+    <div id="tooltip"></div>
 
     <script>
         var margin = {top: 50, right: 250, bottom: 50, left: 50},
-            width = 1000- margin.left - margin.right,
-            height = 650 - margin.top - margin.bottom;
+            width = d3.select("#choropleth").attr("width") - margin.left - margin.right,
+            height = d3.select("#choropleth").attr("height") - margin.top - margin.bottom;
 
         var svg = d3.select("#choropleth")
-            .append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
             .append("g")
@@ -58,29 +54,12 @@
         var colorScale = d3.scaleQuantile()
             .range(myColors);
 
-        var tooltip = d3.tip()
-            .attr('class', 'divtip')
-            .offset([10, 10])
-            .html(function(d) {
-                if (d.info === undefined) {
-                    return "Country: " + d.properties.name + "<br/>" +
-                       "Game: " + d.game + "<br/>" +
-                       "Average Rating: N/A <br/>" +
-                       "Number of Users: N/A";
-                } else {
-                    return "Country: " + d.info["Country"] + "<br/>" +
-                       "Game: " + d.info["Game"] + "<br/>" +
-                       "Average Rating: " + d.info["Average Rating"] + "<br/>" +
-                       "Number of Users: " + d.info["Number of Users"];
-                }
-            });
-
-        svg.call(tooltip);
+        var tooltip = d3.select("#tooltip");
 
         var projection = d3.geoNaturalEarth()
            .scale(width / 2)
-           .translate([width / 2, height / 2])
-            .scale(180)
+           .translate([width / 2.8, height / 2])
+            .scale(180);
 
         var path = d3.geoPath().projection(projection);
 
@@ -91,21 +70,22 @@
 
         function ready([world, gameData]) {
             var games = d3.nest()
-                  .key(d=>d.Game)
+                  .key(d => d.Game)
                   .entries(gameData);
 
-            var gameList = games.map(d=> d.key);
+            var gameList = games.map(d => d.key);
             gameList.sort();
+            var defaultStart = gameList[0]
 
             d3.select("#gameDropdown")
               .selectAll("option")
               .data(gameList)
               .enter()
               .append("option")
-              .text(d=>d)
-              .attr("value", d=>d);
+              .text(d => d)
+              .attr("value", d => d);
 
-            createMapAndLegend(world, gameData, gameList[0]);
+            createMapAndLegend(world, gameData, defaultStart);
 
             d3.select("#gameDropdown").on("change", function() {
                 createMapAndLegend(world, gameData, this.value);
@@ -113,63 +93,60 @@
         }
 
         function createMapAndLegend(world, gameData, selectedGame) {
-            svg.selectAll("*").remove();
+            d3.select("#countries").selectAll("*").remove();
+            d3.select("#legend").selectAll("*").remove();
 
-            var countriesMap = svg.append("g")
-                                    .attr("id", "countries");
+            var filteredData = gameData.filter(d => d.Game === selectedGame);
 
-            countriesMap.selectAll("path")
+            var ratings = filteredData.map(d => +d["Average Rating"]);
+            colorScale.domain(ratings);
+
+            d3.select("#countries")
+                .selectAll("path")
                 .data(world.features)
                 .enter()
                 .append("path")
                 .attr("class", "country")
                 .attr("d", path)
-                .on("mouseover", tooltip.show)
-                .on("mouseout", tooltip.hide)
-                .style("fill", d=>{
-                    world.features.forEach(function(country) {
-                        country["game"] = selectedGame;
-                    });
+                .on("mouseover", function(d) {
+                    var countryData = filteredData.find(rating => rating.Country === d.properties.name);
+                    var html = "Country: " + d.properties.name + "<br/>" +
+                               "Game: " + selectedGame + "<br/>";
 
-                    var min = d3.min(gameData, function(d) {
-                        return d["Game"] == selectedGame ? +d["Average Rating"] : Infinity;
-                    });
-                    var max = d3.max(gameData, function(d) {
-                        return d["Game"] == selectedGame ? +d["Average Rating"] : -Infinity;
-                    });
+                    if (countryData) {
+                        html += "Average Rating: " + countryData["Average Rating"] + "<br/>" +
+                                "Number of Users: " + countryData["Number of Users"];
+                    } else {
+                        html += "Average Rating: N/A<br/>" +
+                                "Number of Users: N/A";
+                    }
 
-                    var color = "#ccc";
-                    gameData.forEach(function(rating) {
-                        if (rating["Game"] == selectedGame && d.properties.name == rating["Country"]) {
-                            d["info"] = {
-                                "Country": d.properties.name,
-                                "Game": selectedGame,
-                                "Average Rating": rating["Average Rating"],
-                                "Number of Users": rating["Number of Users"]
-                            };
-                            colorScale.domain([min, max]);
-                            color = colorScale(+rating["Average Rating"]);
-                        }
-                    });
-                    return color;
+                    tooltip.html(html)
+                        .style("left", (d3.event.pageX + 10) + "px")
+                        .style("top", (d3.event.pageY - 28) + "px")
+                        .style("opacity", 1);
+                })
+                .on("mouseout", function() {
+                    tooltip.style("opacity", 0);
+                })
+                .style("fill", d => {
+                    var countryData = filteredData.find(rating => rating.Country === d.properties.name);
+                    return countryData ? colorScale(+countryData["Average Rating"]) : "#ccc";
                 });
-
-            var legendHold = svg.append("g")
-                 .attr("id", "legend")
-                 .attr("class", "legendQuant")
-                 .attr("transform", "translate(800,20)");
 
             var legend = d3.legendColor()
                .labelFormat(d3.format(".2f"))
                .title("Average Rating")
                .scale(colorScale);
 
-            legendHold.call(legend);
+            d3.select("#legend")
+                .attr("transform", "translate(800,20)")
+                .call(legend);
 
             svg.append("text")
-                .attr("class", "credit")
-               .attr("transform", "translate(500,550)")
-               .text("hpavlovich3");
+                .attr("id", "credit")
+                .attr("transform", "translate(500,550)")
+                .text("hpavlovich3");
         }
     </script>
 </body>
