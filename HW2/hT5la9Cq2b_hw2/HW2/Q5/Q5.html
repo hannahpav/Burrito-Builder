@@ -26,8 +26,7 @@
         border-color: black;
         border: 1px ;
         border-radius: 5px;
-        pointer-events: none;
-        opacity: 30;
+        pointer-events: none;;
     }
 
     .dropdown{
@@ -42,17 +41,20 @@
 </head>
 <body>
 
-    <h1>Games Rating by Country 2015-2019</h1>
-
     <!-- Create dropdown element here. Options should be added after reading in game file, they should not be created here.-->
-    <select id ="gameDropdown"></select>
+   <h1>Games Rating by Country 2015-2019</h1>
+
+    <select id ="gameDropdown">
+
+    </select>
     <svg id ="choropleth" width = "1400" height = "700">
         <g id = "countries">
             <path></path>
             </g>
         <g id= "legend"></g>
     </svg>
-    <div id= "tooltip" display = "block" pointer-events = "none"></div>
+    <div id= "tooltip" display = "block" pointer-events = "none">
+    </div>
 
     <script>
 
@@ -64,8 +66,8 @@
 
         // enter code to create svg
         var svg = d3.select("#choropleth")
-            .attr("width", width)
-            .attr("height", height)
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
 
         var countries = svg.select("#countries")
             .attr("transform", "translate(" + margin.left*-1 + ", "+ margin.bottom+")")
@@ -76,17 +78,19 @@
 
         				// enter code to define tooltip
         var tooltip = d3.tip()
-            .attr('class','divtip')
             .attr('id', 'tooltip')
+            .attr('class','divtip')
             .style("opacity", 0)
             .offset([10,10])
             .html(d=> {
+                console.log(d.info)
+
                 if (d.info === undefined) {
                     return (
-                        "Country: " + d.properties.name
-                        + "<br/> Game: " + d.game
-                        + "<br/> Avg Rating: " + "N/A"
-                        + "<br/> Number of users: " + "N/A"
+                        "Country: " + d.properties.name +
+                        "<br/> Game: " + d.game +
+                        "<br/> Avg Rating: " + "N/A" +
+                        "<br/> Number of users: " + "N/A"
                     )
                 } else {
                     return (
@@ -103,59 +107,55 @@
         // For grading, set the name of functions for projection and path as "projection" and "path"
 
         var projection = d3.geoNaturalEarth()
+            .center([-20,0])
             .translate([width/2.5, height/2])
             .scale(150)
 
         var path = d3.geoPath().projection(projection)
 
         // define any other global variables
-   //     var world, gameData
-   //     var games = new Set()
 
         Promise.all([d3.json("world_countries.json"), d3.csv("ratings-by-country.csv")
-        ]).then(data=> {
-            world = data[0]
-            gameData = data[1]
-
-            ready(null, world, gameData)
-        })
+        ]).then(data=>{
+            var [world, gameData]= data
+            ready(null, world, gameData)}
+        )
 
         function ready(error, world, gameData) {
+        console.log("ready on the run")
             if (error) throw error
 
             var games = gameData.map(d=> d.Game) // map games
-            var gamesList = Array.from(new Set(games)).sort(d3.ascending) // only unique
+            var gamesList = Array.from(new Set(games)) // only unique
+            gamesList.sort(d3.ascending)
             console.log("gamesList "+gamesList)
-
             var defaultGame = gamesList[0]
             var game1 = defaultGame
 
             var dropOption = d3.select("#gameDropdown")
-                .selectAll("options")
+                .selectAll("option")
                 .data(gamesList)
-                //.attr("id", "dropdown")
+                .attr("id", "dropdown")
                 .enter()
                 .append("option")
                 .text(d=>d)
                 .attr("value", d=>d)
 
-            var switchOption = function(){
-                game1 = d3.select(this).property('value')
-                createMapAndLegend(world, gameData, game1)
-            }
+            d3.select("#gameDropdown")
+                .on("change", function() {
+                var selectedGame = d3.select(this).property("value")
+                createMapAndLegend(world, gameData, selectedGame)
+            })
 
             createMapAndLegend(world, gameData, defaultGame)
-            dropOption.on("change", switchOption);
         }
 
         // this function should create a Choropleth and legend using the world and gameData arguments for a selectedGame
         // also use this function to update Choropleth and legend when a different game is selected from the dropdown
         function createMapAndLegend(world, gameData, selectedGame){
-            console.log("createMapandLegend on the run")
-           // svg.call(tooltip)
+            svg.call(tooltip)
             Promise.all([world, gameData])
                 .then(data => {
-                    console.log("data "+data)
                     svg.call(tooltip)
                     countryMap = d3.select("#countries")
                         .selectAll("path")
@@ -169,7 +169,6 @@
                         })
                         .on("mouseout", tooltip.hide)
                         .style("fill", d => {
-                            console.log(d)
                             world.features.forEach(d => {
                                 d["Game"] = selectedGame
                             })
@@ -179,12 +178,12 @@
                             // Find the min and max ratings from the filtered data
                             var min = d3.min(filteredData, d => +d["Average Rating"]);
                             var max = d3.max(filteredData, d => +d["Average Rating"]);
-
                             var color = "lightgray"
                             // Iterate over ratings to find the corresponding info and color
+                            console.log(gameData)
                             gameData.forEach(r => {
-                                console.log(d)
                                 if ((r["Game"] === selectedGame )&& (d.properties.name === r["Country"])) {
+                                    console.log(r["Game"])
                                     d["info"] = {
                                         "Country": d.properties.name,
                                         "Game": selectedGame,
@@ -198,21 +197,21 @@
                             return color
                         })
 
-                    var legendHold = d3.select("#legend")
+                    svg.select("#legend")
                         .attr("class", "legendQuant")
-                        .attr("transform", "translate(0,0)")
+                        .attr("transform", "translate(800,30)")
 
                     var legend = d3.legendColor()
                         .labelFormat(d3.format(".2f"))
                         .title("Average Rating")
-                        .titleWidth(20)
                         .scale(quantileColor)
 
-                    legendHold.select(".legendQuant")
+                    svg.select(".legendQuant")
                         .call(legend)
                 })
             svg.append("text")
-                .attr("transform", "translate(500,height-margin.bottom)")
+                .attr("x", (width / 2))
+                .attr("y", height + 50)
                 .text("hpavlovich3")
 
         }//.catch(function (error) {
