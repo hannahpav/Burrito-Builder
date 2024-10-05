@@ -10,6 +10,7 @@
     <script src="../lib/topojson.v2.min.js"></script>
     <script src="../lib/d3-legend.min.js"></script>
 
+
     <style>
         body {
             font-family: sans-serif;
@@ -32,19 +33,27 @@
 
     <h1>Games Rating by Country 2015-2019</h1>
 
-    <select id ="gameDropdown"></select>
+    <!-- Create dropdown element here. Options should be added after reading in game file, they should not be created here.-->
+    <select id ="gameDropdown">
+
+    </select>
     <svg id ="choropleth" width = "1400" height = "700">
-        <g id = "countries"></g>
+        <g id = "countries">
+            <path></path>
+            </g>
         <g id= "legend"></g>
     </svg>
-    <div id= "tooltip"></div>
+    <div id= "tooltip" display = "block" pointer-events = "none"></div>
+
+
 
     <script>
 
         // enter code to define margin and dimensions for svg
-        var margin = {top: 80, right: 100, bottom: 100, left: 40}
+        var margin = {top: 80, right: 120, bottom: 40, left: 100}
         var width = d3.select("#choropleth")
             .attr("width") - margin.left - margin.right
+
         var height = d3.select("#choropleth")
             .attr("height") - margin.top - margin.bottom
 
@@ -65,7 +74,7 @@
             .style("position", "absolute")
             .style("background", "lightgray") // Example styling
             .style("padding", "5px")
-            .style("border-radius", "5px")
+            .style("border-radius", "5px");
         // enter code to define projection and path required for Choropleth
         // For grading, set the name of functions for projection and path as "projection" and "path"
 
@@ -76,8 +85,8 @@
         var path = d3.geoPath(projection)
 
         // define any other global variables
-     //   var world, gameData
-     //   var games = new Set()
+   //     var world, gameData
+   //     var games = new Set()
 
         Promise.all([d3.json("world_countries.json"), d3.csv("ratings-by-country.csv")
         ]).then(data => {
@@ -92,13 +101,12 @@
             if (error) throw error
 
             var games = gameData.map(d=> d.Game) // map games
-            var gameSet = new Set(games) // only unique
-            let gamesList = Array.from(gameSet)
+            var gamesList = Array.from(new Set(games)) // only unique
             var defaultGame = gamesList[0]
             var game1 = defaultGame
 
             var dropOption = d3.select("#gameDropdown")
-            dropOption.selectAll("option")
+                .selectAll("options")
                 .data(gamesList.sort(d3.ascending))
                 .enter()
                 .append("option")
@@ -118,21 +126,23 @@
         // also use this function to update Choropleth and legend when a different game is selected from the dropdown
         function createMapAndLegend(world, gameData, selectedGame){
 
-            var countryMap = []
-            var hold = []
-            var ratingsCountry=[]
+          //  var nestedData = d3.nest()
+            //    .key(d => d.Game)
+             //   .key(d => d.Country)
+             //   .rollup(v => d3.mean(v, d => +d['Average Rating']))
+             //   .entries(gameData);
 
-            gameData.filter(d => selectedGame === d.Game).forEach(d => {
-                countryMap.push(d.Country);
-                hold.push(+d['Average Rating']);
-                ratingsCountry.push(+d['Average Rating']);
-            });
-
+            // Filter for the selected game and extract the country names and average ratings
+          //  var selectedGameData = nestedData.find(d => d.key === selectedGame);
             var filteredData = gameData.filter(d => d.Game === selectedGame);
 
-     //      var countryMap = filteredData.map(d => d.Country);
-     //       var ratingsCountry = filteredData.map(d => +d['Average Rating']);
-     //       var hold = ratingsCountry
+            var countryMap = filteredData.map(d => d.Country);
+            var ratingsCountry = filteredData.map(d => +d['Average Rating']);
+            var hold = ratingsCountry
+
+         //   var countryMap = selectedGameData ? selectedGameData.values.map(d => d.key) : [];
+          //  var hold = selectedGameData ? selectedGameData.values.map(d => d.value) : [];
+           // var ratingsCountry = hold;
 
             var ratingSort = hold.sort(d3.ascending)
 
@@ -141,7 +151,7 @@
                 .range(myColors)
 
             var countryPath = svg.append("g")
-                .selectAll("path")
+                .selectAll("paths")
                     .data(world)
                     .enter()
                     .append("path")
@@ -162,6 +172,7 @@
                                 dataExists = true
                             }
 
+
                             tooltip.html("Country: " + d.properties.name
                                 + "<br/> Game: " + selectedGame
                                 + "<br/> Avg Rating: " + avgRating
@@ -173,7 +184,7 @@
                         })
                     })
                     .on("mousemove", function(event) {
-                        tooltip.style("left", "4px")
+                        tooltip.style("left", (event.pageX + 5) + "px")
                                .style("top", (event.pageY - 28) + "px");
                     })
                     .on("mouseout", function(d) {
@@ -182,7 +193,6 @@
                             .style('stroke-width', 1)
                 });
                         // Format function for rounding
-
             var Dec2 = d3.format(".2f");
 
             var first = Dec2(d3.quantile(ratingSort,0)) + " to " + Dec2(d3.quantile(ratingSort, 0.25));
@@ -224,10 +234,10 @@
 
             svg.append("text")
                 .attr("transform", "translate(500,510)")
-                .text("hpavlovich3");
-            
-        }
+                .text("hpavlovich3")
 
+        }//.catch(function (error) {
+      //console.log(error);
     </script>
 
 </body>
