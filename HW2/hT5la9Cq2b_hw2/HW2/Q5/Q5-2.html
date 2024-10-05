@@ -10,6 +10,7 @@
     <script src="../lib/topojson.v2.min.js"></script>
     <script src="../lib/d3-legend.min.js"></script>
 
+
     <style>
         body {
             font-family: sans-serif;
@@ -32,19 +33,25 @@
 
     <h1>Games Rating by Country 2015-2019</h1>
 
-    <select id ="gameDropdown"></select>
-    <svg id ="choropleth" width = "1400" height = "700">
-        <g id = "countries"></g>
+    <!-- Create dropdown element here. Options should be added after reading in game file, they should not be created here.-->
+    <select id ="gameDropdown">
+
+    </select>
+    <svg id ="choropleth" width = "950" height = "700">
+        <g id = "countries">
+            <path></path>
+            </g>
         <g id= "legend"></g>
     </svg>
-    <div id= "tooltip"></div>
+    <div id= "tooltip" display = "block" pointer-events = "none"></div>
 
     <script>
 
         // enter code to define margin and dimensions for svg
-        var margin = {top: 80, right: 100, bottom: 100, left: 40}
+        var margin = {top: 80, right: 120, bottom: 40, left: 100}
         var width = d3.select("#choropleth")
             .attr("width") - margin.left - margin.right
+
         var height = d3.select("#choropleth")
             .attr("height") - margin.top - margin.bottom
 
@@ -65,7 +72,7 @@
             .style("position", "absolute")
             .style("background", "lightgray") // Example styling
             .style("padding", "5px")
-            .style("border-radius", "5px")
+            .style("border-radius", "5px");
         // enter code to define projection and path required for Choropleth
         // For grading, set the name of functions for projection and path as "projection" and "path"
 
@@ -76,14 +83,14 @@
         var path = d3.geoPath(projection)
 
         // define any other global variables
-     //   var world, gameData
-     //   var games = new Set()
+        var world, gameData
+        var games = new Set()
 
         Promise.all([d3.json("world_countries.json"), d3.csv("ratings-by-country.csv")
         ]).then(data => {
             console.log(data[0].features)
-            var world = data[0].features
-            var gameData = data[1]
+            world = data[0].features
+            gameData = data[1]
 
             ready(null, world, gameData)
             })
@@ -98,7 +105,7 @@
             var game1 = defaultGame
 
             var dropOption = d3.select("#gameDropdown")
-            dropOption.selectAll("option")
+            dropOption.selectAll("options")
                 .data(gamesList.sort(d3.ascending))
                 .enter()
                 .append("option")
@@ -111,7 +118,8 @@
             }
 
             createMapAndLegend(world, gameData, defaultGame)
-            dropOption.on("change", switchOption);
+            d3.select("#gameDropdown")
+                .on("change", switchOption);
         }
 
         // this function should create a Choropleth and legend using the world and gameData arguments for a selectedGame
@@ -122,10 +130,12 @@
             var hold = []
             var ratingsCountry=[]
 
-            gameData.filter(d => selectedGame === d.Game).forEach(d => {
-                countryMap.push(d.Country);
-                hold.push(+d['Average Rating']);
-                ratingsCountry.push(+d['Average Rating']);
+            gameData.forEach(function(d){
+                if (selectedGame == d.Game) {
+                        countryMap.push(d.Country);
+                        hold.push(+d['Average Rating']);
+                        ratingsCountry.push(+d['Average Rating']);
+                }
             });
 
             var filteredData = gameData.filter(d => d.Game === selectedGame);
@@ -226,8 +236,8 @@
                 .attr("transform", "translate(500,510)")
                 .text("hpavlovich3");
             
-        }
-
+        }//.catch(function (error) {
+      //console.log(error);
     </script>
 
 </body>
