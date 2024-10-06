@@ -110,18 +110,18 @@
                 .attr("d", path)
                 .on("mouseover", function(d) {
                     var countryData = filteredData.find(rating => rating.Country === d.properties.name);
-                    var html = "Country: " + d.properties.name + "<br/>" +
+                    var popupBox = "Country: " + d.properties.name + "<br/>" +
                                "Game: " + selectedGame + "<br/>";
 
                     if (countryData) {
-                        html += "Average Rating: " + countryData["Average Rating"] + "<br/>" +
-                                "Number of Users: " + countryData["Number of Users"];
+                        popupBox += "Average Rating: " + countryData["Average Rating"] +
+                            "<br/>" + "Number of Users: " + countryData["Number of Users"];
                     } else {
-                        html += "Average Rating: N/A<br/>" +
+                        popupBox += "Average Rating: N/A<br/>" +
                                 "Number of Users: N/A";
                     }
 
-                    tooltip.html(html)
+                    tooltip.html(popupBox)
                         .style("left", (d3.event.pageX + 10) + "px")
                         .style("top", (d3.event.pageY - 28) + "px")
                         .style("opacity", 1);
@@ -131,7 +131,13 @@
                 })
                 .style("fill", d => {
                     var countryData = filteredData.find(rating => rating.Country === d.properties.name);
-                    return countryData ? colorScale(+countryData["Average Rating"]) : "#ccc";
+                    let color;
+                    if (countryData) {
+                        color = colorScale(+countryData["Average Rating"]);
+                    } else {
+                        color = "#ccc";
+                    }
+                    return color;
                 });
 
             var legend = d3.legendColor()
