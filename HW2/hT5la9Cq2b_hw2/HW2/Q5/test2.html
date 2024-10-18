@@ -165,8 +165,6 @@
                             })
                             .on("mouseout", tip.hide)
                             .style("fill", d =>{
-                                // console.log(d.properties.name)
-                                // assign current game of all countries to selectedGame
                                 data[0].features.forEach(country => {
                                     country["game"] = selectedGame
                                 });

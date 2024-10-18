@@ -1,3 +1,8 @@
+import sys
+print(sys.executable)
+print(sys.path)
+
+
 from collections import defaultdict
 import requests
 import json

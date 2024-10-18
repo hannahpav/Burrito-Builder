@@ -44,7 +44,7 @@
     <div id="choropleth"></div>
 
     <script>
-
+// THIS GOT A 16
 				// enter code to define margin and dimensions for svg
 				var margin = {top: 50, right: 50, bottom: 50, left: 50};
 				var width = 960 - margin.left - margin.right;
@@ -91,7 +91,6 @@
 					 d3.csv("ratings-by-country.csv")
 		    ]).then(function(data){
 							world = data[0];
-                            console.log("world "+world)
 							gameData = data[1];
 							// enter code to call ready() with required arguments
 							ready(null, world, gameData);
@@ -103,7 +102,6 @@
 
 		    function ready(error, world, gameData) {
 						if (error) throw error;
-                        console.log("world "+ world)
 		        // enter code to extract all unique games from gameData
 						var games = gameData.map(function(d){return d.Game})
 						games_set = new Set(games) //only unique values
@@ -168,7 +166,6 @@
 						}
 					});
 
-					//console.log(gameData)
 
 					// building choropleth
 					var choropleth = svg.append("g")
