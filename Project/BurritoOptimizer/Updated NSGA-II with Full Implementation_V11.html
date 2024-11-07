@@ -231,6 +231,7 @@
         let ingredientData;
         let geoData;
         let countryNameMapping;
+        let optimizationData
 
         const ingredientColors = {
             "tortilla": "#D2B48C",
@@ -644,9 +645,10 @@
 
             // Initialize Pareto front and UI elements AFTER data is loaded
             initializeParetoControls();
+            initializeCountryDropdown();
 
             // Now that data is loaded, enable the UI
-          //  initializeUI();
+            initializeUI();
 
         }).catch(function(error) {
             console.error("Error loading data:", error);
@@ -692,6 +694,32 @@
 
             return mapping;
 }
+
+        // Initialize the country dropdown
+        function initializeCountryDropdown() {
+            const select = d3.select('#country-select');
+
+            // Get unique importing countries
+            const importingCountries = Object.keys(optimizationData);
+
+            // Add options for each country
+            select
+                .selectAll('option.country')
+                .data(importingCountries)
+                .enter()
+                .append('option')
+                .attr('class', 'country')
+                .attr('value', d => d)
+                .text(d => d);
+
+            // Add change event listener
+            select.on('change', function() {
+                const selectedCountry = d3.select(this).property('value');
+                if (selectedCountry) {
+                    updateVisualization(selectedCountry);
+                }
+            });
+        }
 
         // Add error handling to visualization initialization
         function initializeVisualization() {
@@ -761,37 +789,80 @@
             updateParetoFront();
         }
 
-        // initialize country select
+        // Function to initialize the country select dropdown
         function initializeCountrySelect() {
-            // Get the select element
-            const countrySelect = d3.select("#importing-country");
+            // Get the select element - make sure to create it first in your HTML
+            const selectContainer = d3.select('.form-column.right-column')
+                .insert('select', ':first-child')
+                .attr('id', 'country-select')
+                .attr('class', 'form-control');
 
-            if (!ingredientData) {
-                console.error("Ingredient data not loaded");
-                return;
-            }
+            // Add a default option
+            selectContainer.append('option')
+                .attr('value', '')
+                .text('Select a country');
 
-            // Get unique importing countries from the data
-            const importingCountries = Object.keys(ingredientData);
+            // Get all importing countries (top-level keys from the data)
+            const importingCountries = Object.keys(ingredientData).sort();
 
-            // Sort countries alphabetically
-            importingCountries.sort();
-
-            // Add options to select
-            countrySelect
-                .selectAll("option")
+            // Add options for each importing country
+            selectContainer
+                .selectAll('option.country')
                 .data(importingCountries)
                 .enter()
-                .append("option")
-                .attr("value", d => d)
+                .append('option')
+                .attr('class', 'country')
+                .attr('value', d => d)
                 .text(d => d);
 
-            // Set default value if needed
-            if (importingCountries.includes("Australia")) {
-                countrySelect.property("value", "Australia");
+            // Add change event listener
+            selectContainer.on('change', function() {
+                const selectedCountry = this.value;
+                if (selectedCountry) {
+                    // Update your visualizations based on the selected country
+                    updateVisualizationsForCountry(selectedCountry);
+                }
+            });
+        }
+
+        // Function to update visualizations when a country is selected
+        function updateVisualizationsForCountry(country) {
+            // Access the data for the selected country
+            const countryData = ingredientData[country];
+
+            // Update your Pareto front and other visualizations here
+            if (countryData) {
+                // Update your existing visualization functions
+                updateParetoFront(countryData);
+                updateMapColors(country);
+                // Add other visualization updates as needed
             }
         }
 
+        // This function creates and sets up your country dropdown menu
+        function initializeUI() {
+            // Find the container where you want to put the dropdown
+            const formColumn = document.querySelector('.form-column.right-column');
+
+            // Create the dropdown if it doesn't exist
+            if (!document.querySelector('#country-select')) {
+                // Create the dropdown element
+                const select = document.createElement('select');
+                select.id = 'country-select';
+                select.className = 'form-control';
+
+                // Add it to your page
+                formColumn.insertBefore(select, formColumn.firstChild);
+
+                // Add event listener for when country selection changes
+                select.addEventListener('change', function() {
+                    const selectedCountry = this.value;
+                    if (selectedCountry) {
+                        updateVisualizationsForCountry(selectedCountry);
+                    }
+                });
+            }
+        }
         // Modify your existing updateMapColors function to use the mapping
         function updateMapColors(selectedCountries) {
             d3.select("#country-map").selectAll("path")
