@@ -146,11 +146,9 @@
         <!-- Left Column -->
         <div class="form-column left-column">
             <!-- Choose your location -->
-            <label for="importing-country" class="section-label">Choose your location (Importing country):</label><br>
-            <select id="importing-country" style="margin-top:10px;">
-                <option value="USA">USA</option>
-                <option value="China">China</option>
-                <option value="Brazil">Brazil</option>
+            <label for="location">Choose your location (Importing country):</label>
+            <select id="location" name="location"></select>
+
             </select><br><br>
         </div>
 
@@ -223,12 +221,12 @@
         let ingredientData = null;
 
         // Load ingredient data
-        d3.json("ingredientData.json").then(function(data) {
+        d3.json("final_burrito_data.json").then(function(data) {
             ingredientData = data;
             console.log("Ingredient data loaded:", ingredientData);
             updateParetoFront();
         }).catch(function(error) {
-            console.error("Error loading ingredientData.json:", error);
+            console.error("Error loading final_burrito_data.json:", error);
         });
 
         const ingredientColors = {
@@ -243,7 +241,7 @@
             "lettuce": "#32CD32",
             "onions": "#9400D3",
             "tomatoes": "#FF6347",
-            "avocado": "#228B22"Updated NSGA-II with Full Implementation_V1 1 copy.html
+            "avocado": "#228B22"
         };
 
         // Initialize population
@@ -280,20 +278,20 @@
             for (const [ingredient, country] of Object.entries(individual.solution)) {
                 const data = ingredientData[importingCountry]?.[ingredient]?.[country];
                 if (data) {
-                    totalCost += data.cost;
-                    totalImpact += data.impact;
+                    totalCost += data.costPerKg;
+                    totalImpact += data.Production_Env_Impact;
                 } else {
                     validIndividual = false;
                     break;
                 }
             }
             if (validIndividual) {
-                individual.cost = totalCost;
-                individual.impact = totalImpact;
-                console.log(`Assigned cost: ${individual.cost}, impact: ${individual.impact}`);
+                individual.costPerKg = totalCost;
+                individual.Production_Env_Impact = totalImpact;
+                console.log(`Assigned cost: ${individual.costPerKg}, impact: ${individual.Production_Env_Impact}`);
             } else {
-                individual.cost = undefined;
-                individual.impact = undefined;
+                individual.costPerKg = undefined;
+                individual.Production_Env_Impact = undefined;
                 console.log(`Invalid individual, cost and impact set to undefined.`);
             }
         }
@@ -305,9 +303,9 @@
                 p.dominatedCount = 0;
                 p.dominatedSet = [];
                 population.forEach(q => {
-                    if ((q.cost <= p.cost && q.impact <= p.impact) && (q.cost < p.cost || q.impact < p.impact)) {
+                    if ((q.costPerKg <= p.costPerKg && q.Production_Env_Impact <= p.Production_Env_Impact) && (q.costPerKg < p.costPerKg || q.Production_Env_Impact < p.Production_Env_Impact)) {
                         p.dominatedCount += 1;
-                    } else if ((p.cost <= q.cost && p.impact <= q.impact) && (p.cost < q.cost || p.impact < q.impact)) {
+                    } else if ((p.costPerKg <= q.costPerKg && p.Production_Env_Impact <= q.Production_Env_Impact) && (p.costPerKg < q.costPerKg || p.Production_Env_Impact < q.Production_Env_Impact)) {
                         p.dominatedSet.push(q);
                     }
                 });
@@ -404,7 +402,7 @@
                 population.forEach(individual => calculateCostAndImpact(individual, importingCountry));
 
                 // Filter out individuals exceeding the budget or with undefined cost/impact
-                population = population.filter(individual => individual.cost !== undefined && individual.impact !== undefined && individual.cost <= budget);
+                population = population.filter(individual => individual.costPerKg !== undefined && individual.Production_Env_Impact !== undefined && individual.costPerKg <= budget);
 
                 if (population.length === 0) {
                     console.warn("No individuals within budget at generation", generation);
@@ -439,7 +437,7 @@
             // Final evaluation and sorting
             population.forEach(individual => calculateCostAndImpact(individual, importingCountry));
             // Filter out invalid individuals
-            population = population.filter(individual => individual.cost !== undefined && individual.impact !== undefined && individual.cost <= budget);
+            population = population.filter(individual => individual.costPerKg !== undefined && individual.Production_Env_Impact !== undefined && individual.costPerKg <= budget);
 
             const finalFronts = nonDominatedSorting(population);
 
@@ -450,13 +448,13 @@
             }
 
             // Filter out individuals exceeding the budget
-            let paretoFront = finalFronts[0].filter(individual => individual.cost <= budget);
+            let paretoFront = finalFronts[0].filter(individual => individual.costPerKg <= budget);
 
             // Remove duplicates from paretoFront
             paretoFront = paretoFront.filter((v, i, a) => a.findIndex(t => 
                 JSON.stringify(t.solution) === JSON.stringify(v.solution) &&
-                t.cost === v.cost &&
-                t.impact === v.impact
+                t.costPerKg === v.costPerKg &&
+                t.Production_Env_Impact === v.Production_Env_Impact
             ) === i);
 
             console.log("Pareto solutions generated:", paretoFront);
@@ -466,18 +464,18 @@
         // Select the optimal solution based on weights
         function selectOptimalSolution(paretoFront, costWeight, impactWeight) {
             // Calculate min and max for normalization
-            const minCost = d3.min(paretoFront, d => d.cost);
-            const maxCost = d3.max(paretoFront, d => d.cost);
-            const minImpact = d3.min(paretoFront, d => d.impact);
-            const maxImpact = d3.max(paretoFront, d => d.impact);
+            const minCost = d3.min(paretoFront, d => d.costPerKg);
+            const maxCost = d3.max(paretoFront, d => d.costPerKg);
+            const minImpact = d3.min(paretoFront, d => d.Production_Env_Impact);
+            const maxImpact = d3.max(paretoFront, d => d.Production_Env_Impact);
 
             let bestSolution = null;
             let bestScore = Infinity;
 
             paretoFront.forEach(solution => {
                 // Normalize cost and impact
-                const normalizedCost = (solution.cost - minCost) / (maxCost - minCost || 1); // Avoid division by zero
-                const normalizedImpact = (solution.impact - minImpact) / (maxImpact - minImpact || 1); // Avoid division by zero
+                const normalizedCost = (solution.costPerKg - minCost) / (maxCost - minCost || 1); // Avoid division by zero
+                const normalizedImpact = (solution.Production_Env_Impact - minImpact) / (maxImpact - minImpact || 1); // Avoid division by zero
 
                 // Calculate weighted score using normalized values
                 const weightedScore = normalizedCost * costWeight + normalizedImpact * impactWeight;
@@ -508,11 +506,11 @@
             if (paretoFront.length === 0) return;
 
             // Filter out individuals with undefined cost or impact
-            paretoFront = paretoFront.filter(d => d.cost !== undefined && d.impact !== undefined);
+            paretoFront = paretoFront.filter(d => d.costPerKg !== undefined && d.Production_Env_Impact !== undefined);
 
             const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-            const x = d3.scaleLinear().range([0, width]).domain([0, d3.max(paretoFront, d => d.cost) * 1.1]);
-            const y = d3.scaleLinear().range([height, 0]).domain([0, d3.max(paretoFront, d => d.impact) * 1.1]);
+            const x = d3.scaleLinear().range([0, width]).domain([0, d3.max(paretoFront, d => d.costPerKg) * 1.1]);
+            const y = d3.scaleLinear().range([height, 0]).domain([0, d3.max(paretoFront, d => d.Production_Env_Impact) * 1.1]);
 
             // Axes
             g.append("g").attr("transform", `translate(0,${height})`)
@@ -541,13 +539,13 @@
                 .data(paretoFront)
                 .enter().append("circle")
                 .attr("class", "pareto-point")
-                .attr("cx", d => x(d.cost))
-                .attr("cy", d => y(d.impact))
+                .attr("cx", d => x(d.costPerKg))
+                .attr("cy", d => y(d.Production_Env_Impact))
                 .attr("r", 5) // Reduced radius
                 .attr("fill", "blue")
                 .on("mouseover", function(event, d) {
-                    const costText = d.cost !== undefined ? d.cost.toFixed(2) : "N/A";
-                    const impactText = d.impact !== undefined ? d.impact.toFixed(2) : "N/A";
+                    const costText = d.costPerKg !== undefined ? d.costPerKg.toFixed(2) : "N/A";
+                    const impactText = d.Production_Env_Impact !== undefined ? d.Production_Env_Impact.toFixed(2) : "N/A";
                     tooltip.html(`Cost: $${costText}<br>Impact: ${impactText}`)
                         .style("left", (event.pageX + 15) + "px")
                         .style("top", (event.pageY + 15) + "px")
@@ -565,8 +563,8 @@
             // Highlight the optimal solution
             if (finalSolution) {
                 // Calculate the position
-                const optimalX = x(finalSolution.cost);
-                const optimalY = y(finalSolution.impact);
+                const optimalX = x(finalSolution.costPerKg);
+                const optimalY = y(finalSolution.Production_Env_Impact);
 
                 // Append the optimal point
                 g.append("circle")
@@ -578,7 +576,7 @@
                     .attr("stroke", "black")
                     .attr("stroke-width", 1.5)
                     .on("mouseover", function(event) {
-                        tooltip.html(`Optimal Solution<br>Cost: $${finalSolution.cost.toFixed(2)}<br>Impact: ${finalSolution.impact.toFixed(2)}`)
+                        tooltip.html(`Optimal Solution<br>Cost: $${finalSolution.costPerKg.toFixed(2)}<br>Impact: ${finalSolution.Production_Env_Impact.toFixed(2)}`)
                             .style("left", (event.pageX + 15) + "px")
                             .style("top", (event.pageY + 15) + "px")
                             .style("opacity", 1);
@@ -602,18 +600,18 @@
                     .append("tspan")
                         .attr("x", optimalX)
                         .attr("y", optimalY + 25)
-                        .text(`Cost: $${finalSolution.cost.toFixed(2)}`)
+                        .text(`Cost: $${finalSolution.costPerKg.toFixed(2)}`)
                     .append("tspan")
                         .attr("x", optimalX)
                         .attr("y", optimalY + 40) // Shift down by 15 pixels
-                        .text(`Impact: ${finalSolution.impact.toFixed(2)}`);
+                        .text(`Impact: ${finalSolution.Production_Env_Impact.toFixed(2)}`);
             }
         }
 
         // Display Solution Info
         function displaySolutionInfo(finalSolution) {
-            const totalCost = finalSolution.cost.toFixed(2);
-            const totalImpact = finalSolution.impact.toFixed(2);
+            const totalCost = finalSolution.costPerKg.toFixed(2);
+            const totalImpact = finalSolution.Production_Env_Impact.toFixed(2);
             const countries = Object.values(finalSolution.solution);
             const uniqueCountries = [...new Set(countries)];
             const numberOfCountries = uniqueCountries.length;
@@ -720,7 +718,7 @@
                     label.append("tspan")
                         .attr("x", labelX)
                         .attr("y", labelY + 15) // Shift down by 15 pixels
-                        .text(`Cost: $${data.cost.toFixed(2)}, Impact: ${data.impact}`);
+                        .text(`Cost: $${data.costPerKg.toFixed(2)}, Impact: ${data.Production_Env_Impact}`);
 
                     // Highlight the country on the map
                     svg.selectAll("path")
