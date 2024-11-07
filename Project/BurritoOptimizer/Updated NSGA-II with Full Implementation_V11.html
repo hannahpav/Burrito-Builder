@@ -218,16 +218,9 @@
 
     <!-- JavaScript Code -->
     <script>
-        let ingredientData = null;
-
-        // Load ingredient data
-        d3.json("final_burrito_data.json").then(function(data) {
-            ingredientData = data;
-            console.log("Ingredient data loaded:", ingredientData);
-            updateParetoFront();
-        }).catch(function(error) {
-            console.error("Error loading final_burrito_data.json:", error);
-        });
+        let ingredientData;
+        let geoData;
+        let countryNameMapping;
 
         const ingredientColors = {
             "tortilla": "#D2B48C",
@@ -622,6 +615,112 @@
             );
         }
 
+        // Replace your existing data loading section with this:
+        Promise.all([
+            d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson"),
+            // Replace this with your actual ingredient data file path
+            d3.json("final_burrito_data.json")
+        ]).then(function([loadedGeoData, loadedIngredientData]) {
+            geoData = loadedGeoData;
+            ingredientData = loadedIngredientData;
+            console.log("Ingredient data loaded:", ingredientData);
+
+            // Create the country mapping after data is loaded
+            countryNameMapping = createCountryNameMapping(ingredientData);
+
+            // Initialize the visualization
+            initializeVisualization();
+
+            // Now that data is loaded, enable the UI
+          //  initializeUI();
+
+        }).catch(function(error) {
+            console.error("Error loading data:", error);
+        });
+
+        // Add this function definition with your other function definitions
+        function createCountryNameMapping(jsonData) {
+            const uniqueCountries = new Set();
+
+            // Add importing countries (top level keys)
+            Object.keys(jsonData).forEach(country => {
+                uniqueCountries.add(country);
+            });
+
+            // Add source countries (nested within ingredients)
+            Object.values(jsonData).forEach(countryData => {
+                Object.values(countryData).forEach(ingredientData => {
+                    Object.keys(ingredientData).forEach(sourceCountry => {
+                        uniqueCountries.add(sourceCountry);
+                    });
+                });
+            });
+
+            // Create the mapping object
+            const mapping = {};
+            uniqueCountries.forEach(country => {
+                // Handle special cases
+                switch(country) {
+                    case "USA":
+                        mapping[country] = "United States of America";
+                        break;
+                    case "UK":
+                    case "United Kingdom":
+                        mapping[country] = "United Kingdom";
+                        break;
+                    case "Viet Nam":
+                        mapping[country] = "Vietnam";
+                        break;
+                    default:
+                        mapping[country] = country;
+                }
+            });
+
+            return mapping;
+}
+
+        // Add this function definition with your other visualization functions
+        function initializeVisualization() {
+            // Set up map dimensions
+            const width = 960;
+            const height = 500;
+            const svg = d3.select("#country-map")
+                .attr("width", width)
+                .attr("height", height);
+
+            // Create projection
+            const projection = d3.geoMercator()
+                .scale(130)
+                .center([0, 20])
+                .translate([width / 2, height / 2]);
+
+            // Create path generator
+            const path = d3.geoPath().projection(projection);
+
+            // Draw map
+            svg.selectAll("path")
+                .data(geoData.features)
+                .enter()
+                .append("path")
+                .attr("d", path)
+                .style("stroke", "#fff")
+                .style("stroke-width", "0.5")
+                .attr("fill", "#cccccc");
+        }
+
+        // Modify your existing updateMapColors function to use the mapping
+        function updateMapColors(selectedCountries) {
+            d3.select("#country-map").selectAll("path")
+                .attr("fill", function(d) {
+                    const countryName = d.properties.name;
+                    // Check if country is in selected countries using the mapping
+                    const isSelected = Object.values(selectedCountries).some(country =>
+                        countryNameMapping[country] === countryName
+                    );
+                    return isSelected ? "#69b3a2" : "#cccccc";
+                });
+        }
+
         // Display Map
         function displayMap(finalSolution, importingCountry) {
             const svg = d3.select("#country-map");
@@ -646,13 +745,6 @@
                     .attr("d", path)
                     .attr("fill", "lightgray")
                     .attr("stroke", "white");
-
-                // Mapping from importing country value to GeoJSON country name
-                const countryNameMapping = {
-                    "USA": "USA",
-                    "China": "China",
-                    "Brazil": "Brazil"
-                };
 
                 // Get the actual country name
                 const importingCountryName = countryNameMapping[importingCountry];
