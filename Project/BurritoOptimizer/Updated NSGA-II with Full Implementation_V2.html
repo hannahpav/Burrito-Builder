@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NSGA-II Optimization for Burrito Builder</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .form-column {
+            flex: 1;
+        }
+        .left-column {
+            flex: 0 0 300px;
+        }
+        #map {
+            height: 400px;
+            width: 100%;
+            border: 1px solid #ccc;
+        }
+        .slider-container {
+            margin: 20px 0;
+        }
+        .tooltip {
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        #pareto-front {
+            height: 300px;
+            border: 1px solid #ccc;
+            margin: 10px 0;
+        }
+        .ingredient-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        #solution-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>NSGA-II Optimization for Burrito Builder</h1>
+
+    <div class="form-row">
+        <div class="form-column left-column">
+            <label for="location">Choose your location (Importing country):</label>
+            <select id="location" name="location"></select>
+
+            <div style="margin-top: 20px;">
+                <label for="budget">Enter your budget ($):</label>
+                <input type="number" id="budget" min="0" step="0.01">
+            </div>
+        </div>
+
+        <div class="form-column">
+            <h3>Choose ingredients for your burrito:</h3>
+            <div class="ingredient-list">
+                <div><input type="checkbox" id="tortilla" value="Tortilla"> <label for="tortilla">Tortilla (wheat)</label></div>
+                <div><input type="checkbox" id="beef" value="Beef"> <label for="beef">Beef</label></div>
+                <div><input type="checkbox" id="chicken" value="Chicken"> <label for="chicken">Chicken</label></div>
+                <div><input type="checkbox" id="pork" value="Pork"> <label for="pork">Pork</label></div>
+                <div><input type="checkbox" id="cheese" value="Cheese"> <label for="cheese">Cheese</label></div>
+                <div><input type="checkbox" id="sourcream" value="Sour cream"> <label for="sourcream">Sour cream (milk)</label></div>
+                <div><input type="checkbox" id="rice" value="Rice"> <label for="rice">Rice</label></div>
+                <div><input type="checkbox" id="beans" value="Beans"> <label for="beans">Beans</label></div>
+                <div><input type="checkbox" id="lettuce" value="Lettuce"> <label for="lettuce">Lettuce</label></div>
+                <div><input type="checkbox" id="onions" value="Onions"> <label for="onions">Onions</label></div>
+                <div><input type="checkbox" id="tomatoes" value="Tomatoes"> <label for="tomatoes">Tomatoes</label></div>
+                <div><input type="checkbox" id="avocado" value="Avocado"> <label for="avocado">Avocado</label></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-column">
+            <h3>Set Priorities for Optimization</h3>
+            <div class="slider-container">
+                <input type="range" id="weight-slider" min="0" max="100" value="50">
+                <div class="weight-display">
+                    <span id="cost-weight-display">Cost: 50%</span>
+                    <span id="impact-weight-display">Impact: 50%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pareto-front">
+        <h3>Pareto Front Visualization</h3>
+    </div>
+
+    <div id="map-container">
+        <h3>Optimal Sourcing Countries</h3>
+        <div id="map"></div>
+        <div id="solution-info"></div>
+    </div>
+
+    <script>
+        // Global variables
+        let map;
+        let markersLayer;
+        let globalData;
+        const FIXED_INGREDIENTS = [
+            "Tortilla", "Beef", "Chicken", "Pork", "Cheese",
+            "Sour cream", "Rice", "Beans", "Lettuce",
+            "Onions", "Tomatoes", "Avocado"
+        ];
+
+        // Helper function to map checkbox values to data keys
+        function mapIngredientToDataKey(ingredient) {
+            // Add mappings based on your data structure
+            const mappings = {
+                'Tortilla': 'Tortilla',
+                'Beef': 'Beef',
+                'Chicken': 'Chicken',
+                'Pork': 'Pork',
+                'Cheese': 'Shredded Cheese',
+                'Sour cream': 'Sour Cream',
+                'Rice': 'Rice',
+                'Beans': 'Black/Pinto Beans',
+                'Lettuce': 'Salsa',  // Using Salsa as substitute since Lettuce isn't in data
+                'Onions': 'Onions',
+                'Tomatoes': 'Salsa',  // Using Salsa as substitute since Tomatoes isn't in data
+                'Avocado': 'Guacamole'
+            };
+
+            const mapped = mappings[ingredient];
+            console.log(`Mapping ${ingredient} to ${mapped}`);
+            return mapped;
+        }
+
+        // Initialize population with better error checking
+        function initializePopulation(selectedIngredients, importingCountry, populationSize = 50) {
+            console.log('Initializing population for:', selectedIngredients, 'in', importingCountry);
+
+            const population = [];
+
+            try {
+                for (let i = 0; i < populationSize; i++) {
+                    const individual = {};
+
+                    selectedIngredients.forEach(ingredient => {
+                        if (!globalData[importingCountry]?.[ingredient]) {
+                            console.warn(`No data for ${ingredient} in ${importingCountry}`);
+                            return;
+                        }
+
+                        const availableSources = Object.keys(globalData[importingCountry][ingredient]);
+                        if (availableSources.length > 0) {
+                            const randomIndex = Math.floor(Math.random() * availableSources.length);
+                            individual[ingredient] = availableSources[randomIndex];
+                        }
+                    });
+
+                    if (Object.keys(individual).length > 0) {
+                        population.push(individual);
+                    }
+                }
+
+                console.log('Initial population sample:', population.slice(0, 2));
+
+            } catch (error) {
+                console.error('Error initializing population:', error);
+            }
+
+            return population;
+        }
+
+        // Calculate cost and impact with logging
+        function calculateCostAndImpact(individual, importingCountry) {
+            console.log('Calculating metrics for:', individual, 'in', importingCountry);
+
+            let totalCost = 0;
+            let totalImpact = 0;
+
+            try {
+                // Skip non-ingredient properties
+                const ingredients = Object.entries(individual).filter(([key]) =>
+                    !['metrics', 'rank', 'crowdingDistance'].includes(key));
+
+                ingredients.forEach(([ingredient, sourceCountry]) => {
+                    console.log(`Looking up ${ingredient} from ${sourceCountry}`);
+
+                    if (!globalData[importingCountry]?.[ingredient]?.[sourceCountry]) {
+                        console.warn(`Missing data for ${ingredient} from ${sourceCountry}`);
+                        return;
+                    }
+
+                    const metrics = globalData[importingCountry][ingredient][sourceCountry];
+                    totalCost += metrics.costPerKg;
+                    totalImpact += metrics.Production_Env_Impact + (metrics.distance / 1000);
+                });
+
+                console.log('Calculated metrics:', { totalCost, totalImpact });
+
+            } catch (error) {
+                console.error('Error calculating metrics:', error);
+            }
+
+            return { cost: totalCost, impact: totalImpact };
+        }
+
+        // Fixed non-dominated sorting
+        function nonDominatedSorting(population) {
+            if (!population || !Array.isArray(population) || population.length === 0) {
+                console.error('Invalid population provided to sorting');
+                return [[]];
+            }
+
+            console.log('Sorting population of size:', population.length);
+
+            const fronts = [[]];
+            const dominationCount = new Map();
+            const dominatedSolutions = new Map();
+
+            try {
+                // Initialize data structures
+                population.forEach((_, index) => {
+                    dominationCount.set(index, 0);
+                    dominatedSolutions.set(index, []);
+                });
+
+                // Compare all solutions
+                for (let i = 0; i < population.length; i++) {
+                    const p = population[i];
+                    if (!p || !p.metrics) continue;
+
+                    for (let j = 0; j < population.length; j++) {
+                        if (i === j) continue;
+                        const q = population[j];
+                        if (!q || !q.metrics) continue;
+
+                        if (p.metrics.cost <= q.metrics.cost && p.metrics.impact <= q.metrics.impact &&
+                            (p.metrics.cost < q.metrics.cost || p.metrics.impact < q.metrics.impact)) {
+                            dominatedSolutions.get(i).push(j);
+                        } else if (q.metrics.cost <= p.metrics.cost && q.metrics.impact <= p.metrics.impact &&
+                            (q.metrics.cost < p.metrics.cost || q.metrics.impact < p.metrics.impact)) {
+                            dominationCount.set(i, dominationCount.get(i) + 1);
+                        }
+                    }
+
+                    if (dominationCount.get(i) === 0) {
+                        population[i].rank = 0;
+                        fronts[0].push(i);
+                    }
+                }
+
+                // Generate fronts
+                let currentFront = 0;
+                while (fronts[currentFront].length > 0) {
+                    const nextFront = [];
+
+                    for (const i of fronts[currentFront]) {
+                        for (const j of dominatedSolutions.get(i)) {
+                            dominationCount.set(j, dominationCount.get(j) - 1);
+                            if (dominationCount.get(j) === 0) {
+                                population[j].rank = currentFront + 1;
+                                nextFront.push(j);
+                            }
+                        }
+                    }
+
+                    currentFront++;
+                    if (nextFront.length > 0) {
+                        fronts.push(nextFront);
+                    }
+                }
+
+                console.log('Sorting complete, front sizes:', fronts.map(f => f.length));
+                return fronts;
+
+            } catch (error) {
+                console.error('Error during sorting:', error);
+                return [[]];
+            }
+        }
+
+        // Fixed selection function
+        function selection(population, numToSelect) {
+            console.log('Selecting from population:', population.length);
+
+            const selected = [];
+            for (let i = 0; i < numToSelect; i++) {
+                // Tournament selection
+                const idx1 = Math.floor(Math.random() * population.length);
+                const idx2 = Math.floor(Math.random() * population.length);
+
+                const candidate1 = population[idx1];
+                const candidate2 = population[idx2];
+
+                // Ensure candidates have required properties
+                if (!candidate1 || !candidate2) {
+                    console.warn('Invalid candidates in selection');
+                    continue;
+                }
+
+                // Initialize rank if missing
+                if (candidate1.rank === undefined) candidate1.rank = Infinity;
+                if (candidate2.rank === undefined) candidate2.rank = Infinity;
+
+                // Select better candidate
+                if (candidate1.rank < candidate2.rank ||
+                    (candidate1.rank === candidate2.rank &&
+                     (candidate1.crowdingDistance || 0) > (candidate2.crowdingDistance || 0))) {
+                    selected.push({...candidate1});
+                } else {
+                    selected.push({...candidate2});
+                }
+            }
+
+            console.log('Selected solutions:', selected.length);
+            return selected;
+        }
+
+        // Crossover function
+        function crossover(parent1, parent2) {
+            const child = {};
+            const ingredients = Object.keys(parent1).filter(key =>
+                key !== 'metrics' && key !== 'rank' && key !== 'crowdingDistance'
+            );
+
+            ingredients.forEach(ingredient => {
+                // 50% chance to inherit from each parent
+                child[ingredient] = Math.random() < 0.5 ?
+                    parent1[ingredient] : parent2[ingredient];
+            });
+
+            return child;
+        }
+
+        // Mutation function
+        function mutation(individual, importingCountry, mutationRate = 0.1) {
+            const mutated = { ...individual };
+
+            Object.keys(mutated).forEach(ingredient => {
+                if (ingredient === 'metrics' ||
+                    ingredient === 'rank' ||
+                    ingredient === 'crowdingDistance') return;
+
+                if (Math.random() < mutationRate && globalData[importingCountry]?.[ingredient]) {
+                    const availableSources = Object.keys(globalData[importingCountry][ingredient]);
+                    if (availableSources.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * availableSources.length);
+                        mutated[ingredient] = availableSources[randomIndex];
+                    }
+                }
+            });
+
+            return mutated;
+        }
+
+        // Calculate crowding distance
+        function calculateCrowdingDistance(front) {
+            if (!front || front.length === 0) return front;
+
+            const numSolutions = front.length;
+
+            // Initialize crowding distances
+            front.forEach(solution => solution.crowdingDistance = 0);
+
+            // Return if only one solution
+            if (numSolutions === 1) {
+                front[0].crowdingDistance = Infinity;
+                return front;
+            }
+
+            // For each objective (cost and impact)
+            ['cost', 'impact'].forEach(objective => {
+                // Sort by the objective
+                front.sort((a, b) => a.metrics[objective] - b.metrics[objective]);
+
+                // Set infinite distance to boundary points
+                front[0].crowdingDistance = Infinity;
+                front[numSolutions - 1].crowdingDistance = Infinity;
+
+                // Calculate crowding distance for intermediate points
+                const objectiveRange = front[numSolutions - 1].metrics[objective] -
+                                     front[0].metrics[objective];
+
+                if (objectiveRange === 0) return;
+
+                for (let i = 1; i < numSolutions - 1; i++) {
+                    front[i].crowdingDistance += (
+                        front[i + 1].metrics[objective] -
+                        front[i - 1].metrics[objective]
+                    ) / objectiveRange;
+                }
+            });
+
+            return front;
+        }
+
+        // Run NSGA-II optimization with better error handling
+        async function runNSGA2Optimization(selectedIngredients, importingCountry, budget) {
+            console.log('Starting optimization with:', { selectedIngredients, importingCountry, budget });
+
+            const populationSize = 50;
+            const generations = 100;
+
+            // Initialize population
+            let population = initializePopulation(selectedIngredients, importingCountry, populationSize);
+
+            if (!population || population.length === 0) {
+                console.error('Failed to initialize population');
+                return [];
+            }
+
+            try {
+                // Calculate metrics for initial population
+                population = population.map(individual => {
+                    const metrics = calculateCostAndImpact(individual, importingCountry);
+                    return { ...individual, metrics };
+                });
+
+                console.log('Initial population with metrics:', population[0]);
+
+                for (let gen = 0; gen < generations; gen++) {
+                    const offspring = [];
+
+                    // Create offspring
+                    while (offspring.length < populationSize) {
+                        const parents = selection(population, 2);
+                        const child = crossover(parents[0], parents[1]);
+                        const mutatedChild = mutation(child, importingCountry);
+                        const metrics = calculateCostAndImpact(mutatedChild, importingCountry);
+
+                        offspring.push({ ...mutatedChild, metrics });
+                    }
+
+                    // Combine populations
+                    const combined = [...population, ...offspring];
+
+                    // Sort and select next generation
+                    const fronts = nonDominatedSorting(combined);
+                    const nextGen = [];
+                    let frontIndex = 0;
+
+                    while (nextGen.length < populationSize && frontIndex < fronts.length) {
+                        const currentFront = fronts[frontIndex].map(index => combined[index]);
+
+                        if (currentFront.length === 0) break;
+
+                        calculateCrowdingDistance(currentFront);
+
+                        if (nextGen.length + currentFront.length <= populationSize) {
+                            nextGen.push(...currentFront);
+                        } else {
+                            currentFront.sort((a, b) => b.crowdingDistance - a.crowdingDistance);
+                            nextGen.push(...currentFront.slice(0, populationSize - nextGen.length));
+                        }
+
+                        frontIndex++;
+                    }
+
+                    population = nextGen;
+                }
+
+                // Filter solutions within budget
+                const validSolutions = population.filter(solution =>
+                    solution.metrics && solution.metrics.cost <= budget
+                );
+
+                console.log('Valid solutions found:', validSolutions.length);
+                return validSolutions;
+
+            } catch (error) {
+                console.error('Error during optimization:', error);
+                return [];
+            }
+        }
+
+        // Select optimal solution based on weights
+        function selectOptimalSolution(paretoFront, costWeight, impactWeight) {
+            if (paretoFront.length === 0) return null;
+
+            // Normalize weights
+            const totalWeight = costWeight + impactWeight;
+            const normalizedCostWeight = costWeight / totalWeight;
+            const normalizedImpactWeight = impactWeight / totalWeight;
+
+            // Find max and min values for normalization
+            const maxCost = Math.max(...paretoFront.map(sol => sol.metrics.cost));
+            const minCost = Math.min(...paretoFront.map(sol => sol.metrics.cost));
+            const maxImpact = Math.max(...paretoFront.map(sol => sol.metrics.impact));
+            const minImpact = Math.min(...paretoFront.map(sol => sol.metrics.impact));
+
+            let bestSolution = null;
+            let bestScore = Infinity;
+
+            paretoFront.forEach(solution => {
+                // Normalize values to 0-1 range
+                const normalizedCost = (solution.metrics.cost - minCost) / (maxCost - minCost || 1);
+                const normalizedImpact = (solution.metrics.impact - minImpact) / (maxImpact - minImpact || 1);
+
+                // Calculate weighted score
+                const score = normalizedCost * normalizedCostWeight + normalizedImpact * normalizedImpactWeight;
+
+                if (score < bestScore) {
+                    bestScore = score;
+                    bestSolution = solution;
+                }
+            });
+
+            return bestSolution;
+        }
+
+       // Display Pareto Front with hover tooltips and highlight optimal solution
+        function displayParetoFront(paretoFront, finalSolution) {
+            const container = d3.select('#pareto-front');
+            container.html(''); // Clear previous content
+
+            const margin = { top: 20, right: 20, bottom: 50, left: 60 };
+            const width = container.node().getBoundingClientRect().width - margin.left - margin.right;
+            const height = container.node().getBoundingClientRect().height - margin.top - margin.bottom;
+
+            const svg = container.append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            // Create scales
+            const x = d3.scaleLinear()
+                .domain([0, d3.max(paretoFront, d => d.metrics.cost)])
+                .range([0, width]);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(paretoFront, d => d.metrics.impact)])
+                .range([height, 0]);
+
+            // Add axes
+            svg.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x))
+                .append('text')
+                .attr('x', width/2)
+                .attr('y', 40)
+                .attr('fill', 'black')
+                .text('Cost ($)');
+
+            svg.append('g')
+                .call(d3.axisLeft(y))
+                .append('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('y', -40)
+                .attr('x', -height/2)
+                .attr('fill', 'black')
+                .attr('text-anchor', 'middle')
+                .text('Environmental Impact');
+
+            // Add points
+            svg.selectAll('circle')
+                .data(paretoFront)
+                .enter()
+                .append('circle')
+                .attr('cx', d => x(d.metrics.cost))
+                .attr('cy', d => y(d.metrics.impact))
+                .attr('r', 5)
+                .attr('fill', d => d === finalSolution ? 'red' : 'steelblue')
+                .on('mouseover', function(event, d) {
+                    d3.select(this).attr('r', 8);
+                    showTooltip(event, d);
+                })
+                .on('mouseout', function() {
+                    d3.select(this).attr('r', 5);
+                    hideTooltip();
+                });
+        }
+
+        // Display Solution Info
+        function displaySolutionInfo(finalSolution) {
+            const container = document.getElementById('solution-info');
+            if (!finalSolution) {
+                container.innerHTML = '<p>No valid solution found within budget constraints.</p>';
+                return;
+            }
+
+            let html = '<h4>Optimal Solution Details:</h4>';
+            html += `<p>Total Cost: $${finalSolution.metrics.cost.toFixed(2)}</p>`;
+            html += `<p>Environmental Impact: ${finalSolution.metrics.impact.toFixed(2)}</p>`;
+            html += '<h5>Sourcing Details:</h5><ul>';
+
+            Object.entries(finalSolution).forEach(([ingredient, source]) => {
+                if (ingredient !== 'metrics' && ingredient !== 'rank' && ingredient !== 'crowdingDistance') {
+                    html += `<li>${ingredient}: Sourced from ${source}</li>`;
+                }
+            });
+
+            html += '</ul>';
+            container.innerHTML = html;
+        }
+
+        // Display Map with sourcing locations
+        function displayMap(finalSolution, importingCountry) {
+            if (!map) {
+                map = L.map('map').setView([0, 0], 2);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+                markersLayer = L.layerGroup().addTo(map);
+            }
+
+            markersLayer.clearLayers();
+
+            if (!finalSolution) return;
+
+            const markers = [];
+            const importerCoords = getCountryCoordinates(importingCountry);
+            if (importerCoords) {
+                markers.push(L.marker([importerCoords.lat, importerCoords.lng])
+                    .bindPopup(`Importing Country: ${importingCountry}`)
+                    .addTo(markersLayer));
+            }
+
+            Object.entries(finalSolution).forEach(([ingredient, sourceCountry]) => {
+                if (ingredient !== 'metrics' && ingredient !== 'rank' && ingredient !== 'crowdingDistance') {
+                    const metrics = globalData[importingCountry][ingredient][sourceCountry];
+                    const marker = L.marker([metrics.Latitude, metrics.Longitude])
+                        .bindPopup(`
+                            <b>${ingredient}</b><br>
+                            Source: ${sourceCountry}<br>
+                            Cost: $${metrics.costPerKg.toFixed(2)}/kg<br>
+                            Impact: ${metrics.Production_Env_Impact.toFixed(2)}<br>
+                            Distance: ${metrics.distance.toFixed(0)}km
+                        `)
+                        .addTo(markersLayer);
+                    markers.push(marker);
+                }
+            });
+
+            // Fit bounds to show all markers
+            if (markers.length > 0) {
+                const group = L.featureGroup(markers);
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+        }
+
+         // Updated updateParetoFront function with error handling
+        async function updateParetoFront() {
+            try {
+                const importingCountry = document.getElementById('location').value;
+                const budget = parseFloat(document.getElementById('budget').value);
+                const costWeight = parseInt(document.getElementById('weight-slider').value) / 100;
+                const impactWeight = 1 - costWeight;
+
+                const selectedIngredients = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+                    .map(cb => cb.value);
+
+                if (!selectedIngredients.length || !budget || isNaN(budget)) {
+                    alert('Please select ingredients and enter a valid budget.');
+                    return;
+                }
+
+                console.log('Starting optimization with:', {
+                    importingCountry,
+                    selectedIngredients,
+                    budget
+                });
+
+                const paretoFront = await runNSGA2Optimization(selectedIngredients, importingCountry, budget);
+
+                if (!paretoFront || paretoFront.length === 0) {
+                    console.log('No valid solutions found');
+                    displaySolutionInfo(null);
+                    return;
+                }
+
+                const finalSolution = selectOptimalSolution(paretoFront, costWeight, impactWeight);
+
+                displayParetoFront(paretoFront, finalSolution);
+                displaySolutionInfo(finalSolution);
+                displayMap(finalSolution, importingCountry);
+
+            } catch (error) {
+                console.error('Error in updateParetoFront:', error);
+                alert('An error occurred while updating the optimization. Please check the console for details.');
+            }
+        }
+
+        // Initialize the application
+        async function initializeApp() {
+            try {
+                // Load data
+                const response = await fetch('final_burrito_data.json');
+                globalData = await response.json();
+
+                // Populate country dropdown
+                const locationSelect = document.getElementById('location');
+                Object.keys(globalData).forEach(country => {
+                    const option = document.createElement('option');
+                    option.value = country;
+                    option.textContent = country;
+                    locationSelect.appendChild(option);
+                });
+
+                // Initialize map
+                map = L.map('map').setView([0, 0], 2);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+                markersLayer = L.layerGroup().addTo(map);
+
+                // Add event listeners
+                document.getElementById('weight-slider').addEventListener('input', function() {
+                    const costWeight = this.value;
+                    document.getElementById('cost-weight-display').textContent = `Cost: ${costWeight}%`;
+                    document.getElementById('impact-weight-display').textContent = `Impact: ${100-costWeight}%`;
+                    updateParetoFront();
+                });
+
+                document.querySelectorAll('input[type="checkbox"], #location, #budget')
+                    .forEach(el => el.addEventListener('change', updateParetoFront));
+
+            } catch (error) {
+                console.error('Error initializing application:', error);
+                alert('Error loading application data. Please try again.');
+            }
+        }
+
+        // Start the application when the page loads
+        window.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>

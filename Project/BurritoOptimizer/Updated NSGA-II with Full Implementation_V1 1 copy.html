@@ -16,15 +16,15 @@
         .country:hover { fill: lightblue; }
 
         /* Tooltip Styling */
-        .tooltip {
-            position: absolute;
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 8px;
-            border: 1px solid gray;
+        .tooltip { 
+            position: absolute; 
+            background-color: rgba(255, 255, 255, 0.9); 
+            padding: 8px; 
+            border: 1px solid gray; 
             border-radius: 4px;
-            pointer-events: none;
-            font-size: 12px;
-            opacity: 0;
+            pointer-events: none; 
+            font-size: 12px; 
+            opacity: 0; 
             transition: opacity 0.3s;
             box-shadow: 0px 0px 5px rgba(0,0,0,0.3);
             min-width: 80px;
@@ -73,10 +73,10 @@
         }
 
         /* Highlight Styling for Optimal Solution */
-        .optimal-point {
-            fill: red;
-            stroke: black;
-            stroke-width: 2px;
+        .optimal-point { 
+            fill: red; 
+            stroke: black; 
+            stroke-width: 2px; 
         }
         .optimal-label {
             font-size: 10px;
@@ -189,7 +189,7 @@
             <!-- Pareto Front Visualization -->
             <div id="pareto-front">
                 <h3>Pareto Front Visualization</h3>
-                <svg id="pareto-chart" width="400" height="300"></svg>
+                <svg id="pareto-chart" width="400" height="300"></svg>  
             </div>
         </div>
     </div> <!-- Close second form-row -->
@@ -221,7 +221,15 @@
     <!-- JavaScript Code -->
     <script>
         let ingredientData = null;
-        let dataLoaded = false;
+
+        // Load ingredient data
+        d3.json("ingredientData.json").then(function(data) {
+            ingredientData = data;
+            console.log("Ingredient data loaded:", ingredientData);
+            updateParetoFront();
+        }).catch(function(error) {
+            console.error("Error loading ingredientData.json:", error);
+        });
 
         const ingredientColors = {
             "tortilla": "#D2B48C",
@@ -235,187 +243,61 @@
             "lettuce": "#32CD32",
             "onions": "#9400D3",
             "tomatoes": "#FF6347",
-            "avocado": "#228B22"
+            "avocado": "#228B22"Updated NSGA-II with Full Implementation_V1 1 copy.html
         };
 
-        // Function to get all unique countries from the data
-        function getAllCountries() {
-            if (!ingredientData) return []; // Return empty array if data isn't loaded
-
-            const countries = new Set();
-
-            // Add all exporting countries (outer level of data)
-            for (const country of Object.keys(ingredientData)) {
-                countries.add(country);
-
-                // Add all countries that appear as exporters in the inner levels
-                for (const ingredient of Object.values(ingredientData[country])) {
-                    for (const exportingCountry of Object.keys(ingredient)) {
-                        countries.add(exportingCountry);
-                    }
-                }
-            }
-
-            return Array.from(countries).sort();
-        }
-
-        // Function to update the importing country dropdown
-        function updateImportingCountryDropdown() {
-            if (!ingredientData) return; // Don't update if data isn't loaded
-
-            const dropdown = d3.select("#importing-country");
-            const countries = getAllCountries();
-
-            // Clear existing options
-            dropdown.selectAll("option").remove();
-
-            // Add new options
-            dropdown.selectAll("option")
-                .data(countries)
-                .enter()
-                .append("option")
-                .attr("value", d => d)
-                .text(d => d);
-        }
-
         // Initialize population
-       function initializePopulation(selectedIngredients, importingCountry, populationSize = 50) {
-            console.log("Initializing population with:", {
-                selectedIngredients,
-                importingCountry
-            });
-
+        function initializePopulation(selectedIngredients, importingCountry, populationSize = 50) {
             const population = [];
-
-            // Map ingredient checkbox values to proper names
-            const dataIngredients = {
-                'tortilla': 'Tortilla',
-                'beef': 'Beef',
-                'chicken': 'Chicken',
-                'pork': 'Pork',
-                'cheese': 'Shredded Cheese',
-                'sour-cream': 'Sour Cream',
-                'rice': 'Rice',
-                'beans': 'Black/Pinto Beans',
-                'lettuce': 'Lettuce',
-                'onions': 'Onions',
-                'tomatoes': 'Tomatoes',
-                'avocado': 'Guacamole'
-            };
-
-            // Find available exporting countries for each ingredient that can export to the importing country
-            const availableExporters = new Map();
-
-            for (const ingredient of selectedIngredients) {
-                const properName = dataIngredients[ingredient];
-                const exporters = new Set();
-
-                // Look through all countries in ingredientData
-                for (const [exportingCountry, countryData] of Object.entries(ingredientData)) {
-                    // Check if this country exports this ingredient
-                    if (countryData[properName] &&
-                        countryData[properName][importingCountry] &&
-                        typeof countryData[properName][importingCountry].costPerKg === 'number' &&
-                        typeof countryData[properName][importingCountry].Production_Env_Impact === 'number') {
-                        exporters.add(exportingCountry);
-                    }
-                }
-
-                if (exporters.size > 0) {
-                    availableExporters.set(properName, Array.from(exporters));
-                    console.log(`Available exporters for ${properName}:`, Array.from(exporters));
-                } else {
-                    console.warn(`No valid exporters found for ${properName} to ${importingCountry}`);
-                }
-            }
-
-            // Create population
-            let attempts = 0;
-            const maxAttempts = populationSize * 10; // Prevent infinite loops
-
-            while (population.length < populationSize && attempts < maxAttempts) {
-                attempts++;
+            for (let i = 0; i < populationSize; i++) {
                 const individual = { solution: {} };
                 let validIndividual = true;
-
-                // For each selected ingredient, pick a random valid exporter
-                for (const ingredient of selectedIngredients) {
-                    const properName = dataIngredients[ingredient];
-                    const exporters = availableExporters.get(properName);
-
-                    if (!exporters || exporters.length === 0) {
+                selectedIngredients.forEach(ingredient => {
+                    const ingredientCountries = ingredientData[importingCountry]?.[ingredient];
+                    if (ingredientCountries) {
+                        const countries = Object.keys(ingredientCountries);
+                        if (countries.length > 0) {
+                            individual.solution[ingredient] = countries[Math.floor(Math.random() * countries.length)];
+                        } else {
+                            validIndividual = false;
+                        }
+                    } else {
                         validIndividual = false;
-                        break;
                     }
-
-                    // Randomly select an exporter
-                    const selectedExporter = exporters[Math.floor(Math.random() * exporters.length)];
-                    individual.solution[properName] = selectedExporter;
-                }
-
-                // Validate the solution
+                });
                 if (validIndividual) {
-                    // Calculate initial costs to ensure validity
-                    calculateCostAndImpact(individual, importingCountry);
-
-                    if (individual.cost !== undefined && individual.impact !== undefined) {
-                        population.push(individual);
-                        console.log("Created valid individual:", individual);
-                    }
+                    population.push(individual);
                 }
             }
-
-            if (population.length < populationSize) {
-                console.warn(`Could only create ${population.length} valid individuals out of ${populationSize} requested`);
-            }
-
-            console.log(`Created population of size ${population.length}`);
             return population;
-}
+        }
 
-        // Cost and Impact
+        // Calculate cost and impact
         function calculateCostAndImpact(individual, importingCountry) {
             let totalCost = 0;
             let totalImpact = 0;
             let validIndividual = true;
-
-            console.log("Calculating costs for individual:", individual);
-
-            for (const [ingredient, exportingCountry] of Object.entries(individual.solution)) {
-                // For each ingredient, look up data in the exporting country's data
-                if (!ingredientData[exportingCountry] ||
-                    !ingredientData[exportingCountry][ingredient] ||
-                    !ingredientData[exportingCountry][ingredient][importingCountry]) {
-                    console.warn(`Invalid data path for ${ingredient} from ${exportingCountry} to ${importingCountry}`);
-                    validIndividual = false;
-                    break;
-                }
-
-                const data = ingredientData[exportingCountry][ingredient][importingCountry];
-                console.log(`${ingredient} from ${exportingCountry} to ${importingCountry}:`, data);
-
-                // Check if required fields exist
-                if (typeof data.costPerKg === 'number' && typeof data.Production_Env_Impact === 'number') {
-                    totalCost += data.costPerKg;
-                    totalImpact += data.Production_Env_Impact;
-                    console.log(`Running totals - Cost: ${totalCost}, Impact: ${totalImpact}`);
+            for (const [ingredient, country] of Object.entries(individual.solution)) {
+                const data = ingredientData[importingCountry]?.[ingredient]?.[country];
+                if (data) {
+                    totalCost += data.cost;
+                    totalImpact += data.impact;
                 } else {
-                    console.warn(`Missing cost or impact data for ${ingredient} from ${exportingCountry}`);
                     validIndividual = false;
                     break;
                 }
             }
-
             if (validIndividual) {
                 individual.cost = totalCost;
                 individual.impact = totalImpact;
-                console.log(`Final costs - Cost: ${totalCost}, Impact: ${totalImpact}`);
+                console.log(`Assigned cost: ${individual.cost}, impact: ${individual.impact}`);
             } else {
                 individual.cost = undefined;
                 individual.impact = undefined;
-                console.log("Individual marked as invalid");
+                console.log(`Invalid individual, cost and impact set to undefined.`);
             }
         }
+
         // Non-dominated sorting
         function nonDominatedSorting(population) {
             let fronts = [[]];
@@ -511,56 +393,33 @@
             return individual;
         }
 
+        // Run NSGA-II optimization
         function runNSGA2Optimization(selectedIngredients, importingCountry, budget) {
-            console.log("Starting optimization with budget:", budget);
-
             const populationSize = 50;
             const generations = 50;
             let population = initializePopulation(selectedIngredients, importingCountry, populationSize);
-
-            console.log("Initial population size:", population.length);
 
             for (let generation = 0; generation < generations; generation++) {
                 // Evaluate fitness
                 population.forEach(individual => calculateCostAndImpact(individual, importingCountry));
 
-                // Log costs before filtering
-                console.log("Population costs before budget filter:",
-                    population.map(ind => ({
-                        cost: ind.cost,
-                        impact: ind.impact,
-                        valid: ind.cost !== undefined && ind.impact !== undefined && ind.cost <= budget
-                    }))
-                );
-
                 // Filter out individuals exceeding the budget or with undefined cost/impact
-                const filteredPopulation = population.filter(individual =>
-                    individual.cost !== undefined &&
-                    individual.impact !== undefined &&
-                    individual.cost <= budget
-                );
-
-                console.log(`Generation ${generation}:`);
-                console.log(`- Population size before filter: ${population.length}`);
-                console.log(`- Population size after filter: ${filteredPopulation.length}`);
-                console.log(`- Budget limit: ${budget}`);
-                console.log(`- Minimum cost in population: ${Math.min(...population.filter(p => p.cost !== undefined).map(p => p.cost))}`);
-                console.log(`- Maximum cost in population: ${Math.max(...population.filter(p => p.cost !== undefined).map(p => p.cost))}`);
-
-                population = filteredPopulation;
+                population = population.filter(individual => individual.cost !== undefined && individual.impact !== undefined && individual.cost <= budget);
 
                 if (population.length === 0) {
-                    console.warn(`No individuals within budget at generation ${generation}`);
+                    console.warn("No individuals within budget at generation", generation);
                     break;
                 }
 
-                // Rest of the NSGA-II algorithm...
+                // Perform non-dominated sorting
                 const fronts = nonDominatedSorting(population);
                 fronts.forEach(front => calculateCrowdingDistance(front));
 
+                // Selection
                 const matingPool = selection(population, populationSize);
-                let newPopulation = [];
 
+                // Generate new population through crossover and mutation
+                let newPopulation = [];
                 while (newPopulation.length < populationSize) {
                     const parent1 = matingPool[Math.floor(Math.random() * matingPool.length)];
                     const parent2 = matingPool[Math.floor(Math.random() * matingPool.length)];
@@ -568,17 +427,40 @@
                     offspring = mutation(offspring, importingCountry);
                     newPopulation.push(offspring);
                 }
-
                 population = newPopulation;
             }
 
+            // Check if population is empty
             if (population.length === 0) {
-                console.warn("Final population is empty - no solutions within budget found");
-                console.log("Ingredient data sample:", ingredientData[importingCountry]);
+                console.warn("No valid individuals in the population.");
                 return [];
             }
 
-            return population;
+            // Final evaluation and sorting
+            population.forEach(individual => calculateCostAndImpact(individual, importingCountry));
+            // Filter out invalid individuals
+            population = population.filter(individual => individual.cost !== undefined && individual.impact !== undefined && individual.cost <= budget);
+
+            const finalFronts = nonDominatedSorting(population);
+
+            // Check if finalFronts is empty
+            if (finalFronts.length === 0 || !finalFronts[0]) {
+                console.warn("No Pareto fronts generated.");
+                return [];
+            }
+
+            // Filter out individuals exceeding the budget
+            let paretoFront = finalFronts[0].filter(individual => individual.cost <= budget);
+
+            // Remove duplicates from paretoFront
+            paretoFront = paretoFront.filter((v, i, a) => a.findIndex(t => 
+                JSON.stringify(t.solution) === JSON.stringify(v.solution) &&
+                t.cost === v.cost &&
+                t.impact === v.impact
+            ) === i);
+
+            console.log("Pareto solutions generated:", paretoFront);
+            return paretoFront;
         }
 
         // Select the optimal solution based on weights
@@ -879,49 +761,44 @@
         }
 
         // Update Pareto Front Visualization
-
         function updateParetoFront() {
-                if (!dataLoaded) {
-                    console.log("Data not yet loaded, skipping update");
-                    return;
-                }
-
-                const selectedIngredients = Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(el => el.value);
-                if (selectedIngredients.length === 0) {
-                    alert("Please select ingredients.");
-                    return;
-                }
-
-                const budgetInput = d3.select("#budget-input").node();
-                const budget = +budgetInput.value;
-
-                if (isNaN(budget) || budget <= 0) {
-                    alert("Please enter a valid budget.");
-                    return;
-                }
-
-                const importingCountry = d3.select("#importing-country").node().value;
-                const costWeight = +d3.select("#weight-slider").property("value") / 100;
-                const impactWeight = 1 - costWeight;
-
-                const paretoFront = runNSGA2Optimization(selectedIngredients, importingCountry, budget);
-
-                if (paretoFront.length === 0) {
-                    d3.select("#pareto-chart").selectAll("*").remove();
-                    d3.select("#country-map").selectAll("*").remove();
-                    d3.select("#solution-info").html("");
-                    alert("No valid solution found within the budget. Try increasing your budget or selecting different ingredients.");
-                    return;
-                }
-
-                const finalSolution = selectOptimalSolution(paretoFront, costWeight, impactWeight);
-                displayParetoFront(paretoFront, finalSolution);
-
-                if (finalSolution) {
-                    displaySolutionInfo(finalSolution);
-                    displayMap(finalSolution, importingCountry);
-                }
+            const selectedIngredients = Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(el => el.value);
+            if (selectedIngredients.length === 0) {
+                alert("Please select ingredients.");
+                return;
             }
+
+            const budgetInput = d3.select("#budget-input").node();
+            const budget = +budgetInput.value;
+
+            if (isNaN(budget) || budget <= 0) {
+                alert("Please enter a valid budget.");
+                return;
+            }
+
+            const importingCountry = d3.select("#importing-country").node().value;
+            const costWeight = +d3.select("#weight-slider").property("value") / 100;
+            const impactWeight = 1 - costWeight;
+
+            const paretoFront = runNSGA2Optimization(selectedIngredients, importingCountry, budget);
+
+            if (paretoFront.length === 0) {
+                d3.select("#pareto-chart").selectAll("*").remove();
+                d3.select("#country-map").selectAll("*").remove();
+                d3.select("#solution-info").html("");
+                alert("No valid solution found within the budget.");
+                return;
+            }
+
+            const finalSolution = selectOptimalSolution(paretoFront, costWeight, impactWeight);
+
+            displayParetoFront(paretoFront, finalSolution);
+
+            if (finalSolution) {
+                displaySolutionInfo(finalSolution);
+                displayMap(finalSolution, importingCountry);
+            }
+        }
 
         // Event Listener for the Combined Weight Slider
         d3.select("#weight-slider").on("input", function() {
@@ -934,45 +811,9 @@
             updateParetoFront();
         });
 
-        // Keep only the event listeners inside the DOMContentLoaded event
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set up event listeners
-            d3.select("#weight-slider").on("input", function() {
-                const costWeight = +d3.select(this).property("value") / 100;
-                const impactWeight = 1 - costWeight;
-
-                d3.select("#cost-weight-display").text(`${Math.round(costWeight * 100)}%`);
-                d3.select("#impact-weight-display").text(`${Math.round(impactWeight * 100)}%`);
-
-                if (dataLoaded) {
-                    updateParetoFront();
-                }
-            });
-
-            d3.selectAll("input[type=checkbox], select").on("change", function() {
-                if (dataLoaded) {
-                    updateParetoFront();
-                }
-            });
-
-            d3.select("#budget-input").on("change", function() {
-                if (dataLoaded) {
-                    updateParetoFront();
-                }
-            });
-        });
-
-        // Load ingredient data
-        d3.json("final_burrito_data.json").then(function(data) {
-            ingredientData = data;
-            dataLoaded = true;
-            console.log("Ingredient data loaded:", ingredientData);
-            updateImportingCountryDropdown();
-            updateParetoFront();
-        }).catch(function(error) {
-            console.error("Error loading final_burrito_data.json:", error);
-        });
-
+        // Event Listeners for Inputs
+        d3.selectAll("input[type=checkbox], select").on("change", updateParetoFront);
+        d3.select("#budget-input").on("change", updateParetoFront);
     </script>
 </body>
 </html>
