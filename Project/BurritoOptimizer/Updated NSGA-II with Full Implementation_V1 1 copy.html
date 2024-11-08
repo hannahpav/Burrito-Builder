@@ -225,6 +225,31 @@
         .confirmation-section button:hover {
             opacity: 0.9;
         }
+
+        .flex-container {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .ingredient-list {
+            flex: 1;
+        }
+
+        .burrito-preview {
+            flex: 1;
+            width: 256px;
+            height: 256px;
+            position: relative;
+        }
+
+        .burrito-preview img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
     </style>
 </head>
 <body>
@@ -254,21 +279,28 @@
     <div class="form-row">
         <!-- Left Column -->
         <div class="form-column left-column">
-            <!-- Choose ingredients for your burrito -->
-            <label for="ingredient" class="section-label">Choose ingredients for your burrito:</label><br><br>
-            <input type="checkbox" id="tortilla" name="tortilla" value="Tortilla"> Tortilla (wheat)<br>
-            <input type="checkbox" id="beef" name="beef" value="Beef"> Beef<br>
-            <input type="checkbox" id="chicken" name="chicken" value="Chicken"> Chicken<br>
-            <input type="checkbox" id="pork" name="pork" value="Pork"> Pork<br>
-            <input type="checkbox" id="cheese" name="cheese" value="Shredded Cheese"> Cheese<br>
-            <input type="checkbox" id="sour-cream" name="sour-cream" value="Sour Cream"> Sour cream (milk)<br>
-            <input type="checkbox" id="rice" name="rice" value="Rice"> Rice<br>
-            <input type="checkbox" id="beans" name="beans" value="Black/Pinto Beans"> Beans<br>
-            <input type="checkbox" id="lettuce" name="lettuce" value="Lettuce"> Lettuce<br>
-            <input type="checkbox" id="onions" name="onions" value="Onions"> Onions<br>
-            <input type="checkbox" id="tomatoes" name="tomatoes" value="Tomato"> Tomatoes<br>
-            <input type="checkbox" id="avocado" name="avocado" value="Guacamole"> Avocado<br>
-        </div>
+                <!-- Choose ingredients for your burrito -->
+                <label for="ingredient" class="section-label">Choose ingredients for your burrito:</label><br><br>
+                <div class="flex-container">
+                    <!-- Ingredient checkboxes -->
+                    <div class="ingredient-list">
+                        <input type="checkbox" id="tortilla" name="tortilla" value="Tortilla"> Tortilla (wheat)<br>
+                        <input type="checkbox" id="beef" name="beef" value="Beef"> Beef<br>
+                        <input type="checkbox" id="chicken" name="chicken" value="Chicken"> Chicken<br>
+                        <input type="checkbox" id="pork" name="pork" value="Pork"> Pork<br>
+                        <input type="checkbox" id="cheese" name="cheese" value="Shredded Cheese"> Cheese<br>
+                        <input type="checkbox" id="sour-cream" name="sour-cream" value="Sour Cream"> Sour cream (milk)<br>
+                        <input type="checkbox" id="rice" name="rice" value="Rice"> Rice<br>
+                        <input type="checkbox" id="beans" name="beans" value="Black/Pinto Beans"> Beans<br>
+                        <input type="checkbox" id="lettuce" name="lettuce" value="Lettuce"> Lettuce<br>
+                        <input type="checkbox" id="onions" name="onions" value="Onions"> Onions<br>
+                        <input type="checkbox" id="tomatoes" name="tomatoes" value="Tomato"> Tomatoes<br>
+                        <input type="checkbox" id="avocado" name="avocado" value="Guacamole"> Avocado<br>
+                    </div>
+                    <!-- Burrito visualization -->
+                    <div id="burrito-preview" class="burrito-preview"></div>
+                </div>
+            </div>
 
         <!-- Right Column -->
         <div class="form-column right-column">
@@ -358,12 +390,22 @@
         // Add this new function to enable UI elements
         function enableUIElements() {
             // Enable all inputs that were disabled
-            d3.selectAll("input[type=checkbox], select, #budget-input, #weight-slider")
+            d3.selectAll("input[type=checkbox]")
                 .property("disabled", false)
-                .on("change", updateParetoFront);
+                .on("change", function() {
+                    updateParetoFront();
+                    updateBurritoVisualization();
+                });
+            // Add slider event listener
+            d3.select("#weight-slider")
+                .property("disabled", false)
+                .on("input", function() {  // 'input' event fires while sliding
+                    updateParetoFront();
+                });
 
             // Initial update
             updateParetoFront();
+            updateBurritoVisualization();
 
             console.log("UI elements enabled");
         }
@@ -1030,7 +1072,7 @@
         function handleBurritoConfirm(isConfirmed) {
             const message = isConfirmed
                 ? "Great choice! Your burrito combination has been confirmed."
-                : "No problem! Feel free to adjust the parameters to find your perfect burrito.";
+                : "No problem! Feel free to explore more selections to find your perfect burrito.";
             alert(message);
         }
 
@@ -1092,6 +1134,51 @@
             // Add ingredient names
             legendItems.append("span")
                 .text(d => d[0]);
+        }
+
+        function updateBurritoVisualization() {
+            const burritoPreview = document.getElementById('burrito-preview');
+            burritoPreview.innerHTML = ''; // Clear existing images
+
+            // Order of ingredients from bottom to top
+            const ingredientOrder = [
+                'tortilla',
+                'rice',
+                'beans',
+                'beef',
+                'chicken',
+                'pork',
+                'cheese',
+                'lettuce',
+                'onions',
+                'tomatoes',
+                'sour cream',
+                'avocado'
+            ];
+
+            // Add images for checked ingredients in order
+            ingredientOrder.forEach((ingredient, index) => {
+                const checkbox = document.getElementById(ingredient);
+                if (checkbox && checkbox.checked) {
+                    const img = document.createElement('img');
+                    img.src = `images2/${ingredient}.png`;
+                    img.alt = ingredient;
+                    img.style.zIndex = index;
+                    burritoPreview.appendChild(img);
+                }
+            });
+
+            // Show placeholder text if no ingredients selected
+            if (burritoPreview.children.length === 0) {
+                const placeholder = document.createElement('div');
+                placeholder.style.position = 'absolute';
+                placeholder.style.top = '50%';
+                placeholder.style.left = '50%';
+                placeholder.style.transform = 'translate(-50%, -50%)';
+                placeholder.style.color = '#666';
+                placeholder.textContent = 'Select ingredients to build your burrito';
+                burritoPreview.appendChild(placeholder);
+            }
         }
 
         // Helper function to determine if two bounding boxes overlap
@@ -1160,9 +1247,6 @@
                 displayMap(finalSolution, importingCountry);
             }
         }
-
-
-    // Remove any existing event listeners - they'll be added by enableUIElements
 
     </script>
 </body>
