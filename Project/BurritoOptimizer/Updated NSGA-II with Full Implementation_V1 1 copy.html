@@ -47,7 +47,7 @@
         }
 
         /* Label and Line Styling */
-        .label { font-size: 10px; font-weight: bold; }
+        .label { font-size: 14px; font-weight: bold; }
         .line { stroke-width: 1.5; }
 
         /* Map and Chart Dimensions */
@@ -147,7 +147,7 @@
             margin-top: 20px; /* Added margin for spacing */
         }
         #solution-info {
-            font-size: 14px;
+            font-size: 20px;
             font-weight: bold;
             margin-left: 20px;
             color: blue;
@@ -207,7 +207,24 @@
             border-bottom: 1px solid #ccc;
             padding-bottom: 5px;
         }
-        `;
+        .map-header {
+            margin-bottom: 20px;
+        }
+
+        .confirmation-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .confirmation-section button {
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .confirmation-section button:hover {
+            opacity: 0.9;
+        }
     </style>
 </head>
 <body>
@@ -278,12 +295,20 @@
     <!-- Tooltip for displaying cost and impact -->
     <div class="tooltip" id="tooltip"></div>
 
-    <!-- Optimal Sourcing Countries -->
     <div id="map">
         <div class="map-header">
-            <h3>Optimal Sourcing Countries</h3>
-            <div id="solution-info"></div>
+            <!-- Cost info on the left -->
+            <div class="flex justify-between items-center w-full">
+                <div id="solution-info" class="text-left"></div>
+                <div class="confirmation-section">
+                    <span>Is this the burrito you want?</span>
+                    <button onclick="handleBurritoConfirm(true)" class="bg-green-500 text-white px-4 py-2 mx-2 rounded">Yes</button>
+                    <button onclick="handleBurritoConfirm(false)" class="bg-red-500 text-white px-4 py-2 rounded">No</button>
+                </div>
+            </div>
         </div>
+        <!-- Optimal Sourcing Countries title moved here -->
+        <h3 class="text-xl font-bold mt-4 mb-2">Optimal Sourcing Countries</h3>
         <svg id="country-map" width="960" height="500"></svg>
     </div>
 
@@ -922,7 +947,7 @@
                     svg.selectAll("path")
                         .filter(d => d.properties && d.properties.name === importingCountryName)
                         .style("stroke", "black")
-                        .style("stroke-width", 2);
+                        .style("stroke-width", 3);
                 }
 
                 console.log("Mapping countries for each ingredient:", finalSolution.solution);
@@ -1000,6 +1025,13 @@
                 preventLabelOverlap(svg, "text.label");
                 createActiveLegend(finalSolution);
             });
+        }
+
+        function handleBurritoConfirm(isConfirmed) {
+            const message = isConfirmed
+                ? "Great choice! Your burrito combination has been confirmed."
+                : "No problem! Feel free to adjust the parameters to find your perfect burrito.";
+            alert(message);
         }
 
         // Function to prevent label overlapping
