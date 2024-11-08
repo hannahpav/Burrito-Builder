@@ -1227,14 +1227,14 @@
                     // Calculate text metrics for the box
                     const labelHeight = 45; // Height to accommodate 4 lines of text
                     const labelWidth = 120;  // Approximate width, adjust as needed
-                    const padding = 20;  // Padding around text
+                    const padding = 6;  // Padding around text
 
                     // Add the background rectangle
                     labelGroup.append("rect")
                         .attr("x", -padding)  // Offset by padding
                         .attr("y", -padding)  // Adjust to align with first line of text
                         .attr("width", labelWidth+ 2*padding)
-                        .attr("height", labelHeight+2*padding)
+                        .attr("height", labelHeight+3*padding)
                         .attr("fill",ingredientColors[ingredient])
                         .attr("stroke", "#666")
                         .attr("stroke-width", 1)
@@ -1250,23 +1250,23 @@
                     // Add the text lines
                     label.append("tspan")
                         .attr("x", 0)
-                        .attr("y", 0)
+                        .attr("y", padding)
                         .text(country)
                         .style("font-weight", "bold");
 
                     label.append("tspan")
                         .attr("x", 0)
-                        .attr("y", 15)
+                        .attr("y", padding+15)
                         .text(`Ingredient: ${ingredient}`);
 
                     label.append("tspan")
                         .attr("x", 0)
-                        .attr("y", 30)
+                        .attr("y", padding+30)
                         .text(`Cost: $${data.cost.toFixed(2)}`);
 
                     label.append("tspan")
                         .attr("x", 0)
-                        .attr("y", 45)
+                        .attr("y", padding+45)
                         .text(`Impact: ${data.impact.toFixed(2)}`);
 
                     // Update the connecting line endpoint to connect to the group
@@ -1347,8 +1347,8 @@
             // Add color box for importing country
             importingItem.append("div")
                 .attr("class", "color-box")
-                .style("background-color", "white")
-                .style("border", "2px solid black"); // Thick black outline
+                .style("background-color", "lightgray")
+                .style("border", "3px solid black"); // Thick black outline
 
             // Add importing country label
             importingItem.append("span")
