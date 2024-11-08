@@ -19,32 +19,33 @@
         /* Tooltip Styling */
         .tooltip {
             position: absolute;
-            background-color: white; /* White background */
+            background-color: white;
             padding: 10px;
-            border: 1px solid #ccc;
             border-radius: 4px;
             pointer-events: none;
             font-size: 12px;
-            color: black; /* Black text */
+            color: black;
             opacity: 0;
             transition: opacity 0.3s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Subtle shadow for hover effect */
-            z-index: 1000; /* Ensure tooltip appears above other elements */
-            max-width: 200px; /* Prevent tooltip from getting too wide */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 1000;
+            max-width: 200px;
             white-space: pre-line;
-            line-height = 1.4;
+            line-height: 1.4;
+            text-align: left;
+        }
 
-            /* Optional: Add a small arrow/triangle */
-            &::after {
-                content: "";
-                position: absolute;
-                top: 100%;
-                left: 50%;
-                margin-left: -5px;
-                border-width: 5px;
-                border-style: solid;
-                border-color: white transparent transparent transparent;
-            }
+            /*!* Optional: Add a small arrow/triangle *!*/
+            /*&::after {*/
+            /*    content: "";*/
+            /*    position: absolute;*/
+            /*    top: 100%;*/
+            /*    left: 50%;*/
+            /*    margin-left: -5px;*/
+            /*    border-width: 5px;*/
+            /*    border-style: solid;*/
+            /*    border-color: white transparent transparent transparent;*/
+            /*}*/
         }
 
         /* Label and Line Styling */
@@ -95,7 +96,7 @@
             stroke-width: 2px; 
         }
         .optimal-label {
-            font-size: 10px;
+            font-size: 12px;
             font-weight: bold;
             fill: black;
             background: white;
@@ -284,13 +285,13 @@
                         <input type="checkbox" id="chicken" name="chicken" value="Chicken"> Chicken<br>
                         <input type="checkbox" id="pork" name="pork" value="Pork"> Pork<br>
                         <input type="checkbox" id="cheese" name="cheese" value="Shredded Cheese"> Cheese<br>
-                        <input type="checkbox" id="sour-cream" name="sour-cream" value="Sour Cream"> Sour cream (milk)<br>
+                        <input type="checkbox" id="sour-cream" name="sour-cream" value="Sour Cream"> Sour cream<br>
                         <input type="checkbox" id="rice" name="rice" value="Rice"> Rice<br>
-                        <input type="checkbox" id="beans" name="beans" value="Black/Pinto Beans"> Beans<br>
+                        <input type="checkbox" id="beans" name="beans" value="Beans"> Beans<br>
                         <input type="checkbox" id="lettuce" name="lettuce" value="Lettuce"> Lettuce<br>
                         <input type="checkbox" id="onions" name="onions" value="Onions"> Onions<br>
                         <input type="checkbox" id="tomatoes" name="tomatoes" value="Tomato"> Tomatoes<br>
-                        <input type="checkbox" id="avocado" name="avocado" value="Guacamole"> Avocado<br>
+                        <input type="checkbox" id="avocado" name="avocado" value="Avocado"> Avocado<br>
                     </div>
                     <!-- Burrito visualization -->
                     <div id="burrito-preview" class="burrito-preview"></div>
@@ -469,11 +470,11 @@
             "Shredded Cheese": "#33a02c",
             "Sour Cream": "#ff8ab7",
             "Rice": "#fdbf6f",
-            "Black/Pinto Beans": "#ff7f00",
+            "Beans": "#ff7f00",
             "Lettuce": "#cab2d6",
             "Onions": "#6a3d9a",
             "Tomato": "#e31a1c",
-            "Guacamole": "#b15928"
+            "Avocado": "#b15928"
         };
 
         // Helper function to validate data structure
@@ -1067,7 +1068,58 @@
                     // Update angle for next label from the same country
                     countryAngles[country] += angleStep;
 
-                    // Append connecting line
+                    // Replace the existing label creation code with this:
+                    // First create a group for the label and its background
+                    const labelGroup = svg.append("g")
+                        .attr("class", "label-group")
+                        .attr("transform", `translate(${labelX},${labelY})`);
+
+                    // Calculate text metrics for the box
+                    const labelHeight = 45; // Height to accommodate 4 lines of text
+                    const labelWidth = 120;  // Approximate width, adjust as needed
+                    const padding = 20;  // Padding around text
+
+                    // Add the background rectangle
+                    labelGroup.append("rect")
+                        .attr("x", -padding)  // Offset by padding
+                        .attr("y", -padding)  // Adjust to align with first line of text
+                        .attr("width", labelWidth+ 2*padding)
+                        .attr("height", labelHeight+2*padding)
+                        .attr("fill",ingredientColors[ingredient])
+                        .attr("stroke", "#666")
+                        .attr("stroke-width", 1)
+                        .attr("rx", 4)  // Rounded corners
+                        .style("opacity", 0.7);
+
+                    // Add the text elements
+                    const label = labelGroup.append("text")
+                        .attr("class", "label")
+                        .style("fill", "black")
+                        .style("font-size", "12px");
+
+                    // Add the text lines
+                    label.append("tspan")
+                        .attr("x", 0)
+                        .attr("y", 0)
+                        .text(country)
+                        .style("font-weight", "bold");
+
+                    label.append("tspan")
+                        .attr("x", 0)
+                        .attr("y", 15)
+                        .text(`Ingredient: ${ingredient}`);
+
+                    label.append("tspan")
+                        .attr("x", 0)
+                        .attr("y", 30)
+                        .text(`Cost: $${data.cost.toFixed(2)}`);
+
+                    label.append("tspan")
+                        .attr("x", 0)
+                        .attr("y", 45)
+                        .text(`Impact: ${data.impact.toFixed(2)}`);
+
+                    // Update the connecting line endpoint to connect to the group
                     svg.append("line")
                         .attr("class", "line")
                         .attr("x1", coords[0])
@@ -1076,37 +1128,6 @@
                         .attr("y2", labelY)
                         .attr("stroke", ingredientColors[ingredient])
                         .attr("stroke-width", 1);
-
-                    // Append label with cost and impact using <tspan> for multi-line text
-                    const label = svg.append("text")
-                        .attr("class", "label")
-                        .attr("x", labelX)
-                        .attr("y", labelY)
-                        .attr("text-anchor", "middle")
-                        .attr("alignment-baseline", "middle")
-                        .style("fill", "black")
-                        .style("font-size", "12px");
-
-                    // Append each line separately with proper spacing
-                    label.append("tspan")
-                        .attr("x", labelX)
-                        .attr("y", labelY) // 15px down from first line
-                        .text(country);
-
-                    label.append("tspan")
-                        .attr("x", labelX)
-                        .attr("y", labelY+15)
-                        .text(`Ingredient: ${ingredient}`);
-
-                    label.append("tspan")
-                        .attr("x", labelX)
-                        .attr("y", labelY + 30) // 30px down from first line
-                        .text(`Cost: $${data.cost.toFixed(2)}`);
-
-                    label.append("tspan")
-                        .attr("x", labelX)
-                        .attr("y", labelY + 45) // 45px down from first line
-                        .text(`Impact: ${data.impact.toFixed(2)}`);
 
                     // Highlight the country on the map
                     svg.selectAll("path")
@@ -1195,12 +1216,12 @@
             // Order of ingredients from bottom to top
             const ingredientOrder = [
                 'tortilla',
+                'lettuce',
                 'rice',
                 'beans',
                 'beef',
                 'chicken',
                 'pork',
-                'lettuce',
                 'cheese',
                 'onions',
                 'tomatoes',

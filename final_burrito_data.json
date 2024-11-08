@@ -366,7 +366,7 @@
                 "Longitude": -95.7129
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "USA": {
                 "cost": 0.9301108834918527,
                 "impact": 3.015033437254372,
@@ -446,7 +446,7 @@
                 "Longitude": 100.9925
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "New Zealand": {
                 "cost": 1.1962509772842473,
                 "impact": 3.045055080351481,
@@ -2202,7 +2202,7 @@
                 "Longitude": -63.6167
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Argentina": {
                 "cost": 0.8315711774506551,
                 "impact": 2.9908353785528607,
@@ -2246,7 +2246,7 @@
                 "Longitude": -58.4438
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Chile": {
                 "cost": 1.9119176406750231,
                 "impact": 3.0542875819078454,
@@ -2972,7 +2972,7 @@
                 "Longitude": -95.7129
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "USA": {
                 "cost": 0.863252168416328,
                 "impact": 3.1307749992190415,
@@ -2980,7 +2980,7 @@
                 "Longitude": -95.7129
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Brazil": {
                 "cost": 1.0623581963798994,
                 "impact": 3.038004835354197,
@@ -4300,7 +4300,7 @@
                 "Longitude": -90.2308
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Algeria": {
                 "cost": 0.9774714565217392,
                 "impact": 3.1349751888863504,
@@ -4728,7 +4728,7 @@
                 "Longitude": 69.3451
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Australia": {
                 "cost": 1.565708504919551,
                 "impact": 3.3361585753803955,
@@ -7694,7 +7694,7 @@
                 "Longitude": -3.7492
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Portugal": {
                 "cost": 0.9254159201201293,
                 "impact": 2.9930587726894857,
@@ -7762,7 +7762,7 @@
                 "Longitude": 104.1954
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "American Samoa": {
                 "cost": 1.1037238256578947,
                 "impact": 3.026008344481725,
@@ -8318,7 +8318,7 @@
                 "Longitude": -75.0152
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Argentina": {
                 "cost": 0.8709085443546137,
                 "impact": 2.995855401406382,
@@ -8368,7 +8368,7 @@
                 "Longitude": -75.0152
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Ecuador": {
                 "cost": 1.056247129076711,
                 "impact": 3.0197020214109234,
@@ -10168,7 +10168,7 @@
                 "Longitude": 30.8025
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Ethiopia": {
                 "cost": 0.8465021623101843,
                 "impact": 3.6662808823092017,
@@ -10368,7 +10368,7 @@
                 "Longitude": -3.436
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Cambodia": {
                 "cost": 1.2334918032786886,
                 "impact": 3.1950745723510643,
@@ -12062,7 +12062,7 @@
                 "Longitude": -95.7129
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Argentina": {
                 "cost": 0.7789421964586847,
                 "impact": 2.9957550599088596,
@@ -12112,7 +12112,7 @@
                 "Longitude": -66.5897
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "USA": {
                 "cost": 0.9344218891312206,
                 "impact": 3.0866058931476257,
@@ -13992,7 +13992,7 @@
                 "Longitude": 35.2433
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Argentina": {
                 "cost": 1.0136267486590038,
                 "impact": 4.495696135878211,
@@ -14108,7 +14108,7 @@
                 "Longitude": 35.2433
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Austria": {
                 "cost": 2.244312,
                 "impact": 3.014754234728533,
@@ -15714,7 +15714,7 @@
                 "Longitude": 1.8883
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "France": {
                 "cost": 1.9938096792036795,
                 "impact": 4.1551752296627456,
@@ -15966,7 +15966,7 @@
                 "Longitude": 30.8025
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "France": {
                 "cost": 1.1354529699065439,
                 "impact": 4.1652805850482615,
@@ -16610,7 +16610,7 @@
                 "Longitude": 78.9629
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "France": {
                 "cost": 1.1164691618705036,
                 "impact": 3.1920176880662643,
@@ -16690,7 +16690,7 @@
                 "Longitude": 133.7751
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Netherlands": {
                 "cost": 2.3396533674698796,
                 "impact": 4.2681703118674434,
@@ -17742,7 +17742,7 @@
                 "Longitude": -95.7129
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "USA": {
                 "cost": 0.8839359838068528,
                 "impact": 2.993681836476277,
@@ -17904,7 +17904,7 @@
                 "Longitude": 108.2772
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Canada": {
                 "cost": 1.2963049184727908,
                 "impact": 3.4334912112561162,
@@ -19228,7 +19228,7 @@
                 "Longitude": 35.2433
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Czechia": {
                 "cost": 0.8907330250000001,
                 "impact": 3.0115347419779197,
@@ -19386,7 +19386,7 @@
                 "Longitude": -3.7492
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Kenya": {
                 "cost": 0.9305910972129842,
                 "impact": 3.0068580166692294,
@@ -20780,7 +20780,7 @@
                 "Longitude": 22.9375
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Portugal": {
                 "cost": 3.0100000000000002,
                 "impact": 3.0021632442217205,
@@ -20830,7 +20830,7 @@
                 "Longitude": 27.8493
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "South Africa": {
                 "cost": 0.8577486001124492,
                 "impact": 3.0008570644557664,
@@ -21714,7 +21714,7 @@
                 "Longitude": 27.8493
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Angola": {
                 "cost": 0.86639,
                 "impact": 2.9927873739792754,
@@ -21932,7 +21932,7 @@
                 "Longitude": 31.4659
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Saudi Arabia": {
                 "cost": 1.1648127272727273,
                 "impact": 3.952493943760659,
@@ -24016,7 +24016,7 @@
                 "Longitude": 30.8025
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Chile": {
                 "cost": 1.428,
                 "impact": 4.673150856790049,
@@ -24168,7 +24168,7 @@
                 "Longitude": 34.8888
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Uganda": {
                 "cost": 1.0858169014084507,
                 "impact": 3.1082725988996507,
@@ -26258,7 +26258,7 @@
                 "Longitude": 30.8025
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "T\u00fcrkiye": {
                 "cost": 1.0842273150969528,
                 "impact": 2.990080872762602,
@@ -26368,7 +26368,7 @@
                 "Longitude": -95.7129
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Albania": {
                 "cost": 1.1259518187381414,
                 "impact": 3.015221145096456,
@@ -27880,7 +27880,7 @@
                 "Longitude": -71.543
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "France": {
                 "cost": 2.0268569523809523,
                 "impact": 3.0064929269853673,
@@ -27912,7 +27912,7 @@
                 "Longitude": -63.6167
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Peru": {
                 "cost": 1.439213568373492,
                 "impact": 3.4379341952973195,
@@ -29068,7 +29068,7 @@
                 "Longitude": 53.688
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Canada": {
                 "cost": 0.8823961894001932,
                 "impact": 3.1663636144724547,
@@ -29256,7 +29256,7 @@
                 "Longitude": -66.5897
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Kenya": {
                 "cost": 0.8376567428598233,
                 "impact": 3.006142984150009,
@@ -30990,7 +30990,7 @@
                 "Longitude": 22.9375
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Italy": {
                 "cost": 0.7925125716145833,
                 "impact": 3.130238640353897,
@@ -31016,7 +31016,7 @@
                 "Longitude": 53.8478
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "South Africa": {
                 "cost": 0.7523370842388302,
                 "impact": 3.3024474121040237,
@@ -31528,7 +31528,7 @@
                 "Longitude": -51.9253
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Argentina": {
                 "cost": 0.8152575,
                 "impact": 2.9880055316521807,
@@ -31566,7 +31566,7 @@
                 "Longitude": -95.7129
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Brazil": {
                 "cost": 0.9800755907378829,
                 "impact": 3.0009407339383767,
@@ -32420,7 +32420,7 @@
                 "Longitude": -3.7492
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Argentina": {
                 "cost": 0.8490922765631769,
                 "impact": 3.012762864472264,
@@ -32518,7 +32518,7 @@
                 "Longitude": 100.9925
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Argentina": {
                 "cost": 0.9880092808903871,
                 "impact": 3.0228682198577803,
@@ -34202,7 +34202,7 @@
                 "Longitude": -95.7129
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Argentina": {
                 "cost": 1.0502290794797688,
                 "impact": 4.51161996525046,
@@ -34372,7 +34372,7 @@
                 "Longitude": 29.1549
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Brazil": {
                 "cost": 1.3452160986547086,
                 "impact": 3.014940748634598,
@@ -35820,7 +35820,7 @@
                 "Longitude": -51.9253
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Argentina": {
                 "cost": 0.8291146885311469,
                 "impact": 2.9897548295219507,
@@ -35840,7 +35840,7 @@
                 "Longitude": 35.8623
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Brazil": {
                 "cost": 0.9637728104092838,
                 "impact": 3.0227001500612345,
@@ -36828,7 +36828,7 @@
                 "Longitude": 78.9629
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Argentina": {
                 "cost": 0.8885615726982848,
                 "impact": 3.0180736182368313,
@@ -36890,7 +36890,7 @@
                 "Longitude": 103.8198
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "USA": {
                 "cost": 0.9087864835080733,
                 "impact": 3.2954684635616043,
@@ -37998,7 +37998,7 @@
                 "Longitude": 53.8478
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Malawi": {
                 "cost": 0.7770211866954023,
                 "impact": 3.009555937871572,
@@ -38030,7 +38030,7 @@
                 "Longitude": -3.7492
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Burundi": {
                 "cost": 0.786626478125,
                 "impact": 3.0000755523058777,
@@ -39420,7 +39420,7 @@
                 "Longitude": -3.7492
             }
         },
-        "Black/Pinto Beans": {
+        "Beans": {
             "Afghanistan": {
                 "cost": 0.9897642436149312,
                 "impact": 3.2239719659165424,
@@ -39752,7 +39752,7 @@
                 "Longitude": -66.5897
             }
         },
-        "Guacamole": {
+        "Avocado": {
             "Chile": {
                 "cost": 0.9309465859484326,
                 "impact": 4.0960777678920195,
