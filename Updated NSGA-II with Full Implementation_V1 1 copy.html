@@ -278,16 +278,86 @@
             object-fit: contain;
         }
 
-        
+        /* Add new splash screen styles */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #f5d794, #ff9b76);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .splash-content {
+            text-align: center;
+            color: #333;
+            padding: 2rem;
+            max-width: 600px;
+        }
+
+        .splash-title {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .splash-description {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            color: #4a5568;
+        }
+
+        .start-button {
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            background-color: #4a5568;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .start-button:hover {
+            background-color: #2d3748;
+            transform: translateY(-2px);
+        }
+
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Add this to hide the main content initially */
+        .main-content {
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .main-content.visible {
+            opacity: 1;
+        }
+
     </style>
 </head>
 <body>
     <h2>The Burrito Builder: Cost vs Emissions</h2>
 
-    <div class="summary-section" style="margin: 20px 0 30px 0; max-width: 1200px; line-height: 1.6; color: #333;">
-        <p style="margin-bottom: 15px;">
-            Welcome to the Burrito Builder, an interactive tool that helps you create the perfect burrito while considering both cost and environmental impact. This application uses the NSGA-II optimization algorithm to find the best combination of ingredient sources based on your preferences.
-        </p>
+   <div class="splash-screen" id="splashScreen">
+        <div class="splash-content">
+            <h1 class="splash-title">🌯 Burrito Builder</h1>
+            <p class="splash-description">
+                Welcome to the Burrito Builder, an interactive tool that helps you create the perfect burrito while considering both cost and environmental impact. This application uses the NSGA-II optimization algorithm to find the best combination of ingredient sources based on your preferences.
+            </p>
 
         <h3 style="margin: 20px 0 10px 0; color: #2c5282;">How to Use the Interface:</h3>
         <ol style="margin-left: 20px; margin-bottom: 20px;">
@@ -304,96 +374,100 @@
         <p style="font-style: italic; color: #666;">
             Note: The environmental impact score is calculated based on factors such as transportation distance and production methods. Lower scores indicate more environmentally friendly choices.
         </p>
+        <button class="start-button" id="startButton">Let's Build! 🚀</button>
     </div>
+   </div>
 
-    <!-- First Row: Location and Budget -->
-    <div class="form-row">
-        <!-- Left Column -->
-        <div class="form-column left-column">
-            <!-- Choose your location -->
-            <label for="importing-country" class="section-label">Choose your location (Importing country):</label><br>
-            <select id="importing-country" style="margin-top:10px;">
-            </select><br><br>
-        </div>
-
-        <!-- Right Column -->
-        <div class="form-column right-column">
-            <label for="budget" class="section-label">Enter your budget:</label><br>
-            <div style="margin-top: 7px; display: flex; gap: 10px; align-items: center;">
-                $ <input type="number" id="budget-input" name="budget" value="25" min="0" step="0.01" style="width: 100px;">
-                <button id="update-budget" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                    Update
-                </button>
-            </div><br><br>
-        </div>
-    </div> <!-- Close first form-row -->
-
-    <!-- Second Row: Ingredients and Pareto Front -->
-    <div class="form-row">
-        <!-- Left Column -->
-        <div class="form-column left-column">
-                <!-- Choose ingredients for your burrito -->
-                <label for="ingredient" class="section-label">Choose ingredients for your burrito:</label><br><br>
-                <div class="flex-container">
-                    <!-- Ingredient checkboxes -->
-                    <div class="ingredient-list">
-                        <input type="checkbox" id="tortilla" name="tortilla" value="Tortilla" checked disabled> Tortilla (wheat)<br>
-                        <input type="checkbox" id="beef" name="beef" value="Beef"> Beef<br>
-                        <input type="checkbox" id="chicken" name="chicken" value="Chicken"> Chicken<br>
-                        <input type="checkbox" id="pork" name="pork" value="Pork"> Pork<br>
-                        <input type="checkbox" id="cheese" name="cheese" value="Shredded Cheese"> Cheese<br>
-                        <input type="checkbox" id="sour-cream" name="sour-cream" value="Sour Cream"> Sour cream<br>
-                        <input type="checkbox" id="rice" name="rice" value="Rice"> Rice<br>
-                        <input type="checkbox" id="beans" name="beans" value="Beans"> Beans<br>
-                        <input type="checkbox" id="lettuce" name="lettuce" value="Lettuce"> Lettuce<br>
-                        <input type="checkbox" id="onions" name="onions" value="Onions"> Onions<br>
-                        <input type="checkbox" id="tomatoes" name="tomatoes" value="Tomato"> Tomatoes<br>
-                        <input type="checkbox" id="avocado" name="avocado" value="Avocado"> Avocado<br>
-                    </div>
-                    <!-- Burrito visualization -->
-                    <div id="burrito-preview" class="burrito-preview"></div>
-                </div>
+    <div class = "main-content" id="mainContent">
+        <!-- First Row: Location and Budget -->
+        <div class="form-row">
+            <!-- Left Column -->
+            <div class="form-column left-column">
+                <!-- Choose your location -->
+                <label for="importing-country" class="section-label">Choose your location (Importing country):</label><br>
+                <select id="importing-country" style="margin-top:10px;">
+                </select><br><br>
             </div>
 
-        <!-- Right Column -->
-        <div class="form-column right-column">
-            <!-- Pareto Front Visualization -->
-            <div id="pareto-front">
-                <h3>Pareto Front Visualization</h3>
-                <svg id="pareto-chart" width="400" height="300"></svg>
+            <!-- Right Column -->
+            <div class="form-column right-column">
+                <label for="budget" class="section-label">Enter your budget:</label><br>
+                <div style="margin-top: 7px; display: flex; gap: 10px; align-items: center;">
+                    $ <input type="number" id="budget-input" name="budget" value="25" min="0" step="0.01" style="width: 100px;">
+                    <button id="update-budget" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Update
+                    </button>
+                </div><br><br>
             </div>
-        </div>
-    </div> <!-- Close second form-row -->
+        </div> <!-- Close first form-row -->
 
-    <!-- Set Priorities for Optimization -->
-    <h3>Set Priorities for Optimization</h3>
-    <div class="slider-container">
-        <label for="weight-slider">Low Cost</label>
-        <input type="range" id="weight-slider" min="0" max="100" step="1" value="50" style="width: 300px;">
-        <label for="weight-slider">Low Environmental Impact</label>
-    </div>
-
-    <!-- Tooltip for displaying cost and impact -->
-    <div class="tooltip" id="tooltip"></div>
-
-    <div class="map-wrapper">
-        <div id="map">
-            <div class="map-header">
-                <div class="flex justify-between items-center w-full">
-                    <div id="solution-info" class="text-left"></div>
-                    <div class="confirmation-section">
-                        <span>Is this the burrito you want?</span>
-                        <button onclick="handleBurritoConfirm(true)" class="bg-green-500 text-white px-4 py-2 mx-2 rounded">Yes</button>
-                        <button onclick="handleBurritoConfirm(false)" class="bg-red-500 text-white px-4 py-2 rounded">No</button>
+        <!-- Second Row: Ingredients and Pareto Front -->
+        <div class="form-row">
+            <!-- Left Column -->
+            <div class="form-column left-column">
+                    <!-- Choose ingredients for your burrito -->
+                    <label for="ingredient" class="section-label">Choose ingredients for your burrito:</label><br><br>
+                    <div class="flex-container">
+                        <!-- Ingredient checkboxes -->
+                        <div class="ingredient-list">
+                            <input type="checkbox" id="tortilla" name="tortilla" value="Tortilla" checked disabled> Tortilla (wheat)<br>
+                            <input type="checkbox" id="beef" name="beef" value="Beef"> Beef<br>
+                            <input type="checkbox" id="chicken" name="chicken" value="Chicken"> Chicken<br>
+                            <input type="checkbox" id="pork" name="pork" value="Pork"> Pork<br>
+                            <input type="checkbox" id="cheese" name="cheese" value="Shredded Cheese"> Cheese<br>
+                            <input type="checkbox" id="sour-cream" name="sour-cream" value="Sour Cream"> Sour cream<br>
+                            <input type="checkbox" id="rice" name="rice" value="Rice"> Rice<br>
+                            <input type="checkbox" id="beans" name="beans" value="Beans"> Beans<br>
+                            <input type="checkbox" id="lettuce" name="lettuce" value="Lettuce"> Lettuce<br>
+                            <input type="checkbox" id="onions" name="onions" value="Onions"> Onions<br>
+                            <input type="checkbox" id="tomatoes" name="tomatoes" value="Tomato"> Tomatoes<br>
+                            <input type="checkbox" id="avocado" name="avocado" value="Avocado"> Avocado<br>
+                        </div>
+                        <!-- Burrito visualization -->
+                        <div id="burrito-preview" class="burrito-preview"></div>
                     </div>
                 </div>
+
+            <!-- Right Column -->
+            <div class="form-column right-column">
+                <!-- Pareto Front Visualization -->
+                <div id="pareto-front">
+                    <h3>Pareto Front Visualization</h3>
+                    <svg id="pareto-chart" width="400" height="300"></svg>
+                </div>
             </div>
-            <h3 class="text-xl font-bold mt-4 mb-2">Optimal Sourcing Countries</h3>
-            <div class="map-content">
-                <div class="map-container">
-                    <svg id="country-map" width="960" height="500"></svg>
-                    <div id="map-legend" class="legend-container">
-                        <!-- Legend will be populated here -->
+        </div> <!-- Close second form-row -->
+
+        <!-- Set Priorities for Optimization -->
+        <h3>Set Priorities for Optimization</h3>
+        <div class="slider-container">
+            <label for="weight-slider">Low Cost</label>
+            <input type="range" id="weight-slider" min="0" max="100" step="1" value="50" style="width: 300px;">
+            <label for="weight-slider">Low Environmental Impact</label>
+        </div>
+
+        <!-- Tooltip for displaying cost and impact -->
+        <div class="tooltip" id="tooltip"></div>
+
+        <div class="map-wrapper">
+            <div id="map">
+                <div class="map-header">
+                    <div class="flex justify-between items-center w-full">
+                        <div id="solution-info" class="text-left"></div>
+                        <div class="confirmation-section">
+                            <span>Is this the burrito you want?</span>
+                            <button onclick="handleBurritoConfirm(true)" class="bg-green-500 text-white px-4 py-2 mx-2 rounded">Yes</button>
+                            <button onclick="handleBurritoConfirm(false)" class="bg-red-500 text-white px-4 py-2 rounded">No</button>
+                        </div>
+                    </div>
+                </div>
+                <h3 class="text-xl font-bold mt-4 mb-2">Optimal Sourcing Countries</h3>
+                <div class="map-content">
+                    <div class="map-container">
+                        <svg id="country-map" width="960" height="500"></svg>
+                        <div id="map-legend" class="legend-container">
+                            <!-- Legend will be populated here -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -403,6 +477,25 @@
 
     <!-- JavaScript Code -->
     <script>
+
+        // Splash screen handling
+        document.getElementById('startButton').addEventListener('click', function() {
+            const splashScreen = document.getElementById('splashScreen');
+            const mainContent = document.getElementById('mainContent');
+
+            // Hide splash screen
+            splashScreen.classList.add('hidden');
+
+            // Show main content with a slight delay
+            setTimeout(() => {
+                mainContent.classList.add('visible');
+                // Trigger any initial setup you need
+                if (typeof updateParetoFront === 'function') {
+                    updateParetoFront();
+                }
+            }, 500);
+        });
+
         let ingredientData = null;
 
         // Load ingredient data
