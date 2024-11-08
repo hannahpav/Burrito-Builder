@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NSGA-II Optimization for Burrito Builder</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .form-row {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .form-column {
+            flex: 1;
+            padding: 10px;
+        }
+        .left-column {
+            flex: 0 0 40%;
+        }
+        .right-column {
+            flex: 0 0 60%;
+        }
+        #country-select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .weight-display {
+            margin-top: 10px;
+        }
+        .country {
+            transition: fill 0.2s;
+        }
+
+        .country:hover {
+            fill: #999;
+        }
+
+        .source-marker {
+            cursor: pointer;
+        }
+
+        #solution-info {
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        #solution-info table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        #solution-info td {
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        #solution-info td:first-child {
+            font-weight: bold;
+            width: 40%;
+        }
+
+        .map-tooltip, .tooltip {
+            font-size: 12px;
+            pointer-events: none;
+        }
+
+        .average-legend text,
+        .marker-legend text {
+            font-size: 12px;
+            font-family: sans-serif;
+        }
+
+        .map-tooltip {
+            font-size: 12px;
+            pointer-events: none;
+            font-family: sans-serif;
+        }
+
+        .source-marker {
+            cursor: pointer;
+        }
+
+        .average-legend rect,
+        .marker-legend rect {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <h2>NSGA-II Optimization for Burrito Builder</h2>
+
+    <!-- First form row - MODIFIED THIS SECTION -->
+    <div class="form-row">
+        <div class="form-column left-column">
+            Choose your location (Importing country):
+            <select id="country-select">
+                <option value="">Select a country</option>
+            </select>
+        </div>
+        <div class="form-column right-column">
+            Enter your budget:
+            <div style="margin-top: 7px;">
+                <input type="number" id="budget-input" placeholder="$">
+            </div>
+        </div>
+    </div>
+
+    <!-- Second form row -->
+    <div class="form-row">
+        <div class="form-column left-column">
+            Choose ingredients for your burrito:
+            <div id="ingredients-list">
+                <div><input type="checkbox" id="tortilla"> Tortilla (wheat)</div>
+                <div><input type="checkbox" id="beef"> Beef</div>
+                <div><input type="checkbox" id="chicken"> Chicken</div>
+                <div><input type="checkbox" id="pork"> Pork</div>
+                <div><input type="checkbox" id="cheese"> Cheese</div>
+                <div><input type="checkbox" id="sourcream"> Sour cream (milk)</div>
+                <div><input type="checkbox" id="rice"> Rice</div>
+                <div><input type="checkbox" id="beans"> Beans</div>
+                <div><input type="checkbox" id="lettuce"> Lettuce</div>
+                <div><input type="checkbox" id="onions"> Onions</div>
+                <div><input type="checkbox" id="tomatoes"> Tomatoes</div>
+                <div><input type="checkbox" id="avocado"> Avocado</div>
+            </div>
+        </div>
+        <div class="form-column right-column">
+            <div id="pareto-front">
+                <h3>Pareto Front Visualization</h3>
+                <svg id="pareto-chart" width="400" height="300"></svg>
+            </div>
+        </div>
+    </div>
+
+    <h3>Set Priorities for Optimization (Weights sum to 100%)</h3>
+    <div class="slider-container">
+        <label>Cost Weight</label>
+        <input type="range" id="cost-weight" min="0" max="100" value="50">
+        <div class="weight-display">
+            <span id="cost-weight-display">50%</span>
+            <span id="impact-weight-display">50%</span>
+        </div>
+    </div>
+
+    <div id="map">
+        <div class="map-header">
+            <h3>Optimal Sourcing Countries</h3>
+            <div id="solution-info"></div>
+        </div>
+        <svg id="country-map" width="960" height="500"></svg>
+    </div>
+
+    <script>
+
+        let optimizationData
+
+        // Load the JSON file
+        d3.json('final_burrito_data.json')  // Replace with your actual JSON file path
+          .then(function(data) {
+            optimizationData = data;
+            initialize(); // Only initialize after data is loaded
+          })
+          .catch(function(error) {
+            console.error('Error loading the JSON file:', error);
+          });
+
+        // Move initialize() out of DOMContentLoaded since we'll call it after data loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // You can put any DOM-dependent initialization that doesn't need the data here
+        });
+
+        // Main initialization function
+        function initialize() {
+            if (!optimizationData) {
+                console.error('Data not loaded yet');
+                return;
+            }
+
+            initializeCountryDropdown();  // Set up the country dropdown
+            if (typeof initializeUI === 'function') {  // Only call if it exists
+                initializeUI();  // Your UI initialization
+            }
+            initializeVisualizations();  // Set up initial visualizations
+        }
+
+        // Initialize the country dropdown
+        function initializeCountryDropdown() {
+            const select = d3.select('#country-select');
+
+            // Get unique importing countries
+            const importingCountries = Object.keys(optimizationData);
+
+            // Add options for each country
+            select
+                .selectAll('option.country')
+                .data(importingCountries)
+                .enter()
+                .append('option')
+                .attr('class', 'country')
+                .attr('value', d => d)
+                .text(d => d);
+
+            // Add change event listener
+            select.on('change', function() {
+                const selectedCountry = d3.select(this).property('value');
+                if (selectedCountry) {
+                    updateVisualizations(selectedCountry);
+                }
+            });
+        }
+
+        // Function to update visualizations based on selected country
+        function updateVisualizations(country) {
+            const countryData = optimizationData[country];
+
+            // Update Pareto front
+            updateParetoFront(countryData);
+
+            // Update map
+            updateMap(countryData);
+
+            // Update solution info
+            updateSolutionInfo(countryData);
+        }
+
+        // Initialize all visualizations
+        function initializeVisualizations() {
+            // Set up initial empty Pareto front
+            const paretoSvg = d3.select('#pareto-chart')
+                .attr('width', 400)
+                .attr('height', 300);
+
+            // Add initial axes and labels
+            const margin = { top: 20, right: 30, bottom: 40, left: 50 };
+            const width = +paretoSvg.attr('width') - margin.left - margin.right;
+            const height = +paretoSvg.attr('height') - margin.top - margin.bottom;
+
+            const g = paretoSvg.append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            // Add initial X and Y axes
+            g.append('g')
+                .attr('class', 'x-axis')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(d3.scaleLinear().range([0, width])))
+                .append('text')
+                .attr('x', width / 2)
+                .attr('y', 35)
+                .attr('fill', 'black')
+                .text('Cost ($)');
+
+            g.append('g')
+                .attr('class', 'y-axis')
+                .call(d3.axisLeft(d3.scaleLinear().range([height, 0])))
+                .append('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('y', -40)
+                .attr('x', -height / 2)
+                .attr('fill', 'black')
+                .text('Environmental Impact');
+
+            // Initialize the map
+            const mapSvg = d3.select('#country-map')
+                .attr('width', 960)
+                .attr('height', 500);
+
+            // Load world map data
+            d3.json('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson')
+                .then(function(worldData) {
+                    // Create map projection
+                    const projection = d3.geoMercator()
+                        .scale(120)
+                        .center([0, 20])
+                        .translate([480, 250]);
+
+                    // Create path generator
+                    const path = d3.geoPath().projection(projection);
+
+                    // Draw the map
+                    mapSvg.selectAll('path')
+                        .data(worldData.features)
+                        .enter()
+                        .append('path')
+                        .attr('d', path)
+                        .attr('class', 'country')
+                        .attr('fill', '#ccc')
+                        .attr('stroke', '#fff')
+                        .attr('stroke-width', 0.5);
+                });
+        }
+
+        function updateMap(data) {
+            const mapSvg = d3.select('#country-map');
+
+            // Clear existing markers
+            mapSvg.selectAll('.source-marker').remove();
+
+            // Collect all source countries, separating averages from specific locations
+            const sourceCountries = [];
+            const averageEntries = [];
+
+            Object.keys(data).forEach(ingredient => {
+                Object.keys(data[ingredient]).forEach(source => {
+                    if (source === "average") {
+                        averageEntries.push({
+                            ingredient: ingredient,
+                            cost: data[ingredient][source].cost,
+                            impact: data[ingredient][source].impact
+                        });
+                    } else {
+                        const lat = data[ingredient][source].latitude;
+                        const lon = data[ingredient][source].longitude;
+
+                        if (lat != null && lon != null && !isNaN(lat) && !isNaN(lon)) {
+                            sourceCountries.push({
+                                name: source,
+                                lat: lat,
+                                lon: lon,
+                                ingredient: ingredient,
+                                cost: data[ingredient][source].cost,
+                                impact: data[ingredient][source].impact
+                            });
+                        }
+                    }
+                });
+            });
+
+            // Create projection
+            const projection = d3.geoMercator()
+                .scale(120)
+                .center([0, 20])
+                .translate([480, 250]);
+
+            // Add markers for specific countries
+            mapSvg.selectAll('.source-marker')
+                .data(sourceCountries)
+                .enter()
+                .append('circle')
+                .attr('class', 'source-marker')
+                .attr('cx', d => projection([d.lon, d.lat])[0])
+                .attr('cy', d => projection([d.lon, d.lat])[1])
+                .attr('r', 5)
+                .attr('fill', 'red')
+                .attr('opacity', 0.7)
+                .on('mouseover', function(event, d) {
+                    d3.select(this)
+                        .attr('r', 8)
+                        .attr('fill', 'orange');
+
+                    mapSvg.append('text')
+                        .attr('class', 'map-tooltip')
+                        .attr('x', projection([d.lon, d.lat])[0] + 10)
+                        .attr('y', projection([d.lon, d.lat])[1] - 10)
+                        .text(`${d.name}: ${d.ingredient} ($${d.cost})`)
+                        .attr('fill', 'black');
+                })
+                .on('mouseout', function() {
+                    d3.select(this)
+                        .attr('r', 5)
+                        .attr('fill', 'red');
+
+                    mapSvg.selectAll('.map-tooltip').remove();
+                });
+
+            // Add a legend/info box for average entries
+            if (averageEntries.length > 0) {
+                const legendGroup = mapSvg.append('g')
+                    .attr('class', 'average-legend')
+                    .attr('transform', 'translate(20, 20)'); // Position in top-left corner
+
+                // Add background rectangle
+                legendGroup.append('rect')
+                    .attr('width', 200)
+                    .attr('height', averageEntries.length * 20 + 40)
+                    .attr('fill', '#f8f9fa')
+                    .attr('stroke', '#dee2e6')
+                    .attr('rx', 5);
+
+                // Add title
+                legendGroup.append('text')
+                    .attr('x', 10)
+                    .attr('y', 25)
+                    .attr('font-weight', 'bold')
+                    .text('Market Averages:');
+
+                // Add entries
+                averageEntries.forEach((entry, i) => {
+                    legendGroup.append('text')
+                        .attr('x', 10)
+                        .attr('y', 45 + (i * 20))
+                        .text(`${entry.ingredient}: $${entry.cost.toFixed(2)}`);
+                });
+            }
+
+            // Add legend for markers
+            const markerLegend = mapSvg.append('g')
+                .attr('class', 'marker-legend')
+                .attr('transform', 'translate(20, ' +
+                    (averageEntries.length > 0 ?
+                        (averageEntries.length * 20 + 80) : 20) +
+                    ')');
+
+            markerLegend.append('rect')
+                .attr('width', 200)
+                .attr('height', 50)
+                .attr('fill', '#f8f9fa')
+                .attr('stroke', '#dee2e6')
+                .attr('rx', 5);
+
+            markerLegend.append('circle')
+                .attr('cx', 20)
+                .attr('cy', 25)
+                .attr('r', 5)
+                .attr('fill', 'red')
+                .attr('opacity', 0.7);
+
+            markerLegend.append('text')
+                .attr('x', 35)
+                .attr('y', 30)
+                .text('Specific Source Location');
+        }
+
+        // Update solution information panel
+        function updateSolutionInfo(data) {
+            const infoDiv = d3.select('#solution-info');
+
+            // Clear existing content
+            infoDiv.html('');
+
+            // Calculate summary statistics
+            const stats = {
+                totalIngredients: Object.keys(data).length,
+                totalSources: 0,
+                avgCost: 0,
+                avgImpact: 0,
+                costRange: { min: Infinity, max: -Infinity },
+                impactRange: { min: Infinity, max: -Infinity }
+            };
+
+            let totalCost = 0;
+            let totalImpact = 0;
+            let count = 0;
+
+            // Calculate statistics
+            Object.keys(data).forEach(ingredient => {
+                Object.keys(data[ingredient]).forEach(source => {
+                    stats.totalSources++;
+                    count++;
+
+                    const cost = data[ingredient][source].cost;
+                    const impact = data[ingredient][source].impact;
+
+                    totalCost += cost;
+                    totalImpact += impact;
+
+                    stats.costRange.min = Math.min(stats.costRange.min, cost);
+                    stats.costRange.max = Math.max(stats.costRange.max, cost);
+                    stats.impactRange.min = Math.min(stats.impactRange.min, impact);
+                    stats.impactRange.max = Math.max(stats.impactRange.max, impact);
+                });
+            });
+
+            stats.avgCost = totalCost / count;
+            stats.avgImpact = totalImpact / count;
+
+            // Create and append summary table
+            infoDiv.append('div')
+                .html(`
+                    <h4>Summary Statistics</h4>
+                    <table>
+                        <tr><td>Total Ingredients:</td><td>${stats.totalIngredients}</td></tr>
+                        <tr><td>Total Source Options:</td><td>${stats.totalSources}</td></tr>
+                        <tr><td>Average Cost:</td><td>$${stats.avgCost.toFixed(2)}</td></tr>
+                        <tr><td>Cost Range:</td><td>$${stats.costRange.min.toFixed(2)} - $${stats.costRange.max.toFixed(2)}</td></tr>
+                        <tr><td>Average Impact:</td><td>${stats.avgImpact.toFixed(2)}</td></tr>
+                        <tr><td>Impact Range:</td><td>${stats.impactRange.min.toFixed(2)} - ${stats.impactRange.max.toFixed(2)}</td></tr>
+                    </table>
+                `);
+        }
+
+        function updateParetoFront(data) {
+            // Select the SVG element from your HTML
+            const svg = d3.select('#pareto-chart');
+
+            // Clear any existing content
+            svg.selectAll('*').remove();
+
+            // Set margins and dimensions
+            const margin = { top: 20, right: 30, bottom: 40, left: 50 };
+            const width = +svg.attr('width') - margin.left - margin.right;
+            const height = +svg.attr('height') - margin.top - margin.bottom;
+
+            // Create a group (g) element to hold our chart, translated by margins
+            const g = svg.append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            // Extract cost and impact data for the selected country
+            const paretoPoints = [];
+            Object.keys(data).forEach(ingredient => {
+                Object.keys(data[ingredient]).forEach(source => {
+                    paretoPoints.push({
+                        cost: data[ingredient][source].cost,
+                        impact: data[ingredient][source].impact,
+                        ingredient: ingredient,
+                        source: source
+                    });
+                });
+            });
+
+            // Create scales
+            const xScale = d3.scaleLinear()
+                .domain([0, d3.max(paretoPoints, d => d.cost) * 1.1])
+                .range([0, width]);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(paretoPoints, d => d.impact) * 1.1])
+                .range([height, 0]);  // Note: SVG y-axis is inverted
+
+            // Add X axis
+            g.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(xScale))
+                .append('text')
+                .attr('fill', 'black')
+                .attr('x', width / 2)
+                .attr('y', 35)
+                .attr('text-anchor', 'middle')
+                .text('Cost ($)');
+
+            // Add Y axis
+            g.append('g')
+                .call(d3.axisLeft(yScale))
+                .append('text')
+                .attr('fill', 'black')
+                .attr('transform', 'rotate(-90)')
+                .attr('y', -40)
+                .attr('x', -height / 2)
+                .attr('text-anchor', 'middle')
+                .text('Environmental Impact');
+
+            // Add dots for each point
+            g.selectAll('circle')
+                .data(paretoPoints)
+                .enter()
+                .append('circle')
+                .attr('cx', d => xScale(d.cost))
+                .attr('cy', d => yScale(d.impact))
+                .attr('r', 5)
+                .attr('fill', 'steelblue')
+                .attr('opacity', 0.7)
+                // Add tooltips
+                .on('mouseover', function(event, d) {
+                    d3.select(this)
+                        .attr('r', 8)
+                        .attr('fill', 'orange');
+
+                    g.append('text')
+                        .attr('class', 'tooltip')
+                        .attr('x', xScale(d.cost) + 10)
+                        .attr('y', yScale(d.impact) - 10)
+                        .text(`${d.ingredient} from ${d.source}`)
+                        .attr('fill', 'black');
+                })
+                .on('mouseout', function() {
+                    d3.select(this)
+                        .attr('r', 5)
+                        .attr('fill', 'steelblue');
+
+                    g.selectAll('.tooltip').remove();
+                });
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NSGA-II Optimization for Burrito Builder</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .form-row { display: flex; gap: 20px; margin-bottom: 20px; }
+        .form-column { flex: 1; }
+        .left-column { flex: 0 0 300px; }
+        .ingredient-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        #map { height: 400px; width: 100%; border: 1px solid #ccc; }
+        #pareto-front { height: 300px; border: 1px solid #ccc; margin: 10px 0; }
+        .slider-container { margin: 20px 0; }
+        .weight-display { display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+    <h1>NSGA-II Optimization for Burrito Builder</h1>
+
+    <div class="form-row">
+        <div class="form-column left-column">
+            <label for="location">Choose your location:</label>
+            <select id="location"></select>
+
+            <div style="margin-top: 20px;">
+                <label for="budget">Enter your budget ($):</label>
+                <input type="number" id="budget" min="0" step="0.01">
+            </div>
+        </div>
+
+        <div class="form-column">
+            <h3>Choose ingredients for your burrito:</h3>
+            <div class="ingredient-list">
+                <div><input type="checkbox" id="tortilla" value="Tortilla"><label for="tortilla">Tortilla (wheat)</label></div>
+                <div><input type="checkbox" id="beef" value="Beef"><label for="beef">Beef</label></div>
+                <div><input type="checkbox" id="chicken" value="Chicken"><label for="chicken">Chicken</label></div>
+                <div><input type="checkbox" id="pork" value="Pork"><label for="pork">Pork</label></div>
+                <div><input type="checkbox" id="cheese" value="Cheese"><label for="cheese">Cheese</label></div>
+                <div><input type="checkbox" id="sourcream" value="Sour Cream"><label for="sourcream">Sour cream (milk)</label></div>
+                <div><input type="checkbox" id="rice" value="Rice"><label for="rice">Rice</label></div>
+                <div><input type="checkbox" id="beans" value="Black/Pinto Beans"><label for="beans">Beans</label></div>
+                <div><input type="checkbox" id="lettuce" value="Lettuce"><label for="lettuce">Lettuce</label></div>
+                <div><input type="checkbox" id="onions" value="Onions"><label for="onions">Onions</label></div>
+                <div><input type="checkbox" id="tomatoes" value="Tomato"><label for="tomatoes">Tomatoes</label></div>
+                <div><input type="checkbox" id="avocado" value="Guacamole"><label for="avocado">Avocado</label></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-column">
+            <h3>Set Priorities for Optimization</h3>
+            <div class="slider-container">
+                <input type="range" id="weight-slider" min="0" max="100" value="50">
+                <div class="weight-display">
+                    <span id="cost-weight-display">Cost: 50%</span>
+                    <span id="impact-weight-display">Impact: 50%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pareto-front">
+        <h3>Pareto Front Visualization</h3>
+    </div>
+
+    <div id="map-container">
+        <h3>Optimal Sourcing Countries</h3>
+        <div id="map"></div>
+        <div id="solution-info"></div>
+    </div>
+
+    <script>
+        let globalData;
+        let map;
+        let markersLayer;
+
+        // Basic optimization functions
+        function calculateCostAndImpact(solution, importingCountry) {
+            let totalCost = 0;
+            let totalImpact = 0;
+
+            Object.entries(solution).forEach(([ingredient, sourceCountry]) => {
+                if (!globalData[importingCountry]?.[ingredient]?.[sourceCountry]) return;
+
+                const metrics = globalData[importingCountry][ingredient][sourceCountry];
+                totalCost += metrics.costPerKg;
+                totalImpact += metrics.Production_Env_Impact + (metrics.distance / 1000);
+            });
+
+            return { cost: totalCost, impact: totalImpact };
+        }
+
+        function findOptimalSolution(selectedIngredients, importingCountry, budget, costWeight) {
+            let bestSolution = null;
+            let bestScore = Infinity;
+
+            // For each ingredient, try all possible source countries
+            selectedIngredients.forEach(ingredient => {
+                const sourceCountries = Object.keys(globalData[importingCountry][ingredient] || {});
+
+                sourceCountries.forEach(sourceCountry => {
+                    const solution = { [ingredient]: sourceCountry };
+                    const metrics = calculateCostAndImpact(solution, importingCountry);
+
+                    if (metrics.cost <= budget) {
+                        const score = (costWeight * metrics.cost) + ((1 - costWeight) * metrics.impact);
+                        if (score < bestScore) {
+                            bestScore = score;
+                            bestSolution = { ...solution, metrics };
+                        }
+                    }
+                });
+            });
+
+            return bestSolution;
+        }
+
+        function updateVisualization() {
+            const importingCountry = document.getElementById('location').value;
+            const budget = parseFloat(document.getElementById('budget').value);
+            const costWeight = parseInt(document.getElementById('weight-slider').value) / 100;
+
+            const selectedIngredients = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+                .map(cb => cb.value);
+
+            if (!selectedIngredients.length || !budget || isNaN(budget)) {
+                alert('Please select ingredients and enter a valid budget.');
+                return;
+            }
+
+            const solution = findOptimalSolution(selectedIngredients, importingCountry, budget, costWeight);
+
+            if (solution) {
+                displaySolution(solution, importingCountry);
+            } else {
+                document.getElementById('solution-info').innerHTML = 'No valid solution found within budget.';
+            }
+        }
+
+        function displaySolution(solution, importingCountry) {
+            // Clear previous markers
+            markersLayer.clearLayers();
+
+            // Display solution info
+            let html = '<h4>Optimal Solution:</h4>';
+            html += `<p>Total Cost: $${solution.metrics.cost.toFixed(2)}</p>`;
+            html += `<p>Environmental Impact: ${solution.metrics.impact.toFixed(2)}</p>`;
+            html += '<h5>Sources:</h5><ul>';
+
+            Object.entries(solution).forEach(([ingredient, sourceCountry]) => {
+                if (ingredient === 'metrics') return;
+
+                const metrics = globalData[importingCountry][ingredient][sourceCountry];
+                html += `<li>${ingredient}: ${sourceCountry}</li>`;
+
+                // Add marker
+                const marker = L.marker([metrics.Latitude, metrics.Longitude])
+                    .bindPopup(`
+                        <b>${ingredient}</b><br>
+                        Source: ${sourceCountry}<br>
+                        Cost: $${metrics.costPerKg.toFixed(2)}/kg<br>
+                        Impact: ${metrics.Production_Env_Impact.toFixed(2)}
+                    `)
+                    .addTo(markersLayer);
+            });
+
+            html += '</ul>';
+            document.getElementById('solution-info').innerHTML = html;
+
+            // Fit map to markers
+            const group = L.featureGroup(markersLayer.getLayers());
+            if (group.getLayers().length > 0) {
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+        }
+
+        // Initialize application
+        async function initializeApp() {
+            try {
+                // Load data
+                const response = await fetch('final_burrito_data.json');
+                globalData = await response.json();
+
+                // Populate countries
+                const locationSelect = document.getElementById('location');
+                Object.keys(globalData).forEach(country => {
+                    const option = document.createElement('option');
+                    option.value = country;
+                    option.textContent = country;
+                    locationSelect.appendChild(option);
+                });
+
+                // Initialize map
+                map = L.map('map').setView([0, 0], 2);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+                markersLayer = L.layerGroup().addTo(map);
+
+                // Add event listeners
+                document.getElementById('weight-slider').addEventListener('input', function() {
+                    const costWeight = this.value;
+                    document.getElementById('cost-weight-display').textContent = `Cost: ${costWeight}%`;
+                    document.getElementById('impact-weight-display').textContent = `Impact: ${100-costWeight}%`;
+                    updateVisualization();
+                });
+
+                document.querySelectorAll('input[type="checkbox"], #location, #budget')
+                    .forEach(el => el.addEventListener('change', updateVisualization));
+
+            } catch (error) {
+                console.error('Error initializing application:', error);
+                alert('Error loading data. Please try again.');
+            }
+        }
+
+        // Start application
+        window.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>
