@@ -384,14 +384,14 @@
             <!-- Left Column -->
             <div class="form-column left-column">
                 <!-- Choose your location -->
-                <label for="importing-country" class="section-label">Choose your location (Importing country):</label><br>
+                <label for="importing-country" class="section-label">Where are you eating your burrito?</label><br>
                 <select id="importing-country" style="margin-top:10px;">
                 </select><br><br>
             </div>
 
             <!-- Right Column -->
             <div class="form-column right-column">
-                <label for="budget" class="section-label">Enter your budget:</label><br>
+                <label for="budget" class="section-label">What's the max you will pay for your burrito?</label><br>
                 <div style="margin-top: 7px; display: flex; gap: 10px; align-items: center;">
                     $ <input type="number" id="budget-input" name="budget" value="25" min="0" step="0.01" style="width: 100px;">
                     <button id="update-budget" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
@@ -406,7 +406,7 @@
             <!-- Left Column -->
             <div class="form-column left-column">
                     <!-- Choose ingredients for your burrito -->
-                    <label for="ingredient" class="section-label">Choose ingredients for your burrito:</label><br><br>
+                    <label for="ingredient" class="section-label">What's going in your burrito?</label><br><br>
                     <div class="flex-container">
                         <!-- Ingredient checkboxes -->
                         <div class="ingredient-list">
@@ -414,7 +414,7 @@
                             <input type="checkbox" id="beef" name="beef" value="Beef"> Beef<br>
                             <input type="checkbox" id="chicken" name="chicken" value="Chicken"> Chicken<br>
                             <input type="checkbox" id="pork" name="pork" value="Pork"> Pork<br>
-                            <input type="checkbox" id="cheese" name="cheese" value="Shredded Cheese"> Cheese<br>
+                            <input type="checkbox" id="cheese" name="cheese" value="Cheese"> Cheese<br>
                             <input type="checkbox" id="sour-cream" name="sour-cream" value="Sour Cream"> Sour cream<br>
                             <input type="checkbox" id="rice" name="rice" value="Rice"> Rice<br>
                             <input type="checkbox" id="beans" name="beans" value="Beans"> Beans<br>
@@ -439,7 +439,7 @@
         </div> <!-- Close second form-row -->
 
         <!-- Set Priorities for Optimization -->
-        <h3>Set Priorities for Optimization</h3>
+        <h3>What matters more when selecting your burrito?</h3>
         <div class="slider-container">
             <label for="weight-slider">Low Cost</label>
             <input type="range" id="weight-slider" min="0" max="100" step="1" value="50" style="width: 300px;">
@@ -461,7 +461,7 @@
                         </div>
                     </div>
                 </div>
-                <h3 class="text-xl font-bold mt-4 mb-2">Optimal Sourcing Countries</h3>
+                <h3 class="text-xl font-bold mt-4 mb-2">From where are your burrito ingredients?</h3>
                 <div class="map-content">
                     <div class="map-container">
                         <svg id="country-map" width="960" height="500"></svg>
@@ -625,7 +625,7 @@
             "Beef": "#1f78b4",
             "Chicken": "#b2df8a",
             "Pork": "#33a02c",
-            "Shredded Cheese": "#33a02c",
+            "Cheese": "#33a02c",
             "Sour Cream": "#ff8ab7",
             "Rice": "#fdbf6f",
             "Beans": "#ff7f00",
@@ -1143,7 +1143,6 @@
 
             const width = +svg.attr("width");
             const height = +svg.attr("height");
-            //const projection = d3.geoMercator().scale(130).translate([width / 2.2, height / 1.5]);
 
             // Equal Earth projection - better area representation
             const projection = d3.geoRobinson()
@@ -1208,6 +1207,9 @@
                 let countryAngles = {};
                 const angleStep = Math.PI / 4; // 45 degrees for spacing
 
+                // Store all label groups for later adjustment
+                const labelGroups = [];
+
                 Object.keys(finalSolution.solution).forEach(ingredient => {
                     const country = finalSolution.solution[ingredient];
                     const data = ingredientData[importingCountry][ingredient][country];
@@ -1231,6 +1233,9 @@
                     const labelGroup = svg.append("g")
                         .attr("class", "label-group")
                         .attr("transform", `translate(${labelX},${labelY})`);
+
+                    // Add to array for later adjustment
+                    labelGroups.push(labelGroup);
 
                     // Calculate text metrics for the box
                     const labelHeight = 45; // Height to accommodate 4 lines of text
@@ -1285,7 +1290,7 @@
                         .attr("x2", labelX)
                         .attr("y2", labelY)
                         .attr("stroke", ingredientColors[ingredient])
-                        .attr("stroke-width", 1);
+                        .attr("stroke-width", 2);
 
                     // Highlight the country on the map
                     svg.selectAll("path")
@@ -1294,8 +1299,20 @@
 
                 });
 
-                // Adjust label positioning to prevent overlapping
-                preventLabelOverlap(svg, "text.label");
+                // After all labels are created, adjust positions to prevent overlap
+                let anyMoved = true;
+                let iterations = 0;
+                const maxIterations = 10;
+
+                while (anyMoved && iterations < maxIterations) {
+                    anyMoved = false;
+                    labelGroups.forEach(labelGroup => {
+                        const moved = adjustLabelPosition(labelGroup, labelGroups.map(g => g.node()));
+                        if (moved) anyMoved = true;
+                    });
+                    iterations++;
+                }
+
                 createActiveLegend(finalSolution);
             });
         }
@@ -1307,25 +1324,143 @@
             alert(message);
         }
 
-        // Function to prevent label overlapping
-        function preventLabelOverlap(svg, labelClass) {
-            const labels = svg.selectAll(labelClass).nodes();
-            const padding = 15; // Minimum distance between labels
+        // Function to move a label to avoid overlap
+        function adjustLabelPosition(labelGroup, otherGroups, padding = 20) {
+            const svg = d3.select("#country-map");
+            const svgWidth = +svg.attr("width");
+            const svgHeight = +svg.attr("height");
 
-            for (let i = 0; i < labels.length; i++) {
-                for (let j = i + 1; j < labels.length; j++) {
-                    const labelA = labels[i].getBBox();
-                    const labelB = labels[j].getBBox();
+            // Define margins to keep labels within visible area
+            const margin = {
+                top: 50,
+                right: 50,
+                bottom: 50,
+                left: 50
+            };
 
-                    if (isOverlapping(labelA, labelB, padding)) {
-                        // Shift labelB down by padding
-                        const currentY = parseFloat(d3.select(labels[j]).attr("y")) + padding;
-                        d3.select(labels[j]).attr("y", currentY);
+            const currentBox = labelGroup.node().getBBox();
+            const currentTransform = d3.select(labelGroup.node()).attr("transform");
+            let [currentX, currentY] = currentTransform
+                .replace("translate(", "")
+                .replace(")", "")
+                .split(",")
+                .map(parseFloat);
+
+            let moved = false;
+            let attempts = 0;
+            const maxAttempts = 50;
+            const moveStep = 30;
+
+            while (attempts < maxAttempts) {
+                let overlapping = false;
+
+                // Check overlap with other label groups
+                otherGroups.forEach(otherGroup => {
+                    if (otherGroup === labelGroup.node()) return; // Skip self
+
+                    const otherBox = otherGroup.getBBox();
+                    const otherTransform = d3.select(otherGroup).attr("transform");
+                    let [otherX, otherY] = otherTransform
+                        .replace("translate(", "")
+                        .replace(")", "")
+                        .split(",")
+                        .map(parseFloat);
+
+                    // Calculate actual boundaries with current positions
+                    const box1 = {
+                        left: currentX - padding,
+                        right: currentX + currentBox.width + padding,
+                        top: currentY - padding,
+                        bottom: currentY + currentBox.height + padding
+                    };
+
+                    const box2 = {
+                        left: otherX - padding,
+                        right: otherX + otherBox.width + padding,
+                        top: otherY - padding,
+                        bottom: otherY + otherBox.height + padding
+                    };
+
+                    if (!(box1.right < box2.left ||
+                          box1.left > box2.right ||
+                          box1.bottom < box2.top ||
+                          box1.top > box2.bottom)) {
+                        overlapping = true;
+
+                        // Calculate the center points of both boxes
+                        const center1 = {
+                            x: (box1.left + box1.right) / 2,
+                            y: (box1.top + box1.bottom) / 2
+                        };
+                        const center2 = {
+                            x: (box2.left + box2.right) / 2,
+                            y: (box2.top + box2.bottom) / 2
+                        };
+
+                        // Determine the direction to move based on relative positions
+                        const dx = center1.x - center2.x;
+                        const dy = center1.y - center2.y;
+
+                        // Move diagonally away from the overlapping label
+                        if (Math.abs(dx) > Math.abs(dy)) {
+                            currentX += (dx > 0 ? moveStep : -moveStep);
+                        } else {
+                            currentY += (dy > 0 ? moveStep : -moveStep);
+                        }
+
+                        moved = true;
+                    }
+                });
+
+                // Enforce boundaries
+                const labelWidth = currentBox.width;
+                const labelHeight = currentBox.height;
+
+                // Constrain X position
+                currentX = Math.max(margin.left, Math.min(svgWidth - labelWidth - margin.right, currentX));
+
+                // Constrain Y position
+                currentY = Math.max(margin.top, Math.min(svgHeight - labelHeight - margin.bottom, currentY));
+
+                if (!overlapping) break;
+                attempts++;
+            }
+
+            if (moved) {
+                // Update the label group position
+                labelGroup.attr("transform", `translate(${currentX},${currentY})`);
+
+                // Get the original coordinates from the line
+                const line = d3.select(labelGroup.node().parentNode).select("line");
+                if (!line.empty()) {
+                    const x1 = +line.attr("x1");
+                    const y1 = +line.attr("y1");
+
+                    // Calculate direction vector
+                    const dx = currentX - x1;
+                    const dy = currentY - y1;
+                    const length = Math.sqrt(dx * dx + dy * dy);
+
+                    // If length is too long, adjust end point to maintain reasonable line length
+                    const maxLength = 200; // Maximum desired line length
+                    if (length > maxLength) {
+                        const ratio = maxLength / length;
+                        const newX = x1 + dx * ratio;
+                        const newY = y1 + dy * ratio;
+                        line.attr("x2", newX)
+                            .attr("y2", newY);
+                        // Update label position to match line endpoint
+                        labelGroup.attr("transform", `translate(${newX},${newY})`);
+                    } else {
+                        // Update line normally
+                        line.attr("x2", currentX)
+                            .attr("y2", currentY);
                     }
                 }
             }
-        }
 
+            return moved;
+        }
         // Alternative legend creation that only shows active ingredients
         function createActiveLegend(finalSolution) {
             // Remove any existing legend
