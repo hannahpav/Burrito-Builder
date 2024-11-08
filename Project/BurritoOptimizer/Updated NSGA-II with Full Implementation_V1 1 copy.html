@@ -16,19 +16,34 @@
         .country:hover { fill: lightblue; }
 
         /* Tooltip Styling */
-        .tooltip { 
-            position: absolute; 
-            background-color: rgba(255, 255, 255, 0.9); 
-            padding: 8px; 
-            border: 1px solid gray; 
+        .tooltip {
+            position: absolute;
+            background-color: white; /* White background */
+            padding: 10px;
+            border: 1px solid #ccc;
             border-radius: 4px;
-            pointer-events: none; 
-            font-size: 12px; 
-            opacity: 0; 
+            pointer-events: none;
+            font-size: 12px;
+            color: black; /* Black text */
+            opacity: 0;
             transition: opacity 0.3s;
-            box-shadow: 0px 0px 5px rgba(0,0,0,0.3);
-            min-width: 80px;
-            min-height: 40px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Subtle shadow for hover effect */
+            z-index: 1000; /* Ensure tooltip appears above other elements */
+            max-width: 200px; /* Prevent tooltip from getting too wide */
+            white-space: pre-line;
+            line-height = 1.4;
+
+            /* Optional: Add a small arrow/triangle */
+            &::after {
+                content: "";
+                position: absolute;
+                top: 100%;
+                left: 50%;
+                margin-left: -5px;
+                border-width: 5px;
+                border-style: solid;
+                border-color: white transparent transparent transparent;
+            }
         }
 
         /* Label and Line Styling */
@@ -98,12 +113,30 @@
             flex-direction: column;
             align-items: center;
         }
+
         #cost-weight-display {
             margin-left: 50px; /* Adjusted for better alignment */
         }
 
         #impact-weight-display {
             margin-left:350px; /* Adjusted for better alignment */
+        }
+
+        /* Add these new styles for the slider appearance */
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 2px;
+            background: #d3d3d3;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            border: 1px solid #888;
+            border-radius: 50%;
+            cursor: pointer;
+            background: black;
         }
 
         /* Map Header Styling */
@@ -233,9 +266,9 @@
     <!-- Set Priorities for Optimization -->
     <h3>Set Priorities for Optimization (Weights sum to 100%)</h3>
     <div class="slider-container">
-        <label for="weight-slider">Less Cost</label>
+        <label for="weight-slider">Low Cost</label>
         <input type="range" id="weight-slider" min="0" max="100" step="1" value="50" style="width: 300px;">
-        <label for="weight-slider">Less Environmental Impact</label>
+        <label for="weight-slider">Low Environmental Impact</label>
     </div>
     <div class="weight-display">
         <span id="cost-weight-display">50%</span>
@@ -316,21 +349,21 @@
             "Chicken": "#b2df8a",
             "Pork": "#33a02c",
             "Shredded Cheese": "#33a02c",
-            "Sour Cream": "#e31a1c",
+            "Sour Cream": "#ff8ab7",
             "Rice": "#fdbf6f",
             "Black/Pinto Beans": "#ff7f00",
             "Lettuce": "#cab2d6",
             "Onions": "#6a3d9a",
-            "Tomato": "#ffff99",
+            "Tomato": "#e31a1c",
             "Guacamole": "#b15928"
         };
 
-        // Helper function to calculate total cost
-        function calculateTotalCost(solution, importingCountry) {
-            return Object.entries(solution).reduce((total, [ingredient, sourceCountry]) => {
-                return total + (ingredientData[importingCountry][ingredient][sourceCountry]?.cost || 0);
-            }, 0);
-        }
+        // // Helper function to calculate total cost
+        // function calculateTotalCost(solution, importingCountry) {
+        //     return Object.entries(solution).reduce((total, [ingredient, sourceCountry]) => {
+        //         return total + (ingredientData[importingCountry][ingredient][sourceCountry]?.cost || 0);
+        //     }, 0);
+        // }
 
         // Helper function to validate data structure
         function validateIngredientData(data) {
@@ -435,6 +468,7 @@
             console.log(`Generated ${population.length} valid individuals after ${attempts} attempts`);
             return population;
         }
+
         // Calculate cost and impact
         function calculateCostAndImpact(individual, importingCountry) {
             let totalCost = 0;
@@ -671,11 +705,17 @@
 
             paretoFront.forEach(solution => {
                 // Normalize cost and impact
-                const normalizedCost = (solution.cost - minCost) / (maxCost - minCost || 1); // Avoid division by zero
-                const normalizedImpact = (solution.impact - minImpact) / (maxImpact - minImpact || 1); // Avoid division by zero
+                const normalizedCost = (solution.cost - minCost) / (maxCost - minCost || 1);
+                const normalizedImpact = (solution.impact - minImpact) / (maxImpact - minImpact || 1);
+
+                // Invert costWeight since slider movement should be opposite
+                // When slider is at 0 (far left, "Low Cost"), costWeight should be 1
+                // When slider is at 1 (far right, "Low Impact"), costWeight should be 0
+                const adjustedCostWeight = 1 - costWeight;
+                const adjustedImpactWeight = costWeight;  // This becomes the opposite of costWeight
 
                 // Calculate weighted score using normalized values
-                const weightedScore = normalizedCost * costWeight + normalizedImpact * impactWeight;
+                const weightedScore = normalizedCost * adjustedCostWeight + normalizedImpact * adjustedImpactWeight;
 
                 console.log(`Solution: ${JSON.stringify(solution)}, Weighted Score: ${weightedScore}`);
 
@@ -916,7 +956,7 @@
                         .attr("x2", labelX)
                         .attr("y2", labelY)
                         .attr("stroke", ingredientColors[ingredient])
-                        .attr("stroke-width", 1.5);
+                        .attr("stroke-width", 1);
 
                     // Append label with cost and impact using <tspan> for multi-line text
                     const label = svg.append("text")
@@ -925,25 +965,35 @@
                         .attr("y", labelY)
                         .attr("text-anchor", "middle")
                         .attr("alignment-baseline", "middle")
-                        .style("fill", ingredientColors[ingredient])
+                        .style("fill", "black")
                         .style("font-size", "12px");
 
-                    // Append first line
+                    // Append each line separately with proper spacing
                     label.append("tspan")
                         .attr("x", labelX)
-                        .attr("y", labelY)
-                        .text(`${ingredient}: ${country}`);
+                        .attr("y", labelY) // 15px down from first line
+                        .text(country);
 
-                    // Append second line
                     label.append("tspan")
                         .attr("x", labelX)
-                        .attr("y", labelY + 15) // Shift down by 15 pixels
-                        .text(`Cost: $${data.cost.toFixed(2)}, Impact: ${data.impact}`);
+                        .attr("y", labelY+15)
+                        .text(`Ingredient: ${ingredient}`);
+
+                    label.append("tspan")
+                        .attr("x", labelX)
+                        .attr("y", labelY + 30) // 30px down from first line
+                        .text(`Cost: $${data.cost.toFixed(2)}`);
+
+                    label.append("tspan")
+                        .attr("x", labelX)
+                        .attr("y", labelY + 45) // 45px down from first line
+                        .text(`Impact: ${data.impact.toFixed(2)}`);
 
                     // Highlight the country on the map
                     svg.selectAll("path")
                         .filter(d => d.properties && d.properties.name === country)
-                        .style("fill", ingredientColors[ingredient]);
+                        .style("fill", ingredientColors[ingredient])
+
                 });
 
                 // Adjust label positioning to prevent overlapping
@@ -1053,6 +1103,10 @@
 
             const costWeight = +d3.select("#weight-slider").property("value") / 100;
             const impactWeight = 1 - costWeight;
+
+            // Add this line right after to update the display:
+            d3.select("#cost-weight-display").text(`${Math.round((1 - costWeight) * 100)}%`);
+            d3.select("#impact-weight-display").text(`${Math.round(costWeight * 100)}%`);
 
             const paretoFront = runNSGA2Optimization(selectedIngredients, importingCountry, budget);
 
