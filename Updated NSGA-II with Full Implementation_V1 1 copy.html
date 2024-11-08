@@ -52,8 +52,41 @@
         .label { font-size: 14px; font-weight: bold; }
         .line { stroke-width: 1.5; }
 
-        /* Map and Chart Dimensions */
-        #map svg { width: 100%; height: 500px; }
+        .map-wrapper {
+            width: 100%;
+            max-width: 1200px; /* Or whatever maximum width you prefer */
+            margin: 0;
+            position: relative;
+        }
+
+        /* Map container layout */
+        #map {
+            position: relative;
+            width: 100%;
+        }
+
+        /* Map content container */
+        .map-content {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            margin: 0/* Consistent space between map and legend */
+        }
+
+        /* Map SVG dimensions */
+        #map svg {
+            width: 100%;
+            height: 500px;
+        }
+
+        /* Map Container */
+        .map-container {
+            position: relative;
+            flex: 1;
+            min-width: 0;
+            margin: 0;/* Prevent flex item overflow */
+        }
+
         #pareto-chart { width: 100%; height: 300px; }
 
         /* Layout Styling */
@@ -164,12 +197,12 @@
             }
         }
 
-        /* Legend Styling */
+        /* Legend Container Styling */
         .legend-container {
             position: absolute;
-            right: 20px;
-            top: 75%;
-            transform: translateY(-50%);
+            top: 10px;          /* Position at top */
+            right: 10px;        /* Position at right */
+            width: 150px;
             background-color: rgba(255, 255, 255, 0.9);
             padding: 15px;
             border-radius: 5px;
@@ -244,10 +277,34 @@
             height: 100%;
             object-fit: contain;
         }
+
+        
     </style>
 </head>
 <body>
-    <h2>NSGA-II Optimization for Burrito Builder</h2>
+    <h2>The Burrito Builder: Cost vs Emissions</h2>
+
+    <div class="summary-section" style="margin: 20px 0 30px 0; max-width: 1200px; line-height: 1.6; color: #333;">
+        <p style="margin-bottom: 15px;">
+            Welcome to the Burrito Builder, an interactive tool that helps you create the perfect burrito while considering both cost and environmental impact. This application uses the NSGA-II optimization algorithm to find the best combination of ingredient sources based on your preferences.
+        </p>
+
+        <h3 style="margin: 20px 0 10px 0; color: #2c5282;">How to Use the Interface:</h3>
+        <ol style="margin-left: 20px; margin-bottom: 20px;">
+            <li><strong>Select Your Location:</strong> Choose your country from the dropdown menu. This will determine the available ingredient sources and their associated costs.</li>
+            <li><strong>Set Your Budget:</strong> Enter the maximum amount you're willing to spend on your burrito.</li>
+            <li><strong>Choose Ingredients:</strong> Select the ingredients you'd like in your burrito. The tortilla is included by default.</li>
+            <li><strong>Adjust Preferences:</strong> Use the slider to balance between cost savings (left) and lower environmental impact (right).</li>
+        </ol>
+
+        <p style="margin-bottom: 15px;">
+            The Pareto front visualization shows all optimal solutions, where each point represents a unique combination of ingredient sources. The world map below displays the source countries for your selected burrito configuration, with your location highlighted in black.
+        </p>
+
+        <p style="font-style: italic; color: #666;">
+            Note: The environmental impact score is calculated based on factors such as transportation distance and production methods. Lower scores indicate more environmentally friendly choices.
+        </p>
+    </div>
 
     <!-- First Row: Location and Budget -->
     <div class="form-row">
@@ -319,22 +376,30 @@
     <!-- Tooltip for displaying cost and impact -->
     <div class="tooltip" id="tooltip"></div>
 
-    <div id="map">
-        <div class="map-header">
-            <!-- Cost info on the left -->
-            <div class="flex justify-between items-center w-full">
-                <div id="solution-info" class="text-left"></div>
-                <div class="confirmation-section">
-                    <span>Is this the burrito you want?</span>
-                    <button onclick="handleBurritoConfirm(true)" class="bg-green-500 text-white px-4 py-2 mx-2 rounded">Yes</button>
-                    <button onclick="handleBurritoConfirm(false)" class="bg-red-500 text-white px-4 py-2 rounded">No</button>
+    <div class="map-wrapper">
+        <div id="map">
+            <div class="map-header">
+                <div class="flex justify-between items-center w-full">
+                    <div id="solution-info" class="text-left"></div>
+                    <div class="confirmation-section">
+                        <span>Is this the burrito you want?</span>
+                        <button onclick="handleBurritoConfirm(true)" class="bg-green-500 text-white px-4 py-2 mx-2 rounded">Yes</button>
+                        <button onclick="handleBurritoConfirm(false)" class="bg-red-500 text-white px-4 py-2 rounded">No</button>
+                    </div>
+                </div>
+            </div>
+            <h3 class="text-xl font-bold mt-4 mb-2">Optimal Sourcing Countries</h3>
+            <div class="map-content">
+                <div class="map-container">
+                    <svg id="country-map" width="960" height="500"></svg>
+                    <div id="map-legend" class="legend-container">
+                        <!-- Legend will be populated here -->
+                    </div>
                 </div>
             </div>
         </div>
-        <!-- Optimal Sourcing Countries title moved here -->
-        <h3 class="text-xl font-bold mt-4 mb-2">Optimal Sourcing Countries</h3>
-        <svg id="country-map" width="960" height="500"></svg>
     </div>
+
 
     <!-- JavaScript Code -->
     <script>
@@ -1170,7 +1235,8 @@
 
         // Alternative legend creation that only shows active ingredients
         function createActiveLegend(finalSolution) {
-            d3.selectAll("#map-legend").remove();
+            // Remove any existing legend
+            d3.select("#map-legend").selectAll("*").remove();
 
             // Get active ingredients
             const activeIngredients = Object.keys(finalSolution.solution);
@@ -1181,11 +1247,8 @@
                 activeColors[ingredient] = ingredientColors[ingredient];
             });
 
-            // Create legend container
-            const legendContainer = d3.select("#map")
-                .append("div")
-                .attr("id", "map-legend")
-                .attr("class", "legend-container");
+            // Get the existing legend container
+            const legendContainer = d3.select("#map-legend");
 
             // Add legend title
             legendContainer.append("div")
