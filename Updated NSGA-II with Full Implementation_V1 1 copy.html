@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>NSGA-II Optimization for Burrito Builder</title>
     <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://d3js.org/d3-geo-projection.v4.min.js"></script>
     <style>
         /* Global Font Style */
         body {
@@ -112,14 +113,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-        }
-
-        #cost-weight-display {
-            margin-left: 50px; /* Adjusted for better alignment */
-        }
-
-        #impact-weight-display {
-            margin-left:350px; /* Adjusted for better alignment */
         }
 
         /* Add these new styles for the slider appearance */
@@ -267,10 +260,12 @@
 
         <!-- Right Column -->
         <div class="form-column right-column">
-            <!-- Enter your budget -->
             <label for="budget" class="section-label">Enter your budget:</label><br>
-            <div style="margin-top: 7px;">
+            <div style="margin-top: 7px; display: flex; gap: 10px; align-items: center;">
                 $ <input type="number" id="budget-input" name="budget" value="25" min="0" step="0.01" style="width: 100px;">
+                <button id="update-budget" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Update
+                </button>
             </div><br><br>
         </div>
     </div> <!-- Close first form-row -->
@@ -284,7 +279,7 @@
                 <div class="flex-container">
                     <!-- Ingredient checkboxes -->
                     <div class="ingredient-list">
-                        <input type="checkbox" id="tortilla" name="tortilla" value="Tortilla"> Tortilla (wheat)<br>
+                        <input type="checkbox" id="tortilla" name="tortilla" value="Tortilla" checked disabled> Tortilla (wheat)<br>
                         <input type="checkbox" id="beef" name="beef" value="Beef"> Beef<br>
                         <input type="checkbox" id="chicken" name="chicken" value="Chicken"> Chicken<br>
                         <input type="checkbox" id="pork" name="pork" value="Pork"> Pork<br>
@@ -313,15 +308,11 @@
     </div> <!-- Close second form-row -->
 
     <!-- Set Priorities for Optimization -->
-    <h3>Set Priorities for Optimization (Weights sum to 100%)</h3>
+    <h3>Set Priorities for Optimization</h3>
     <div class="slider-container">
         <label for="weight-slider">Low Cost</label>
         <input type="range" id="weight-slider" min="0" max="100" step="1" value="50" style="width: 300px;">
         <label for="weight-slider">Low Environmental Impact</label>
-    </div>
-    <div class="weight-display">
-        <span id="cost-weight-display">50%</span>
-        <span id="impact-weight-display">50%</span>
     </div>
 
     <!-- Tooltip for displaying cost and impact -->
@@ -356,12 +347,19 @@
             ingredientData = data;
             console.log("Ingredient data loaded:", ingredientData);
 
+            // Find and modify tortilla checkbox
+            const tortillaCheckbox = document.getElementById('tortilla');
+            if (tortillaCheckbox) {
+                tortillaCheckbox.checked = true;  // Check by default
+                tortillaCheckbox.disabled = true; // Prevent unchecking
+            }
+
             // Add these debug lines:
             console.log("Sample of first country data:", JSON.stringify(ingredientData['Australia'], null, 2));
-            // Also print all available ingredients for Australia
             if (ingredientData['Australia']) {
                 console.log("Available ingredients for Australia:", Object.keys(ingredientData['Australia']));
             }
+
             // Get unique importing countries from the data
             const importingCountries = Object.keys(data);
             console.log("Available importing countries:", importingCountries);
@@ -372,34 +370,87 @@
             // Clear existing options
             dropdown.selectAll("option").remove();
 
-            // Add new options
+            // Add new options and set Australia as the first option
             dropdown.selectAll("option")
-                .data(importingCountries)
+                .data(["Australia", ...importingCountries.filter(country => country !== "Australia")])
                 .enter()
                 .append("option")
                 .attr("value", d => d)
                 .text(d => d);
 
-            // Enable the UI elements
+            // Set Australia as default
+            dropdown.property("value", "Australia");
+
+            // Enable all UI elements
             enableUIElements();
+
+            console.log("Initial setup complete with Australia selected");
+
         }).catch(function(error) {
             console.error("Error loading ingredientData.json:", error);
             alert("Error loading ingredient data. Please refresh the page.");
         });
 
-        // Add this new function to enable UI elements
+        // Function to enable UI elements - redefine this first
         function enableUIElements() {
-            // Enable all inputs that were disabled
+            // Enable all checkboxes except tortilla
             d3.selectAll("input[type=checkbox]")
+                .filter(function() {
+                    return this.id !== 'tortilla';  // Skip the tortilla checkbox
+                })
                 .property("disabled", false)
                 .on("change", function() {
                     updateParetoFront();
                     updateBurritoVisualization();
                 });
-            // Add slider event listener
-            d3.select("#weight-slider")
+
+            // Enable location dropdown
+            const locationDropdown = d3.select("#importing-country");
+            locationDropdown
                 .property("disabled", false)
-                .on("input", function() {  // 'input' event fires while sliding
+                .on("change", function() {
+                    console.log("Location changed to:", this.value);
+                    updateParetoFront();
+                });
+
+            // Enable budget input
+            const budgetInput = d3.select("#budget-input");
+            const updateButton = d3.select("#update-budget");
+
+            // Function to handle budget update
+            function updateBudget() {
+                const budget = +budgetInput.node().value;
+                if (budget <= 0) {
+                    alert("Please enter a valid budget greater than 0");
+                    budgetInput.node().value = 1;
+                    return;
+                }
+                console.log("Budget changed to:", budget);
+                updateParetoFront();
+            }
+
+            // Update button click handler
+            updateButton.on("click", updateBudget);
+
+            // Enter key handler
+            budgetInput.on("keydown", function() {
+                if (d3.event.keyCode === 13) { // 13 is the Enter key code
+                    d3.event.preventDefault();
+                    updateBudget();
+                }
+            });
+
+            // Enable weight slider
+            const weightSlider = d3.select("#weight-slider");
+            weightSlider
+                .property("disabled", false)
+                .on("input", function() {
+                    const costWeight = +this.value / 100;
+                    const impactWeight = 1 - costWeight;
+
+
+
+                    console.log("Weights updated - Cost:", (1 - costWeight) * 100, "% Impact:", costWeight * 100, "%");
                     updateParetoFront();
                 });
 
@@ -424,13 +475,6 @@
             "Tomato": "#e31a1c",
             "Guacamole": "#b15928"
         };
-
-        // // Helper function to calculate total cost
-        // function calculateTotalCost(solution, importingCountry) {
-        //     return Object.entries(solution).reduce((total, [ingredient, sourceCountry]) => {
-        //         return total + (ingredientData[importingCountry][ingredient][sourceCountry]?.cost || 0);
-        //     }, 0);
-        // }
 
         // Helper function to validate data structure
         function validateIngredientData(data) {
@@ -821,7 +865,7 @@
                 .call(d3.axisBottom(x).ticks(5))
                 .append("text")
                 .attr("x", width / 2)
-                .attr("y", 30) // Adjusted for smaller SVG
+                .attr("y", 30)
                 .attr("fill", "black")
                 .style("text-anchor", "middle")
                 .text("Cost");
@@ -838,27 +882,28 @@
             // Select the tooltip div
             const tooltip = d3.select(".tooltip");
 
-            // Dots with tooltip events
+            // Dots with tooltip events - Updated event handling
             g.selectAll("circle.pareto-point")
                 .data(paretoFront)
                 .enter().append("circle")
                 .attr("class", "pareto-point")
                 .attr("cx", d => x(d.cost))
                 .attr("cy", d => y(d.impact))
-                .attr("r", 5) // Reduced radius
+                .attr("r", 5)
                 .attr("fill", "blue")
-                .on("mouseover", function(event, d) {
+                .on("mouseover", function(d) {
+                    const [mouseX, mouseY] = d3.mouse(document.body);
                     const costText = d.cost !== undefined ? d.cost.toFixed(2) : "N/A";
                     const impactText = d.impact !== undefined ? d.impact.toFixed(2) : "N/A";
                     tooltip.html(`Cost: $${costText}<br>Impact: ${impactText}`)
-                        .style("left", (event.pageX + 15) + "px")
-                        .style("top", (event.pageY + 15) + "px")
+                        .style("left", (mouseX + 15) + "px")
+                        .style("top", (mouseY + 15) + "px")
                         .style("opacity", 1);
                 })
-                .on("mousemove", function(event, d) {
-                    // Adjust tooltip position if necessary
-                    tooltip.style("left", (event.pageX + 15) + "px")
-                           .style("top", (event.pageY + 15) + "px");
+                .on("mousemove", function() {
+                    const [mouseX, mouseY] = d3.mouse(document.body);
+                    tooltip.style("left", (mouseX + 15) + "px")
+                           .style("top", (mouseY + 15) + "px");
                 })
                 .on("mouseout", function() {
                     tooltip.style("opacity", 0);
@@ -866,40 +911,41 @@
 
             // Highlight the optimal solution
             if (finalSolution) {
-                // Calculate the position
                 const optimalX = x(finalSolution.cost);
                 const optimalY = y(finalSolution.impact);
 
-                // Append the optimal point
+                // Append the optimal point with updated event handling
                 g.append("circle")
                     .attr("class", "optimal-point")
                     .attr("cx", optimalX)
                     .attr("cy", optimalY)
-                    .attr("r", 7) // Reduced radius
+                    .attr("r", 7)
                     .attr("fill", "red")
                     .attr("stroke", "black")
                     .attr("stroke-width", 1.5)
-                    .on("mouseover", function(event) {
+                    .on("mouseover", function() {
+                        const [mouseX, mouseY] = d3.mouse(document.body);
                         tooltip.html(`Optimal Solution<br>Cost: $${finalSolution.cost.toFixed(2)}<br>Impact: ${finalSolution.impact.toFixed(2)}`)
-                            .style("left", (event.pageX + 15) + "px")
-                            .style("top", (event.pageY + 15) + "px")
+                            .style("left", (mouseX + 15) + "px")
+                            .style("top", (mouseY + 15) + "px")
                             .style("opacity", 1);
                     })
-                    .on("mousemove", function(event) {
-                        tooltip.style("left", (event.pageX + 15) + "px")
-                               .style("top", (event.pageY + 15) + "px");
+                    .on("mousemove", function() {
+                        const [mouseX, mouseY] = d3.mouse(document.body);
+                        tooltip.style("left", (mouseX + 15) + "px")
+                               .style("top", (mouseY + 15) + "px");
                     })
                     .on("mouseout", function() {
                         tooltip.style("opacity", 0);
                     });
 
-                // Append label with cost and impact using <tspan> for multi-line text
+                // Append label with cost and impact
                 g.append("text")
                     .attr("class", "optimal-label")
                     .attr("x", optimalX)
-                    .attr("y", optimalY + 15) // Position below the circle
+                    .attr("y", optimalY + 15)
                     .attr("text-anchor", "middle")
-                    .attr("font-size", "10px") // Reduced font size
+                    .attr("font-size", "10px")
                     .attr("fill", "black")
                     .append("tspan")
                         .attr("x", optimalX)
@@ -907,11 +953,10 @@
                         .text(`Cost: $${finalSolution.cost.toFixed(2)}`)
                     .append("tspan")
                         .attr("x", optimalX)
-                        .attr("y", optimalY + 40) // Shift down by 15 pixels
+                        .attr("y", optimalY + 40)
                         .text(`Impact: ${finalSolution.impact.toFixed(2)}`);
             }
         }
-
         // Display Solution Info
         function displaySolutionInfo(finalSolution) {
             const totalCost = finalSolution.cost.toFixed(2);
@@ -939,7 +984,14 @@
 
             const width = +svg.attr("width");
             const height = +svg.attr("height");
-            const projection = d3.geoMercator().scale(130).translate([width / 2.2, height / 1.5]);
+            //const projection = d3.geoMercator().scale(130).translate([width / 2.2, height / 1.5]);
+
+            // Equal Earth projection - better area representation
+            const projection = d3.geoRobinson()
+                .scale(170)
+                .center([0, 15])
+                .translate([width / 2, height / 2]);
+
             const path = d3.geoPath().projection(projection);
 
             d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson").then(function (data) {
@@ -1148,11 +1200,11 @@
                 'beef',
                 'chicken',
                 'pork',
-                'cheese',
                 'lettuce',
+                'cheese',
                 'onions',
                 'tomatoes',
-                'sour cream',
+                'sour-cream',
                 'avocado'
             ];
 
@@ -1195,11 +1247,13 @@
                 return;
             }
 
-            const selectedIngredients = Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(el => el.value);
-            if (selectedIngredients.length === 0) {
-                alert("Please select ingredients.");
-                return;
+            // Get selected ingredients, ensuring tortilla is always included
+            const selectedCheckboxes = Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(el => el.value);
+            const selectedIngredients = [...selectedCheckboxes];
+            if (!selectedIngredients.includes("Tortilla")) {
+                selectedIngredients.push("Tortilla");
             }
+
 
             const budgetInput = d3.select("#budget-input").node();
             const budget = +budgetInput.value;
@@ -1222,10 +1276,6 @@
 
             const costWeight = +d3.select("#weight-slider").property("value") / 100;
             const impactWeight = 1 - costWeight;
-
-            // Add this line right after to update the display:
-            d3.select("#cost-weight-display").text(`${Math.round((1 - costWeight) * 100)}%`);
-            d3.select("#impact-weight-display").text(`${Math.round(costWeight * 100)}%`);
 
             const paretoFront = runNSGA2Optimization(selectedIngredients, importingCountry, budget);
 
