@@ -350,7 +350,7 @@
         </style>
     </head>
     <body>
-        <h2>The Burrito Builder: Cost vs Emissions</h2>
+        <h2>The Burrito Builder: Cost vs Environmental Impact</h2>
 
        <div class="splash-screen" id="splashScreen">
             <div class="splash-content">
@@ -626,6 +626,66 @@
                 "Tomato": "#e31a1c",
                 "Avocado": "#b15928"
             };
+
+            const countryNameMapping = {
+                        "Argentina": "Argentina",
+                        "Australia": "Australia",
+                        "Bolivia": "Bolivia",
+                        "Brazil": "Brazil",
+                        "Cabo Verde": "Cape Verde",
+                        "Canada": "Canada",
+                        "Chile": "Chile",
+                        "Colombia": "Colombia",
+                        "Czechia": "Czech Republic",
+                        "Guyana": "Guyana",
+                        "Iceland": "Iceland",
+                        "Luxembourg": "Luxembourg",
+                        "Madagascar": "Madagascar",
+                        "Mauritius": "Mauritania",
+                        "Mexico": "Mexico",
+                        "Mozambique": "Mozambique",
+                        "Paraguay": "Paraguay",
+                        "Philippines": "Philippines",
+                        "Romania": "Romania",
+                        "Slovakia": "Slovakia",
+                        "South Africa": "South Africa",
+                        "Tanzania": "United Republic of Tanzania",
+                        "Turkey": "Turkey",
+                        "Uruguay": "Uruguay",
+                        "USA": "USA",
+                        "Zambia": "Zambia",
+                        "Bahamas": "The Bahamas",
+                        "Bolivia (Plurinational State of)": "Bolivia",
+                        "Bosnia Herzegovina": "Bosnia and Herzegovina",
+                        "Côte d'Ivoire": "Ivory Coast",
+                        "Dem. Rep. of the Congo": "Democratic Republic of the Congo",
+                        "Dominican Rep.": "Dominican Republic",
+                        "Eswatini": "Swaziland",
+                        "Guinea-Bissau": "Guinea Bissau",
+                        "North Macedonia": "Macedonia",
+                        "Russian Federation": "Russia",
+                        "Serbia": "Republic of Serbia",
+                        "Timor-Leste": "East Timor",
+                        "Türkiye": "Turkey",
+                        "United Kingdom": "England",
+                        "United Rep. of Tanzania": "United Republic of Tanzania",
+                        "Viet Nam": "Vietnam",
+                    };
+
+                    // Create reverse mapping
+                    const reverseCountryMapping = {};
+                    Object.entries(countryNameMapping).forEach(([key, value]) => {
+                        reverseCountryMapping[value] = key;
+                    });
+
+                    // Function to convert country name in either direction
+                    function convertCountryName(countryName, direction = 'forward') {
+                        if (direction === 'forward') {
+                            return countryNameMapping[countryName] || countryName;
+                        } else {
+                            return reverseCountryMapping[countryName] || countryName;
+                        }
+                    }
 
             // Helper function to validate data structure
             function validateIngredientData(data) {
@@ -1118,7 +1178,7 @@
 
                 const solutionInfoDiv = d3.select("#solution-info");
                 solutionInfoDiv.html(
-                    `<p>Total Cost: $${totalCost} | Total Emission Score: ${totalImpact} | Number of Countries: ${numberOfCountries}</p>`
+                    `<p>Total Cost: $${totalCost} | Total Environmental Impact: ${totalImpact} | Number of Countries: ${numberOfCountries}</p>`
                 );
             }
 
@@ -1150,66 +1210,6 @@
                         .attr("d", path)
                         .attr("fill", "lightgray")
                         .attr("stroke", "white");
-
-                    const countryNameMapping = {
-                        "Argentina": "Argentina",
-                        "Australia": "Australia",
-                        "Bolivia": "Bolivia",
-                        "Brazil": "Brazil",
-                        "Cabo Verde": "Cape Verde",
-                        "Canada": "Canada",
-                        "Chile": "Chile",
-                        "Colombia": "Colombia",
-                        "Czechia": "Czech Republic",
-                        "Guyana": "Guyana",
-                        "Iceland": "Iceland",
-                        "Luxembourg": "Luxembourg",
-                        "Madagascar": "Madagascar",
-                        "Mauritius": "Mauritania",
-                        "Mexico": "Mexico",
-                        "Mozambique": "Mozambique",
-                        "Paraguay": "Paraguay",
-                        "Philippines": "Philippines",
-                        "Romania": "Romania",
-                        "Slovakia": "Slovakia",
-                        "South Africa": "South Africa",
-                        "Tanzania": "United Republic of Tanzania",
-                        "Turkey": "Turkey",
-                        "Uruguay": "Uruguay",
-                        "USA": "USA",
-                        "Zambia": "Zambia",
-                        "Bahamas": "The Bahamas",
-                        "Bolivia (Plurinational State of)": "Bolivia",
-                        "Bosnia Herzegovina": "Bosnia and Herzegovina",
-                        "Côte d'Ivoire": "Ivory Coast",
-                        "Dem. Rep. of the Congo": "Democratic Republic of the Congo",
-                        "Dominican Rep.": "Dominican Republic",
-                        "Eswatini": "Swaziland",
-                        "Guinea-Bissau": "Guinea Bissau",
-                        "North Macedonia": "Macedonia",
-                        "Russian Federation": "Russia",
-                        "Serbia": "Republic of Serbia",
-                        "Timor-Leste": "East Timor",
-                        "Türkiye": "Turkey",
-                        "United Kingdom": "England",
-                        "United Rep. of Tanzania": "United Republic of Tanzania",
-                        "Viet Nam": "Vietnam",
-                    };
-
-                    // Create reverse mapping
-                    const reverseCountryMapping = {};
-                    Object.entries(countryNameMapping).forEach(([key, value]) => {
-                        reverseCountryMapping[value] = key;
-                    });
-
-                    // Function to convert country name in either direction
-                    function convertCountryName(countryName, direction = 'forward') {
-                        if (direction === 'forward') {
-                            return countryNameMapping[countryName] || countryName;
-                        } else {
-                            return reverseCountryMapping[countryName] || countryName;
-                        }
-                    }
 
                     // Highlight importing country using bidirectional mapping
                     const importingCountryName = convertCountryName(importingCountry, 'forward');
@@ -1244,7 +1244,7 @@
                         }
 
                         const angle = countryAngles[country];
-                        const radius = 120;
+                        const radius = 60;
                         const labelX = coords[0] + radius * Math.cos(angle);
                         const labelY = coords[1] + radius * Math.sin(angle);
 
@@ -1261,7 +1261,7 @@
                         labelGroup.append("rect")
                             .attr("x", -6)
                             .attr("y", -6)
-                            .attr("width", 132)
+                            .attr("width", 140)
                             .attr("height", 63)
                             .attr("fill", ingredientColors[ingredient])
                             .attr("stroke", "#666")
@@ -1339,19 +1339,19 @@
                     }
                 }
             }
-
             function createActiveLegend(finalSolution, importingCountry) {
                 // Remove any existing legend
                 d3.select("#map-legend").selectAll("*").remove();
 
-                // Get active ingredients
-                const activeIngredients = Object.keys(finalSolution.solution);
-
-                // Create filtered colors object
-                const activeColors = {};
-                activeIngredients.forEach(ingredient => {
-                    activeColors[ingredient] = ingredientColors[ingredient];
-                });
+                // Get references to SVG and create path generator
+                const svg = d3.select("#country-map");
+                const width = +svg.attr("width");
+                const height = +svg.attr("height");
+                const projection = d3.geoRobinson()
+                    .scale(170)
+                    .center([0, 15])
+                    .translate([width / 2, height / 2]);
+                const path = d3.geoPath().projection(projection);
 
                 // Get the legend container
                 const legendContainer = d3.select("#map-legend");
@@ -1365,49 +1365,39 @@
                 const importingItem = legendContainer.append("div")
                     .attr("class", "legend-item")
                     .style("cursor", "pointer")
-                    .style("opacity", 0.6)  // Match ingredient style
+                    .style("opacity", 0.6)
                     .on("click", function() {
                         // Toggle visibility state
                         const isVisible = !d3.select(this).classed("active");
                         d3.select(this).classed("active", isVisible);
                         d3.select(this).style("opacity", isVisible ? 1 : 0.6);
 
-                        // Get country coordinates for the label
-                        const countryName = convertCountryName(importingCountry, 'forward');
-                        const countryPath = d3.select("#country-map")
-                            .selectAll("path")
-                            .filter(d => d.properties && d.properties.name === countryName);
+                        // Handle existing labels
+                        svg.selectAll(".home-country-label").remove();
+                        svg.selectAll(".home-country-line").remove();
 
-                        if (!countryPath.empty()) {
-                            // Calculate centroid for the country
-                            const bounds = path.bounds(countryPath.datum());
-                            const centroid = [
-                                (bounds[0][0] + bounds[1][0]) / 2,
-                                (bounds[0][1] + bounds[1][1]) / 2
-                            ];
+                        if (isVisible) {
+                            // Find the country path and get its centroid
+                            const countryName = convertCountryName(importingCountry, 'forward');
+                            d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson").then(function(geoData) {
+                                const countryFeature = geoData.features.find(f => f.properties.name === countryName);
+                                if (countryFeature) {
+                                    const centroid = path.centroid(countryFeature);
 
-                            // Toggle home country label and line
-                            const homeLabel = d3.select(".home-country-label");
-                            const homeLine = d3.select(".home-country-line");
-
-                            if (isVisible) {
-                                // Create label if it doesn't exist
-                                if (homeLabel.empty()) {
-                                    // Position label with offset from centroid
+                                    // Calculate label position with offset
                                     const labelX = centroid[0] + 100;
                                     const labelY = centroid[1] - 50;
 
                                     // Create label group
                                     const labelGroup = svg.append("g")
-                                        .attr("class", "home-country-label")
-                                        .attr("transform", `translate(${labelX},${labelY})`);
+                                        .attr("class", "home-country-label");
 
                                     // Background rectangle
                                     labelGroup.append("rect")
-                                        .attr("x", -6)
-                                        .attr("y", -6)
-                                        .attr("width", 132)
-                                        .attr("height", 48)
+                                        .attr("x", labelX - 6)
+                                        .attr("y", labelY - 6)
+                                        .attr("width", 120)
+                                        .attr("height", 36)
                                         .attr("fill", "white")
                                         .attr("stroke", "#666")
                                         .attr("stroke-width", 1)
@@ -1416,25 +1406,19 @@
 
                                     // Add text elements
                                     const label = labelGroup.append("text")
-                                        .attr("class", "label")
                                         .style("fill", "black")
                                         .style("font-size", "12px");
 
                                     label.append("tspan")
-                                        .attr("x", 0)
-                                        .attr("y", 6)
+                                        .attr("x", labelX)
+                                        .attr("y", labelY + 6)
                                         .text(importingCountry)
                                         .style("font-weight", "bold");
 
                                     label.append("tspan")
-                                        .attr("x", 0)
-                                        .attr("y", 21)
+                                        .attr("x", labelX)
+                                        .attr("y", labelY + 21)
                                         .text("Home Country");
-
-                                    label.append("tspan")
-                                        .attr("x", 0)
-                                        .attr("y", 36)
-                                        .text(`${Object.keys(finalSolution.solution).length} ingredients`);
 
                                     // Add connecting line
                                     svg.append("line")
@@ -1446,11 +1430,7 @@
                                         .attr("stroke", "black")
                                         .attr("stroke-width", 2);
                                 }
-                            }
-
-                            // Toggle visibility
-                            homeLabel.style("display", isVisible ? "block" : "none");
-                            homeLine.style("display", isVisible ? "block" : "none");
+                            });
                         }
                     });
 
@@ -1464,11 +1444,6 @@
                 importingItem.append("span")
                     .text(importingCountry);
 
-                // Rest of the legend creation (separator and ingredients) remains the same
-                legendContainer.append("hr")
-                    .style("margin", "10px 0")
-                    .style("border", "1px solid #ccc");
-
                 // Add separator
                 legendContainer.append("hr")
                     .style("margin", "10px 0")
@@ -1480,6 +1455,13 @@
                     .style("margin-top", "10px")
                     .text("Ingredients (Click to show/hide labels)");
 
+                // Get active ingredients and their colors
+                const activeIngredients = Object.keys(finalSolution.solution);
+                const activeColors = {};
+                activeIngredients.forEach(ingredient => {
+                    activeColors[ingredient] = ingredientColors[ingredient];
+                });
+
                 // Add legend items for ingredients with click functionality
                 const legendItems = legendContainer.selectAll(".ingredient-legend-item")
                     .data(Object.entries(activeColors))
@@ -1488,19 +1470,91 @@
                     .attr("class", "legend-item")
                     .style("cursor", "pointer")
                     .each(function(d) {
-                        // Store toggle state
                         d.isVisible = false;
                     })
                     .on("click", function(d) {
                         const ingredient = d[0];
-                        // Toggle visibility state
                         d.isVisible = !d.isVisible;
 
-                        // Update visual feedback in legend
                         d3.select(this)
                             .style("opacity", d.isVisible ? 1 : 0.6);
 
-                        // Toggle visibility of corresponding labels and lines only
+                        // Find the country for this ingredient
+                        const sourceCountry = finalSolution.solution[ingredient];
+                        const data = ingredientData[importingCountry][ingredient][sourceCountry];
+
+                        // Get coordinates for the source country
+                        const coords = projection([data.Longitude, data.Latitude]);
+
+                        if (d.isVisible) {
+                            // Create label group if it doesn't exist
+                            let labelGroup = svg.select(`.label-group[data-ingredient="${ingredient}"]`);
+                            if (labelGroup.empty()) {
+                                // Calculate label position with offset
+                                const angle = Math.random() * Math.PI * 2; // Random angle
+                                const radius = 60; // Distance from point
+                                const labelX = coords[0] + radius * Math.cos(angle);
+                                const labelY = coords[1] + radius * Math.sin(angle);
+
+                                // Create the label group
+                                labelGroup = svg.append("g")
+                                    .attr("class", "label-group")
+                                    .attr("data-ingredient", ingredient)
+                                    .attr("transform", `translate(${labelX},${labelY})`);
+
+                                // Background rectangle
+                                labelGroup.append("rect")
+                                    .attr("x", -6)
+                                    .attr("y", -6)
+                                    .attr("width", 132)
+                                    .attr("height", 63)
+                                    .attr("fill", ingredientColors[ingredient])
+                                    .attr("stroke", "#666")
+                                    .attr("stroke-width", 1)
+                                    .attr("rx", 4)
+                                    .style("opacity", 0.7);
+
+                                // Add text elements
+                                const label = labelGroup.append("text")
+                                    .attr("class", "label")
+                                    .style("fill", "black")
+                                    .style("font-size", "12px");
+
+                                label.append("tspan")
+                                    .attr("x", 0)
+                                    .attr("y", 6)
+                                    .text(sourceCountry)
+                                    .style("font-weight", "bold");
+
+                                label.append("tspan")
+                                    .attr("x", 0)
+                                    .attr("y", 21)
+                                    .text(`Ingredient: ${ingredient}`);
+
+                                label.append("tspan")
+                                    .attr("x", 0)
+                                    .attr("y", 36)
+                                    .text(`Cost: $${data.cost.toFixed(2)}`);
+
+                                label.append("tspan")
+                                    .attr("x", 0)
+                                    .attr("y", 51)
+                                    .text(`Impact: ${data.impact.toFixed(2)}`);
+
+                                // Add connecting line
+                                svg.append("line")
+                                    .attr("class", "line")
+                                    .attr("data-ingredient", ingredient)
+                                    .attr("x1", coords[0])
+                                    .attr("y1", coords[1])
+                                    .attr("x2", labelX)
+                                    .attr("y2", labelY)
+                                    .attr("stroke", ingredientColors[ingredient])
+                                    .attr("stroke-width", 3);
+                            }
+                        }
+
+                        // Toggle visibility of label and line
                         d3.selectAll(`.label-group[data-ingredient="${ingredient}"]`)
                             .style("display", d.isVisible ? "block" : "none");
                         d3.selectAll(`line[data-ingredient="${ingredient}"]`)
@@ -1510,18 +1564,18 @@
                 // Add color boxes
                 legendItems.append("div")
                     .attr("class", "color-box")
-                    .style("background-color", d => d[1])
-                    .style("cursor", "pointer");
+                    .style("background-color", d => d[1]);
 
                 // Add ingredient names
                 legendItems.append("span")
-                    .text(d => d[0])
-                    .style("cursor", "pointer");
+                    .text(d => d[0]);
 
-                // Set initial opacity for legend items
+                // Set initial opacity
                 legendItems.style("opacity", 0.6);
-}
 
+                // Prevent label overlap
+                preventLabelOverlap(svg, "text.label");
+            }
             function updateBurritoVisualization() {
                 const burritoPreview = document.getElementById('burrito-preview');
                 burritoPreview.innerHTML = ''; // Clear existing images
@@ -1618,7 +1672,7 @@
                     d3.select("#country-map").selectAll("*").remove();
                     d3.select("#solution-info").html("");
                     d3.select("#map-legend").remove();
-                    alert("No valid solution found within the budget.");
+                    alert("No burrito found in your budget. Try adjusting your choices!");
                     return;
                 }
 
