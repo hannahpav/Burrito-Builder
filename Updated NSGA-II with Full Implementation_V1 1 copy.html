@@ -347,6 +347,66 @@
                 opacity: 1;
             }
 
+            .popup-confirm {
+                position: absolute;
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.3s, visibility 0.3s;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                width: 300px;
+            }
+
+            .popup-confirm.show {
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .popup-content {
+                text-align: center;
+            }
+
+            .popup-title {
+                font-size: 1.2em;
+                color: #2d3748;
+                margin-bottom: 15px;
+                font-weight: 600;
+            }
+
+            .popup-buttons {
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+                margin-top: 15px;
+            }
+
+            .popup-button {
+                padding: 8px 20px;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: transform 0.2s, opacity 0.2s;
+            }
+
+            .popup-button:hover {
+                transform: translateY(-1px);
+                opacity: 0.9;
+            }
+
+            .popup-confirm-btn {
+                background-color: #48bb78;
+                color: white;
+            }
+
+            .popup-cancel-btn {
+                background-color: #f56565;
+                color: white;
+            }
         </style>
     </head>
     <body>
@@ -455,9 +515,9 @@
                         <div class="flex justify-between items-center w-full">
                             <div id="solution-info" class="text-left"></div>
                             <div class="confirmation-section">
-                                <span>Is this the burrito you want?</span>
-                                <button onclick="handleBurritoConfirm(true)" class="bg-green-500 text-white px-4 py-2 mx-2 rounded">Yes</button>
-                                <button onclick="handleBurritoConfirm(false)" class="bg-red-500 text-white px-4 py-2 rounded">No</button>
+                                <button id="confirmBurrito" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                    Confirm Selection
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -470,6 +530,16 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="burritoPopup" class="popup-confirm">
+            <div class="popup-content">
+                <div class="popup-title">🌯 Ready to enjoy your burrito?</div>
+                <div class="popup-buttons">
+                    <button onclick="handleBurritoConfirm(true)" class="popup-button popup-confirm-btn">Yes, I'm ready!</button>
+                    <button onclick="handleBurritoConfirm(false)" class="popup-button popup-cancel-btn">Let me modify it</button>
                 </div>
             </div>
         </div>
@@ -523,9 +593,11 @@
                 // Clear existing options
                 dropdown.selectAll("option").remove();
 
+
+
                 // Add new options and set Australia as the first option
                 dropdown.selectAll("option")
-                    .data(["Australia", ...importingCountries.filter(country => country !== "Australia")])
+                    .data(["Australia", ...importingCountries.filter(country => country !== "Australia").sort()])
                     .enter()
                     .append("option")
                     .attr("value", d => d)
@@ -1356,6 +1428,10 @@
                 // Get the legend container
                 const legendContainer = d3.select("#map-legend");
 
+                legendContainer.append("div")
+                    .attr("class", "legend-title")
+                    .text("Click to show/hide labels")
+
                 // Add legend title for home country
                 legendContainer.append("div")
                     .attr("class", "legend-title")
@@ -1453,7 +1529,7 @@
                 legendContainer.append("div")
                     .attr("class", "legend-title")
                     .style("margin-top", "10px")
-                    .text("Ingredients (Click to show/hide labels)");
+                    .text("Ingredients");
 
                 // Get active ingredients and their colors
                 const activeIngredients = Object.keys(finalSolution.solution);
@@ -1685,6 +1761,61 @@
                     displayMap(finalSolution, importingCountry);
                 }
             }
+
+            // Get popup elements
+            const burritoPopup = document.getElementById('burritoPopup');
+            const confirmButton = document.getElementById('confirmBurrito');
+
+            // Show popup when confirm button is clicked
+            confirmButton.addEventListener('click', (event) => {
+                const buttonRect = confirmButton.getBoundingClientRect();
+                const popupWidth = 300; // Width of the popup
+
+                // Position popup near the button
+                burritoPopup.style.left = `${buttonRect.left + (buttonRect.width - popupWidth) / 2}px`;
+                burritoPopup.style.top = `${buttonRect.bottom + 10}px`; // 10px below the button
+
+                burritoPopup.classList.add('show');
+            });
+
+            // Modified handleBurritoConfirm function
+            function handleBurritoConfirm(isConfirmed) {
+                burritoPopup.classList.remove('show');
+
+                // Wait for popup to fade out before showing message
+                setTimeout(() => {
+                    if (isConfirmed) {
+                        const popup = document.createElement('div');
+                        popup.className = 'popup-confirm show';
+                        popup.style.position = 'fixed';
+                        popup.style.top = '50%';
+                        popup.style.left = '50%';
+                        popup.style.transform = 'translate(-50%, -50%)';
+
+                        popup.innerHTML = `
+                            <div class="popup-content">
+                                <div class="popup-title">🎉 Excellent Choice!</div>
+                                <p>Your perfect burrito combination has been confirmed.</p>
+                            </div>
+                        `;
+
+                        document.body.appendChild(popup);
+
+                        // Remove success message after 2 seconds
+                        setTimeout(() => {
+                            popup.style.opacity = '0';
+                            setTimeout(() => popup.remove(), 300);
+                        }, 2000);
+                    }
+                }, 300);
+            }
+
+            // Close popup when clicking outside
+            document.addEventListener('click', (event) => {
+                if (!burritoPopup.contains(event.target) && event.target !== confirmButton) {
+                    burritoPopup.classList.remove('show');
+                }
+            });
 
         </script>
     </body>
