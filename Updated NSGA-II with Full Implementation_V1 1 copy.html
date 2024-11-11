@@ -350,7 +350,7 @@
         </style>
     </head>
     <body>
-        <h2>The Burrito Builder: Cost vs Environmental Impact</h2>
+        <h2>The Burrito Builder: Cost vs Emissions</h2>
 
        <div class="splash-screen" id="splashScreen">
             <div class="splash-content">
@@ -617,7 +617,7 @@
                 "Beef": "#1f78b4",
                 "Chicken": "#b2df8a",
                 "Pork": "#33a02c",
-                "Cheese": "#FFF700",
+                "Cheese": "#33a02c",
                 "Sour Cream": "#ff8ab7",
                 "Rice": "#fdbf6f",
                 "Beans": "#ff7f00",
@@ -625,44 +625,6 @@
                 "Onions": "#6a3d9a",
                 "Tomato": "#e31a1c",
                 "Avocado": "#b15928"
-            };
-
-            const countryNameMapping = {
-                "Argentina": "Argentina",
-                "Australia": "Australia",
-                "Bolivia": "Bolivia",
-                "Brazil": "Brazil",
-                "Cabo Verde": "Cape Verde",
-                "Canada": "Canada",
-                "Chile": "Chile",
-                "Colombia": "Colombia",
-                "Cote d'Ivoire": "Ivory Coast",
-                "Côte d'Ivoire": "Ivory Coast",
-                "Ivory Coast": "Ivory Coast",
-                "Czechia": "Czech Republic",
-                "England": "United Kingdom",
-                "Great Britain": "United Kingdom",
-                "Guyana": "Guyana",
-                "Iceland": "Iceland",
-                "Luxembourg": "Luxembourg",
-                "Madagascar": "Madagascar",
-                "Mauritius": "Mauritius",
-                "Mexico": "Mexico",
-                "Mozambique": "Mozambique",
-                "Paraguay": "Paraguay",
-                "Philippines": "Philippines",
-                "Romania": "Romania",
-                "Serbia": "Serbia",
-                "Slovakia": "Slovakia",
-                "South Africa": "South Africa",
-                "Tanzania": "Tanzania",
-                "Turkey": "Turkey",
-                "United Kingdom": "England",
-                "United States": "United States of America",
-                "USA": "United States of America",
-                "United States of America": "United States of America",
-                "Uruguay": "Uruguay",
-                "Zambia": "Zambia"
             };
 
             // Helper function to validate data structure
@@ -701,7 +663,7 @@
                 return true;
             }
 
-           // Modified initialization function with proper data validation
+          // Modified initialization function with proper data validation
             function initializePopulation(selectedIngredients, importingCountry, budget, populationSize = 50) {
                 const population = [];
                 let attempts = 0;
@@ -1146,7 +1108,6 @@
                             .text(`Impact: ${finalSolution.impact.toFixed(2)}`);
                 }
             }
-
             // Display Solution Info
             function displaySolutionInfo(finalSolution) {
                 const totalCost = finalSolution.cost.toFixed(2);
@@ -1157,12 +1118,12 @@
 
                 const solutionInfoDiv = d3.select("#solution-info");
                 solutionInfoDiv.html(
-                    `<p>Total Cost: $${totalCost} | Total Environmental Impact: ${totalImpact} | Number of Countries: ${numberOfCountries}</p>`
+                    `<p>Total Cost: $${totalCost} | Total Emission Score: ${totalImpact} | Number of Countries: ${numberOfCountries}</p>`
                 );
             }
 
             // Display Map
-            function displayMap(finalSolution, importingCountry) {
+             function displayMap(finalSolution, importingCountry) {
                 const svg = d3.select("#country-map");
                 svg.selectAll("*").remove();
 
@@ -1190,29 +1151,84 @@
                         .attr("fill", "lightgray")
                         .attr("stroke", "white");
 
-                    // First, color all source countries
-                    Object.keys(finalSolution.solution).forEach(ingredient => {
-                        const country = finalSolution.solution[ingredient];
-                        const countryName = country === "United Kingdom" ? "England" : (countryNameMapping[country] || country);
+                    const countryNameMapping = {
+                        "Argentina": "Argentina",
+                        "Australia": "Australia",
+                        "Bolivia": "Bolivia",
+                        "Brazil": "Brazil",
+                        "Cabo Verde": "Cape Verde",
+                        "Canada": "Canada",
+                        "Chile": "Chile",
+                        "Colombia": "Colombia",
+                        "Czechia": "Czech Republic",
+                        "Guyana": "Guyana",
+                        "Iceland": "Iceland",
+                        "Luxembourg": "Luxembourg",
+                        "Madagascar": "Madagascar",
+                        "Mauritius": "Mauritania",
+                        "Mexico": "Mexico",
+                        "Mozambique": "Mozambique",
+                        "Paraguay": "Paraguay",
+                        "Philippines": "Philippines",
+                        "Romania": "Romania",
+                        "Slovakia": "Slovakia",
+                        "South Africa": "South Africa",
+                        "Tanzania": "United Republic of Tanzania",
+                        "Turkey": "Turkey",
+                        "Uruguay": "Uruguay",
+                        "USA": "USA",
+                        "Zambia": "Zambia",
+                        "Bahamas": "The Bahamas",
+                        "Bolivia (Plurinational State of)": "Bolivia",
+                        "Bosnia Herzegovina": "Bosnia and Herzegovina",
+                        "Côte d'Ivoire": "Ivory Coast",
+                        "Dem. Rep. of the Congo": "Democratic Republic of the Congo",
+                        "Dominican Rep.": "Dominican Republic",
+                        "Eswatini": "Swaziland",
+                        "Guinea-Bissau": "Guinea Bissau",
+                        "North Macedonia": "Macedonia",
+                        "Russian Federation": "Russia",
+                        "Serbia": "Republic of Serbia",
+                        "Timor-Leste": "East Timor",
+                        "Türkiye": "Turkey",
+                        "United Kingdom": "England",
+                        "United Rep. of Tanzania": "United Republic of Tanzania",
+                        "Viet Nam": "Vietnam",
+                    };
 
-                        svg.selectAll("path")
-                            .filter(d => d.properties && (
-                                d.properties.name === countryName ||
-                                d.properties.name === country ||
-                                (countryName === "Ivory Coast" && d.properties.name === "Côte d'Ivoire") ||
-                                (countryName === "United States of America" && d.properties.name === "USA")
-                            ))
-                            .style("fill", ingredientColors[ingredient]);
+                    // Create reverse mapping
+                    const reverseCountryMapping = {};
+                    Object.entries(countryNameMapping).forEach(([key, value]) => {
+                        reverseCountryMapping[value] = key;
                     });
 
-                    // Highlight importing country
-                    const importingCountryName = countryNameMapping[importingCountry];
+                    // Function to convert country name in either direction
+                    function convertCountryName(countryName, direction = 'forward') {
+                        if (direction === 'forward') {
+                            return countryNameMapping[countryName] || countryName;
+                        } else {
+                            return reverseCountryMapping[countryName] || countryName;
+                        }
+                    }
+
+                    // Highlight importing country using bidirectional mapping
+                    const importingCountryName = convertCountryName(importingCountry, 'forward');
                     if (importingCountryName) {
                         svg.selectAll("path")
                             .filter(d => d.properties && d.properties.name === importingCountryName)
                             .style("stroke", "black")
                             .style("stroke-width", 3);
                     }
+
+                    // Color source countries using bidirectional mapping
+                    Object.keys(finalSolution.solution).forEach(ingredient => {
+                        const country = finalSolution.solution[ingredient];
+                        const countryName = convertCountryName(country, 'forward');
+
+                        svg.selectAll("path")
+                            .filter(d => d.properties && d.properties.name === countryName)
+                            .style("fill", ingredientColors[ingredient]);
+                    });
 
                     // Then add the toggle-able labels
                     let countryAngles = {};
@@ -1228,34 +1244,25 @@
                         }
 
                         const angle = countryAngles[country];
-                        const radius = 40;
-                        let labelX = coords[0] + radius * Math.cos(angle);
-                        let labelY = coords[1] + radius * Math.sin(angle);
-
-                        // Keep labels within bounds
-                        const labelWidth = 132;
-                        const labelHeight = 63;
-                        const padding = 10;
-
-                        // Adjust position to keep within SVG bounds
-                        labelX = Math.min(Math.max(padding, labelX), width - labelWidth - padding);
-                        labelY = Math.min(Math.max(padding, labelY), height - labelHeight - padding);
+                        const radius = 120;
+                        const labelX = coords[0] + radius * Math.cos(angle);
+                        const labelY = coords[1] + radius * Math.sin(angle);
 
                         countryAngles[country] += angleStep;
 
-                        // Create label group
+                        // Create label group (hidden by default)
                         const labelGroup = svg.append("g")
                             .attr("class", "label-group")
                             .attr("data-ingredient", ingredient)
                             .attr("transform", `translate(${labelX},${labelY})`)
-                            .style("display", "none");
+                            .style("display", "none");  // Initially hidden
 
                         // Background rectangle
                         labelGroup.append("rect")
                             .attr("x", -6)
                             .attr("y", -6)
-                            .attr("width", labelWidth)
-                            .attr("height", labelHeight)
+                            .attr("width", 132)
+                            .attr("height", 63)
                             .attr("fill", ingredientColors[ingredient])
                             .attr("stroke", "#666")
                             .attr("stroke-width", 1)
@@ -1289,7 +1296,7 @@
                             .attr("y", 51)
                             .text(`Impact: ${data.impact.toFixed(2)}`);
 
-                        // Add connecting line
+                        // Add connecting line (hidden by default)
                         svg.append("line")
                             .attr("class", "line")
                             .attr("data-ingredient", ingredient)
@@ -1302,6 +1309,7 @@
                             .style("display", "none");
                     });
 
+                    preventLabelOverlap(svg, "text.label");
                     createActiveLegend(finalSolution, importingCountry);
                 });
 }
@@ -1315,65 +1323,23 @@
 
             // Function to prevent label overlapping
             function preventLabelOverlap(svg, labelClass) {
-                const labels = svg.selectAll(".label-group").nodes();
-                const padding = 15;
-                const svgRect = document.querySelector('#country-map').getBoundingClientRect();
+                const labels = svg.selectAll(labelClass).nodes();
+                const padding = 15; // Minimum distance between labels
 
                 for (let i = 0; i < labels.length; i++) {
-                    const labelA = labels[i].getBBox();
-                    const transformA = d3.select(labels[i]).attr("transform");
-                    const posA = getTranslation(transformA);
-
-                    // First ensure label A is within bounds
-                    let newX = posA[0];
-                    let newY = posA[1];
-
-                    if (posA[0] + labelA.width > svgRect.width - padding) {
-                        newX = svgRect.width - labelA.width - padding;
-                    }
-                    if (posA[0] < padding) {
-                        newX = padding;
-                    }
-                    if (posA[1] + labelA.height > svgRect.height - padding) {
-                        newY = svgRect.height - labelA.height - padding;
-                    }
-                    if (posA[1] < padding) {
-                        newY = padding;
-                    }
-
-                    d3.select(labels[i]).attr("transform", `translate(${newX},${newY})`);
-
-                    // Then check for overlaps with other labels
                     for (let j = i + 1; j < labels.length; j++) {
+                        const labelA = labels[i].getBBox();
                         const labelB = labels[j].getBBox();
-                        const transformB = d3.select(labels[j]).attr("transform");
-                        const posB = getTranslation(transformB);
 
-                        if (isOverlapping(
-                            {x: newX, y: newY, width: labelA.width, height: labelA.height},
-                            {x: posB[0], y: posB[1], width: labelB.width, height: labelB.height},
-                            padding
-                        )) {
-                            // Move label B down and ensure it's within bounds
-                            let newPosY = newY + labelA.height + padding;
-                            if (newPosY + labelB.height > svgRect.height - padding) {
-                                newPosY = padding; // Move to top if bottom is reached
-                            }
-                            d3.select(labels[j]).attr("transform", `translate(${posB[0]},${newPosY})`);
+                        if (isOverlapping(labelA, labelB, padding)) {
+                            // Shift labelB down by padding
+                            const currentY = parseFloat(d3.select(labels[j]).attr("y")) + padding;
+                            d3.select(labels[j]).attr("y", currentY);
                         }
                     }
                 }
             }
 
-            // Helper function to extract transform values
-            function getTranslation(transform) {
-                const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                g.setAttributeNS(null, "transform", transform);
-                const matrix = g.transform.baseVal.consolidate().matrix;
-                return [matrix.e, matrix.f];
-            }
-
-            // Modified createActiveLegend function
             function createActiveLegend(finalSolution, importingCountry) {
                 // Remove any existing legend
                 d3.select("#map-legend").selectAll("*").remove();
@@ -1399,54 +1365,109 @@
                 const importingItem = legendContainer.append("div")
                     .attr("class", "legend-item")
                     .style("cursor", "pointer")
+                    .style("opacity", 0.6)  // Match ingredient style
                     .on("click", function() {
-                        // Find the country path on the map
+                        // Toggle visibility state
+                        const isVisible = !d3.select(this).classed("active");
+                        d3.select(this).classed("active", isVisible);
+                        d3.select(this).style("opacity", isVisible ? 1 : 0.6);
+
+                        // Get country coordinates for the label
+                        const countryName = convertCountryName(importingCountry, 'forward');
                         const countryPath = d3.select("#country-map")
                             .selectAll("path")
-                            .filter(d => {
-                                const countryName = countryNameMapping[importingCountry] || importingCountry;
-                                return d.properties && (
-                                    d.properties.name === countryName ||
-                                    d.properties.name === importingCountry ||
-                                    (countryName === "Ivory Coast" && d.properties.name === "Côte d'Ivoire") ||
-                                    (countryName === "United States of America" && d.properties.name === "USA")
-                                );
-                            });
+                            .filter(d => d.properties && d.properties.name === countryName);
 
                         if (!countryPath.empty()) {
-                            // Get the centroid of the country path
-                            const pathNode = countryPath.node();
-                            const centroid = d3.geoPath().centroid(pathNode.__data__);
+                            // Calculate centroid for the country
+                            const bounds = path.bounds(countryPath.datum());
+                            const centroid = [
+                                (bounds[0][0] + bounds[1][0]) / 2,
+                                (bounds[0][1] + bounds[1][1]) / 2
+                            ];
 
-                            // Show tooltip at country centroid
-                            const svgRect = document.querySelector('#country-map').getBoundingClientRect();
-                            const tooltipX = svgRect.left + centroid[0];
-                            const tooltipY = svgRect.top + centroid[1];
+                            // Toggle home country label and line
+                            const homeLabel = d3.select(".home-country-label");
+                            const homeLine = d3.select(".home-country-line");
 
-                            d3.select(".tooltip")
-                                .html(`Your Location: ${importingCountry}`)
-                                .style("left", (tooltipX + 15) + "px")
-                                .style("top", (tooltipY + 15) + "px")
-                                .style("opacity", 1);
+                            if (isVisible) {
+                                // Create label if it doesn't exist
+                                if (homeLabel.empty()) {
+                                    // Position label with offset from centroid
+                                    const labelX = centroid[0] + 100;
+                                    const labelY = centroid[1] - 50;
 
-                            // Add temporary highlight effect
-                            countryPath
-                                .style("stroke-width", "4")
-                                .style("stroke-opacity", "0.8")
-                                .transition()
-                                .duration(2000)
-                                .style("stroke-width", "3")
-                                .style("stroke-opacity", "1");
+                                    // Create label group
+                                    const labelGroup = svg.append("g")
+                                        .attr("class", "home-country-label")
+                                        .attr("transform", `translate(${labelX},${labelY})`);
+
+                                    // Background rectangle
+                                    labelGroup.append("rect")
+                                        .attr("x", -6)
+                                        .attr("y", -6)
+                                        .attr("width", 132)
+                                        .attr("height", 48)
+                                        .attr("fill", "white")
+                                        .attr("stroke", "#666")
+                                        .attr("stroke-width", 1)
+                                        .attr("rx", 4)
+                                        .style("opacity", 0.9);
+
+                                    // Add text elements
+                                    const label = labelGroup.append("text")
+                                        .attr("class", "label")
+                                        .style("fill", "black")
+                                        .style("font-size", "12px");
+
+                                    label.append("tspan")
+                                        .attr("x", 0)
+                                        .attr("y", 6)
+                                        .text(importingCountry)
+                                        .style("font-weight", "bold");
+
+                                    label.append("tspan")
+                                        .attr("x", 0)
+                                        .attr("y", 21)
+                                        .text("Home Country");
+
+                                    label.append("tspan")
+                                        .attr("x", 0)
+                                        .attr("y", 36)
+                                        .text(`${Object.keys(finalSolution.solution).length} ingredients`);
+
+                                    // Add connecting line
+                                    svg.append("line")
+                                        .attr("class", "home-country-line")
+                                        .attr("x1", centroid[0])
+                                        .attr("y1", centroid[1])
+                                        .attr("x2", labelX)
+                                        .attr("y2", labelY)
+                                        .attr("stroke", "black")
+                                        .attr("stroke-width", 2);
+                                }
+                            }
+
+                            // Toggle visibility
+                            homeLabel.style("display", isVisible ? "block" : "none");
+                            homeLine.style("display", isVisible ? "block" : "none");
                         }
                     });
 
+                // Add color box for home country
                 importingItem.append("div")
                     .attr("class", "color-box")
                     .style("background-color", "lightgray")
                     .style("border", "3px solid black");
 
+                // Add country name
                 importingItem.append("span")
                     .text(importingCountry);
+
+                // Rest of the legend creation (separator and ingredients) remains the same
+                legendContainer.append("hr")
+                    .style("margin", "10px 0")
+                    .style("border", "1px solid #ccc");
 
                 // Add separator
                 legendContainer.append("hr")
@@ -1467,12 +1488,19 @@
                     .attr("class", "legend-item")
                     .style("cursor", "pointer")
                     .each(function(d) {
+                        // Store toggle state
                         d.isVisible = false;
                     })
                     .on("click", function(d) {
                         const ingredient = d[0];
+                        // Toggle visibility state
                         d.isVisible = !d.isVisible;
-                        d3.select(this).style("opacity", d.isVisible ? 1 : 0.6);
+
+                        // Update visual feedback in legend
+                        d3.select(this)
+                            .style("opacity", d.isVisible ? 1 : 0.6);
+
+                        // Toggle visibility of corresponding labels and lines only
                         d3.selectAll(`.label-group[data-ingredient="${ingredient}"]`)
                             .style("display", d.isVisible ? "block" : "none");
                         d3.selectAll(`line[data-ingredient="${ingredient}"]`)
@@ -1492,12 +1520,8 @@
 
                 // Set initial opacity for legend items
                 legendItems.style("opacity", 0.6);
+}
 
-                // Add mouseleave handler to the map to hide tooltip
-                d3.select("#country-map").on("mouseleave", function() {
-                    d3.select(".tooltip").style("opacity", 0);
-                });
-            }
             function updateBurritoVisualization() {
                 const burritoPreview = document.getElementById('burrito-preview');
                 burritoPreview.innerHTML = ''; // Clear existing images
