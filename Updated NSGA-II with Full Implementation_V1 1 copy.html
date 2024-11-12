@@ -256,19 +256,108 @@
                 padding-bottom: 5px;
             }
 
-           .map-header {
+            .map-header {
                 margin-bottom: 20px;
             }
 
             .confirmation-section {
+                margin: 20px 0;
                 display: flex;
-                align-items: center;
-                gap: 10px;
+                justify-content: center;
             }
 
-            .confirmation-section button {
+            .confirmation-content {
+                display: flex;
+                align-items: center;
+                gap: 20px;
+            }
+
+            .confirmation-text {
+                font-size: 1.2rem;
+                font-weight: 600;
+                color: #2d3748;
+            }
+
+            .confirmation-buttons {
+                display: flex;
+                gap: 15px;
+            }
+
+            .confirm-yes, .confirm-no {
+                padding: 8px 25px;
+                border: none;
+                border-radius: 20px;
                 cursor: pointer;
-                transition: opacity 0.2s;
+                font-size: 1rem;
+                font-weight: 500;
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .confirm-yes {
+                background: linear-gradient(45deg, #4CAF50, #45a049);
+                color: white;
+            }
+
+            .confirm-no {
+                background: linear-gradient(45deg, #ff9b76, #ff7f50);
+                color: white;
+            }
+
+            .confirm-yes:hover, .confirm-no:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            }
+
+            /* Update success and adjust popups to be centered */
+            .success-popup, .adjust-popup {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 30px;
+                border-radius: 15px;
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+                text-align: center;
+                z-index: 1001;
+                animation: popIn 0.5s ease;
+            }
+
+            @keyframes popIn {
+                0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+                100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            }
+
+            .popup-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.3s;
+                z-index: 1000;
+            }
+
+            .popup-overlay.show {
+                opacity: 1;
+                visibility: visible;
+            }
+
+            /* Update the popup positioning to be centered */
+            .popup-confirm {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) scale(0.95);
+                width: 400px;
+            }
+
+            .popup-confirm.show {
+                transform: translate(-50%, -50%) scale(1);
             }
 
             .confirmation-section button:hover {
@@ -369,65 +458,179 @@
                 opacity: 1;
             }
 
+            #confirmBurrito {
+                background: linear-gradient(45deg, #FF6B6B, #FFE66D);
+                color: white;
+                font-size: 1.2rem;
+                padding: 12px 30px;
+                border: none;
+                border-radius: 25px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                font-weight: bold;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                position: relative;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            #confirmBurrito:before {
+                content: "🌯";
+                font-size: 1.4rem;
+            }
+
+            #confirmBurrito:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+                background: linear-gradient(45deg, #FF8787, #FFF3A3);
+            }
+
+            #confirmBurrito:active {
+                transform: translateY(1px);
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            }
+
+            @keyframes bounce {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-5px); }
+            }
+
+            #confirmBurrito:hover:before {
+                animation: bounce 1s infinite;
+            }
+
             .popup-confirm {
-                position: absolute;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) scale(0.95);  /* Fixed typo here */
                 background: white;
-                padding: 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                padding: 30px;
+                border-radius: 15px;
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
                 z-index: 1000;
                 opacity: 0;
                 visibility: hidden;
-                transition: opacity 0.3s, visibility 0.3s;
+                transition: all 0.3s ease;
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                width: 300px;
+                width: 350px;
+                text-align: center;
+                border: 3px solid #FFD700;
+                background: linear-gradient(145deg, #ffffff, #f5f5f5);
             }
 
             .popup-confirm.show {
                 opacity: 1;
                 visibility: visible;
+                transform: translate(-50%, -50%) scale(1);
             }
 
             .popup-content {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
                 text-align: center;
             }
 
-            .popup-title {
-                font-size: 1.2em;
-                color: #2d3748;
+            .popup-emoji {
+                font-size: 48px;
                 margin-bottom: 15px;
+                animation: bounce 1s infinite;
+            }
+
+            @keyframes bounce {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-10px); }
+            }
+
+            .popup-title {
+                font-size: 1.4em;
+                color: #2d3748;
+                margin-bottom: 25px;
                 font-weight: 600;
+                width: 100%;
+                text-align:center;
             }
 
             .popup-buttons {
                 display: flex;
                 justify-content: center;
-                gap: 10px;
-                margin-top: 15px;
+                gap: 15px;
+                margin-top: 20px;
             }
 
             .popup-button {
-                padding: 8px 20px;
+                padding: 12px 24px;
                 border: none;
-                border-radius: 6px;
+                border-radius: 25px;
                 cursor: pointer;
-                font-size: 14px;
-                transition: transform 0.2s, opacity 0.2s;
+                font-size: 16px;
+                font-weight: 600;
+                transition: all 0.2s ease;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             }
 
             .popup-button:hover {
-                transform: translateY(-1px);
-                opacity: 0.9;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
             }
 
             .popup-confirm-btn {
-                background-color: #48bb78;
+                background: linear-gradient(145deg, #4CAF50, #45a049);
                 color: white;
+                min-width: 160px;
+            }
+
+            .popup-confirm-btn:hover {
+                background: linear-gradient(145deg, #45a049, #4CAF50);
             }
 
             .popup-cancel-btn {
-                background-color: #f56565;
+                background: linear-gradient(145deg, #ff9b76, #ff7f50);
                 color: white;
+                min-width: 160px;
+            }
+
+            .popup-cancel-btn:hover {
+                background: linear-gradient(145deg, #ff7f50, #ff9b76);
+            }
+            /* Success Message Styling */
+            .success-popup {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 30px;
+                border-radius: 15px;
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+                text-align: center;
+                z-index: 1001;
+                animation: popIn 0.5s ease;
+            }
+
+            @keyframes popIn {
+                0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+                100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            }
+
+            /* Adjustment Message Styling */
+            .adjust-popup {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 30px;
+                border-radius: 15px;
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+                text-align: center;
+                z-index: 1001;
+                animation: popIn 0.5s ease;
             }
 
             .no-burrito-popup {
@@ -603,11 +806,14 @@
                 <div id="map">
                     <div class="map-header">
                         <div class="flex justify-between items-center w-full">
-                            <div id="solution-info" class="text-left"></div>
-                            <div class="confirmation-section">
-                                <button id="confirmBurrito" class="bg-lime-500 hover:bg-lime-500 text-white font-bold py-2 px-4 rounded">
-                                    I'm ready!
-                                </button>
+                            <div id="solution-info" class="text-center"></div>
+                                <div class="confirmation-section">
+                                    <div class="confirmation-text">Are you happy with your burrito?</div>
+                                    <div class="confirmation-buttons">
+                                        <button class="confirm-yes" onclick="handleBurritoConfirm(true)">Yes, it's perfect! ✓</button>
+                                        <button class="confirm-no" onclick="handleBurritoConfirm(false)">Not yet ✗</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -624,16 +830,6 @@
                     </div>
                 </div>
             </div>
-
-        <div id="burritoPopup" class="popup-confirm">
-            <div class="popup-content">
-                <div class="popup-title">🌯 Ready to enjoy your burrito?</div>
-                <div class="popup-buttons">
-                    <button onclick="handleBurritoConfirm(true)" class="popup-button popup-confirm-btn">Yes, I'm ready!</button>
-                    <button onclick="handleBurritoConfirm(false)" class="popup-button popup-cancel-btn">Let me modify it</button>
-                </div>
-            </div>
-        </div>
 
         <div class="popup-overlay" id="popupOverlay"></div>
         <div class="no-burrito-popup" id="noBurritoPopup">
@@ -842,20 +1038,20 @@
                         "Viet Nam": "Vietnam",
                     };
 
-                    // Create reverse mapping
-                    const reverseCountryMapping = {};
-                    Object.entries(countryNameMapping).forEach(([key, value]) => {
-                        reverseCountryMapping[value] = key;
-                    });
+            // Create reverse mapping
+            const reverseCountryMapping = {};
+            Object.entries(countryNameMapping).forEach(([key, value]) => {
+                reverseCountryMapping[value] = key;
+            });
 
-                    // Function to convert country name in either direction
-                    function convertCountryName(countryName, direction = 'forward') {
-                        if (direction === 'forward') {
-                            return countryNameMapping[countryName] || countryName;
-                        } else {
-                            return reverseCountryMapping[countryName] || countryName;
-                        }
-                    }
+            // Function to convert country name in either direction
+            function convertCountryName(countryName, direction = 'forward') {
+                if (direction === 'forward') {
+                    return countryNameMapping[countryName] || countryName;
+                } else {
+                    return reverseCountryMapping[countryName] || countryName;
+                }
+            }
 
             // Helper function to validate data structure
             function validateIngredientData(data) {
@@ -1545,7 +1741,8 @@
 
                         if (coords) {
                             // Fixed offset to the right
-                            const offsetX = -50;  // Distance to the right of the country
+                            console.log("sourcecountry:", sourceCountry)
+                            const offsetX = (sourceCountry === "New Zealand") ? -70 : 0;
                             let labelX = coords[0] + offsetX;
                             let labelY = coords[1];  // Start at same vertical position as country
 
@@ -1841,7 +2038,7 @@
                 }
             }
 
-                    // Add new functions for popup handling
+            // Add new functions for popup handling
             function showNoBurritoPopup() {
                 const popup = document.getElementById('noBurritoPopup');
                 const overlay = document.getElementById('popupOverlay');
@@ -1877,36 +2074,42 @@
 
             // Modified handleBurritoConfirm function
             function handleBurritoConfirm(isConfirmed) {
-                burritoPopup.classList.remove('show');
+                // Show overlay
+                const overlay = document.getElementById('popupOverlay');
+                overlay.classList.add('show');
 
-                // Wait for popup to fade out before showing message
-                setTimeout(() => {
-                    if (isConfirmed) {
-                        const popup = document.createElement('div');
-                        popup.className = 'popup-confirm show';
-                        popup.style.position = 'fixed';
-                        popup.style.top = '50%';
-                        popup.style.left = '50%';
-                        popup.style.transform = 'translate(-50%, -50%)';
+                if (isConfirmed) {
+                    const successPopup = document.createElement('div');
+                    successPopup.className = 'success-popup';
+                    successPopup.innerHTML = `
+                        <div style="font-size: 48px; margin-bottom: 15px;">🎉</div>
+                        <div style="font-size: 24px; color: #2d3748; margin-bottom: 15px;">Fantastic Choice!</div>
+                        <div style="color: #4a5568;">Your perfect burrito combination has been confirmed.</div>
+                    `;
+                    document.body.appendChild(successPopup);
 
-                        popup.innerHTML = `
-                            <div class="popup-content">
-                                <div class="popup-title">🎉 Excellent Choice!</div>
-                                <p>Your perfect burrito combination has been confirmed.</p>
-                            </div>
-                        `;
+                    setTimeout(() => {
+                        successPopup.style.opacity = '0';
+                        overlay.classList.remove('show');
+                        setTimeout(() => successPopup.remove(), 300);
+                    }, 2000);
+                } else {
+                    const adjustPopup = document.createElement('div');
+                    adjustPopup.className = 'adjust-popup';
+                    adjustPopup.innerHTML = `
+                        <div style="font-size: 48px; margin-bottom: 15px;">🔄</div>
+                        <div style="font-size: 24px; color: #2d3748; margin-bottom: 15px;">No problem!</div>
+                        <div style="color: #4a5568;">Keep working on your perfect burrito combination.</div>
+                    `;
+                    document.body.appendChild(adjustPopup);
 
-                        document.body.appendChild(popup);
-
-                        // Remove success message after 2 seconds
-                        setTimeout(() => {
-                            popup.style.opacity = '0';
-                            setTimeout(() => popup.remove(), 300);
-                        }, 2000);
-                    }
-                }, 300);
+                    setTimeout(() => {
+                        adjustPopup.style.opacity = '0';
+                        overlay.classList.remove('show');
+                        setTimeout(() => adjustPopup.remove(), 300);
+                    }, 2000);
+                }
             }
-
             // Close popup when clicking outside
             document.addEventListener('click', (event) => {
                 if (!burritoPopup.contains(event.target) && event.target !== confirmButton) {
