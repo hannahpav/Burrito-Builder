@@ -11,7 +11,18 @@
             /* Global Font Style */
             body {
                 font-family: 'Poppins', sans-serif;
-                margin: 20px; /* Added margin for overall padding */
+                margin: 0;          /* Changed from margin: 20px */
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
+            }
+
+            /* Center the page title */
+            h2 {
+                text-align: center;
+                margin-bottom: 20px;
+                width: 100%;
             }
 
             /* Country Styling */
@@ -44,9 +55,7 @@
             /* Map wrapper and content layout */
             .map-wrapper {
                 width: 100%;
-                max-width: none;
-                margin: 0;
-                padding-bottom: 20px;
+                box-sizing: border-box;
                 position: relative;
             }
 
@@ -57,7 +66,7 @@
                 min-width: 960px;
                 padding: 10px;
                 padding-left: 0;
-                margin-right: 100px;
+                margin: 0px;
             }
 
             /* Map content container with flexbox */
@@ -68,12 +77,14 @@
                 margin: 0;
                 padding: 0;
                 justify-content: flex-start;
+                width: 100%;
             }
 
             .map-container {
                 width: 960px;
                 flex: 0 0 auto;
-                min-width: 0; /* Allow container to shrink */
+                min-width: 0;
+                box-sizing: border-box;
             }
 
             html, body {
@@ -86,18 +97,25 @@
             /* Layout Styling */
             .form-row {
                 display: flex;
-                align-items: flex-start;
+                align-items: stretch;
                 flex-wrap: wrap;
                 margin-bottom: 20px;
-                gap: 20px; /* Added gap for consistent spacing */
+                gap: 20px;
+                width: 100%;
+                box-sizing: border-box;
             }
+
+            /* Fix form columns */
             .form-column {
                 flex: 1;
+                min-width: 300px;
+                margin: 0;
+                box-sizing: border-box;
             }
 
             .left-column {
                 /* Reduced margin-right to narrow the gap */
-                margin-right: 10px;
+                margin-right: 0px;
             }
 
             .right-column {
@@ -129,72 +147,115 @@
                 background: white;
             }
 
-            /* Slider Styling */
-            .slider-container {
+            .slider-section {
+                width: 100%;
+                box-sizing: border-box;
+                padding: 20px;
+                margin: 0;
+            }
+
+            .slider-flex-container {
                 display: flex;
                 align-items: center;
-                gap: 20px; /* Space between slider and label containers */
-                margin-bottom: 10px; /* Added margin for spacing */
+                justify-content: space-between;
+                gap: 20px;
+            }
+
+            .slider-container {
+                display: flex;
+                align-items: flex-start;
+                gap: 15px;
+                min-width: 500px;
+                box-sizing: border-box;
             }
 
             .slider-label-container {
                 display: flex;
                 flex-direction: column;
-                align-items: center;
+                align-items: flex-start;
+            }
+
+            /* Style the slider section labels */
+            .slider-container label {
+                flex: 0 0 auto;    /* Prevent labels from growing */
+                white-space: nowrap;  /* Keep labels on one line */
+            }
+
+            /* Make the range input take up remaining space */
+            .slider-container input[type="range"] {
+                flex: 0 1 300px; /* Allow shrinking but limit growth */
+                min-width: 200px; /* Minimum width for usability */
+                max-width: 300px; /* Maximum width to match other elements */
             }
 
             /* Add these new styles for the slider appearance */
             input[type="range"] {
                 -webkit-appearance: none;
+                width: 200px;
                 height: 2px;
                 background: #d3d3d3;
+                border: none;
+                border-radius: 2px;
             }
 
+            /* Style the slider thumb */
             input[type="range"]::-webkit-slider-thumb {
                 -webkit-appearance: none;
                 width: 15px;
                 height: 15px;
-                border: 1px solid #888;
                 border-radius: 50%;
+                background: #333;
                 cursor: pointer;
-                background: black;
+                border: none;
+            }
+
+            input[type="range"]::-moz-range-thumb {
+                width: 15px;
+                height: 15px;
+                border-radius: 50%;
+                background: #333;
+                cursor: pointer;
+                border: none;
+            }
+
+            /* Remove focus outline */
+            input[type="range"]:focus {
+                outline: none;
             }
 
             /* Map Header Styling */
             .map-header {
                 display: block;  /* Ensure header doesn't affect flow */
                 width: 100%;
+                margin:0;
+                padding:0 20px;
             }
 
             .flex.justify-between.items-center.w-full {
                 display: flex;
-                position: relative;  /* Contain the flex context */
-                z-index: 1;  /* Ensure it doesn't interfere with map positioning */
+                position: relative;
+                z-index: 1;
+                justify-content: flex-start;  /* Change from between to flex-start */
+                align-items: flex-start;      /* Change from center to flex-start */
+                width: 100%;
             }
 
             #solution-info {
+                max-width: none;
                 font-size: 20px;
                 font-weight: bold;
-                margin-bottom: 1px;
                 color: black;
-                text-align: start;
+                text-align: left;
+                margin: 0;
+                padding: 0;
             }
 
             /* Section Label Styling */
             .section-label {
                 color: black;
                 font-weight: bold;
-            }
-
-            /* Responsive Design (Optional) */
-            @media (max-width: 800px) {
-                .form-row {
-                    flex-direction: column;
-                }
-                .left-column, .right-column {
-                    margin-right: 0;
-                    margin-left: 0;
-                }
+                margin-right: auto;
+                white-space: nowrap;
             }
 
             /* Legend Container with responsive positioning */
@@ -208,6 +269,9 @@
                 height: fit-content; /* Make height adapt to content */
                 min-height: min-content; /* Ensure it doesn't collapse */
                 position: sticky;
+                margin: 0;
+                box-shadow: border-box;
+                top:20px
             }
 
             .legend-title {
@@ -232,30 +296,6 @@
                 max-width: 960px;
             }
 
-            @media (max-width: 1200px) {
-                .map-content {
-                    flex-direction: column;
-                    align-items: flex-start;
-                }
-
-                .map-container {
-                    width: 100%;
-                    margin-bottom: 20px;
-                }
-
-                .legend-container {
-                    width: 150px;
-                    position: relative;
-                    margin: 0;
-                    height: fit-content;
-                }
-
-                #country-map {
-                    width: 100%;
-                    height: auto;
-                }
-            }
-
             /* Map SVG dimensions */
             #map svg {
                 width: 100%;
@@ -271,19 +311,26 @@
 
 
             .map-header {
-                margin-bottom: 20px;
+                display: block;
+                width: 100%;
+                margin: 0;        /* Remove auto margins */
+                padding: 0;       /* Remove padding */
             }
 
-             .confirmation-section {
-                margin-bottom: 20px 0;
+            .confirmation-section {
+                width: 100%;
+                margin: 10px 0 0 0;
+                padding: 0;
                 display: flex;
-                justify-content: start;
+                justify-content: flex-start;
             }
 
             .confirmation-content {
                 display: flex;
                 align-items: center;
                 gap: 20px;
+                margin: 0;
+                padding: 0;
             }
 
             .confirmation-text {
@@ -468,10 +515,13 @@
                 pointer-events: none;
             }
 
-            /* Add this to hide the main content initially */
+            /* Center the main content container */
             .main-content {
-                opacity: 0;
-                transition: opacity 0.5s ease-in-out;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 0 40px;
+                width: 100%;
+                box-sizing: border-box;
             }
 
             .main-content.visible {
@@ -720,6 +770,36 @@
                 opacity: 1;
                 visibility: visible;
             }
+
+            .section-box {
+                width: 100%;
+                box-sizing: border-box;
+                min-height: 100px; /* Set minimum height to prevent collapse */
+                height: auto;      /* Allow height to grow but maintain minimum */
+                margin: 0 0 20px 0;
+                border: 2px solid #e2e8f0;
+                border-radius: 8px;
+                padding: 20px;
+                background-color: white;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                position: relative; /* Enable positioning context */
+            }
+
+            .section-box label {
+                text-align: left;
+                width: 100%;
+            }
+
+            .form-row:first-of-type .section-box { /* This targets only the first row's section boxes */
+                min-height: 50px; /* Reduced height for first row only */
+                padding: 12px 20px;
+            }
+
+            .form-row:first-of-type select,
+            .form-row:first-of-type input {
+                margin-top: 5px;
+            }
+
         </style>
     </head>
     <body>
@@ -755,7 +835,7 @@
             <!-- First Row: Location and Budget -->
             <div class="form-row">
                 <!-- Left Column -->
-                <div class="form-column left-column">
+                <div class="form-column left-column section-box">
                     <!-- Choose your location -->
                     <label for="importing-country" class="section-label">Where are you eating your burrito?</label><br>
                     <select id="importing-country" style="margin-top:10px;">
@@ -763,10 +843,10 @@
                 </div>
 
                 <!-- Right Column -->
-                <div class="form-column right-column">
+                <div class="form-column right-column section-box">
                     <label for="budget" class="section-label">How much do you want to pay for your burrito?</label><br>
                     <div style="margin-top: 7px; display: flex; gap: 10px; align-items: center;">
-                        $ <input type="number" id="budget-input" name="budget" value="10" min="0" step="0.01" style="width: 100px;">
+                        $ <input type="number" id="budget-input" name="budget" value="10" min="0" step="0.01" style="width: 100px align: right;">
                         <button id="update-budget" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                             Update
                         </button>
@@ -777,7 +857,7 @@
             <!-- Second Row: Ingredients and Pareto Front -->
             <div class="form-row">
                 <!-- Left Column -->
-                <div class="form-column left-column">
+                <div class="form-column left-column section-box">
                         <!-- Choose ingredients for your burrito -->
                         <label for="ingredient" class="section-label">What's going in your burrito?</label><br><br>
                         <div class="flex-container">
@@ -802,30 +882,36 @@
                     </div>
 
                 <!-- Right Column -->
-                <div class="form-column right-column">
+                <div class="form-column right-column section-box">
                     <!-- Pareto Front Visualization -->
                     <div id="pareto-front">
-                        <h3>Pareto Front Visualization</h3>
+                        <label class="section-label">Pareto Front Visualization</label>
                         <svg id="pareto-chart" width="400" height="300"></svg>
                     </div>
                 </div>
             </div> <!-- Close second form-row -->
 
             <!-- Set Priorities for Optimization -->
-            <label class="section-label">What matters more when selecting your burrito?</label>
-            <div class="slider-container">
-                <label for="weight-slider">Low Cost</label>
-                <input type="range" id="weight-slider" min="0" max="100" step="1" value="50" style="width: 300px;">
-                <label for="weight-slider">Low Environmental Impact</label>
-            </div>
 
+            <div class="form-row">
+                <div class="form-column section-box slider-section">
+                    <div class="slider-flex-container">
+                        <label class="section-label">What matters more when selecting your burrito?</label>
+                        <div class="slider-container">
+                            <label>Low Cost</label>
+                            <input type="range" id="weight-slider" min="0" max="100" step="1" value="50">
+                            <label>Low Environmental Impact</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <!-- Tooltip for displaying cost and impact -->
             <div class="tooltip" id="tooltip"></div>
 
             <div class="map-wrapper">
                 <div id="map">
                     <div class="map-header">
-                        <div class="flex-column justify-between items-center w-full">
+                        <div class="flex-column justify-between items-center w-full section-box">
                             <div id="solution-info" class="text-center"></div>
                             <div class="confirmation-section" style="margin-top: 10px;">
                                 <div class="confirmation-content">
@@ -838,15 +924,16 @@
                             </div>
                         </div>
                     </div>
+                    <div class="section-box">
+                        <label class="text-xl font-bold mt-4 mb-2">From where are your burrito ingredients?</label>
 
-                    <h3 class="text-xl font-bold mt-4 mb-2">From where are your burrito ingredients?</h3>
-
-                    <div class="map-content">
-                        <div class="map-container">
-                            <svg id="country-map" width="960" height="500"></svg>
-                        </div>
-                        <div id="map-legend" class="legend-container">
-                            <!-- Legend will be populated here -->
+                        <div class="map-content">
+                            <div class="map-container">
+                                <svg id="country-map" width="960" height="500"></svg>
+                            </div>
+                            <div id="map-legend" class="legend-container">
+                                <!-- Legend will be populated here -->
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -871,6 +958,7 @@
                 <div class="message">No burrito found in your budget.<br>Try adjusting your choices!</div>
                 <button class="close-button" onclick="closeNoBurritoPopup()">OK, I'll Try Again</button>
             </div>
+        </div>
 
 
         <!-- JavaScript Code -->
