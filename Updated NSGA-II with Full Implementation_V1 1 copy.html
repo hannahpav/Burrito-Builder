@@ -57,6 +57,7 @@
                 width: 100%;
                 box-sizing: border-box;
                 position: relative;
+                margin-top: 20px;
             }
 
             /* Map container layout */
@@ -266,8 +267,8 @@
             .map-header {
                 display: block;  /* Ensure header doesn't affect flow */
                 width: 100%;
-                margin:0;
-                padding:0 20px;
+                margin:0 0 20px 0;
+                padding:0;
             }
 
             .flex.justify-between.items-center.w-full {
@@ -473,6 +474,17 @@
                 display: flex;
                 flex-direction: column;
                 gap: 10px;
+            }
+
+            /* Update flex container styles */
+            .flex-column.justify-between.items-center.w-full {
+                display: flex;
+                position: relative;
+                z-index: 1;
+                justify-content: flex-start;
+                align-items: flex-start;
+                width: 100%;
+                margin-bottom: 20px;  /* Consistent spacing */
             }
 
             .ingredient-list {
@@ -815,7 +827,7 @@
                 box-sizing: border-box;
                 min-height: 100px; /* Set minimum height to prevent collapse */
                 height: auto;      /* Allow height to grow but maintain minimum */
-                margin: 0 0 20px 0;
+                margin: 0;
                 border: 2px solid #e2e8f0;
                 border-radius: 8px;
                 padding: 20px;
@@ -827,16 +839,6 @@
             .section-box label {
                 text-align: left;
                 width: 100%;
-            }
-
-            .form-row:first-of-type .section-box { /* This targets only the first row's section boxes */
-                min-height: 50px; /* Reduced height for first row only */
-                padding: 12px 20px;
-            }
-
-            .form-row:first-of-type select,
-            .form-row:first-of-type input {
-                margin-top: 5px;
             }
 
         </style>
@@ -876,20 +878,20 @@
                 <!-- Left Column -->
                 <div class="form-column left-column section-box">
                     <!-- Choose your location -->
-                    <label for="importing-country" class="section-label">Where are you eating your burrito?</label><br>
+                    <label for="importing-country" class="section-label">Where are you eating your burrito?</label>
                     <select id="importing-country" style="margin-top:10px;">
-                    </select><br><br>
+                    </select>
                 </div>
 
                 <!-- Right Column -->
                 <div class="form-column right-column section-box">
-                    <label for="budget" class="section-label">How much do you want to pay for your burrito?</label><br>
+                    <label for="budget" class="section-label">How much do you want to pay for your burrito?</label>
                     <div style="margin-top: 7px; display: flex; gap: 10px; align-items: center;">
-                        $ <input type="number" id="budget-input" name="budget" value="10" min="0" step="0.01" style="width: 100px align: right;">
+                        $ <input type="number" id="budget-input" name="budget" value="10" min="0" step="0.50" style="width: 100px justify-content: right;">
                         <button id="update-budget" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                             Update
                         </button>
-                    </div><br><br>
+                    </div>
                 </div>
             </div> <!-- Close first form-row -->
 
@@ -898,7 +900,7 @@
                 <!-- Left Column -->
                 <div class="form-column left-column section-box">
                         <!-- Choose ingredients for your burrito -->
-                        <label for="ingredient" class="section-label">What's going in your burrito?</label><br><br>
+                        <label for="ingredient" class="section-label">What's going in your burrito?</label>
                         <div class="flex-container">
                             <!-- Ingredient checkboxes -->
                             <div class="ingredient-list">
@@ -1651,11 +1653,29 @@
                 paretoFront = paretoFront.filter(d => d.cost !== undefined && d.impact !== undefined);
 
                 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-                const x = d3.scaleLinear().range([0, width]).domain([0, d3.max(paretoFront, d => d.cost) * 1.1]);
-                const y = d3.scaleLinear().range([height, 0]).domain([0, d3.max(paretoFront, d => d.impact) * 1.1]);
+
+                // Calculate minimum and maximum values for both axes
+                const minCost = d3.min(paretoFront, d => d.cost);
+                const maxCost = d3.max(paretoFront, d => d.cost);
+                const minImpact = d3.min(paretoFront, d => d.impact);
+                const maxImpact = d3.max(paretoFront, d => d.impact);
+
+                // Add padding to the ranges (5% padding)
+                const costPadding = (maxCost - minCost) * 0.05;
+                const impactPadding = (maxImpact - minImpact) * 0.05;
+
+                // Create scales with dynamic ranges
+                const x = d3.scaleLinear()
+                    .range([0, width])
+                    .domain([minCost - costPadding, maxCost + costPadding]);
+
+                const y = d3.scaleLinear()
+                    .range([height, 0])
+                    .domain([minImpact - impactPadding, maxImpact + impactPadding]);
 
                 // Axes
-                g.append("g").attr("transform", `translate(0,${height})`)
+                g.append("g")
+                    .attr("transform", `translate(0,${height})`)
                     .call(d3.axisBottom(x).ticks(5))
                     .append("text")
                     .attr("x", width / 2)
@@ -1664,7 +1684,8 @@
                     .style("text-anchor", "middle")
                     .text("Cost");
 
-                g.append("g").call(d3.axisLeft(y).ticks(5))
+                g.append("g")
+                    .call(d3.axisLeft(y).ticks(5))
                     .append("text")
                     .attr("x", -height / 2)
                     .attr("y", -30)
@@ -1676,7 +1697,7 @@
                 // Select the tooltip div
                 const tooltip = d3.select(".tooltip");
 
-                // Dots with tooltip events - Updated event handling
+                // Dots with tooltip events
                 g.selectAll("circle.pareto-point")
                     .data(paretoFront)
                     .enter().append("circle")
@@ -1686,10 +1707,9 @@
                     .attr("r", 5)
                     .attr("fill", "blue")
                     .on("mouseover", function(d) {
-                        // Always position tooltip to the left of the cursor with a large offset
                         const pos = {
-                            left: d3.event.pageX - 250,  // Force 250px to the left of cursor
-                            top: d3.event.pageY - 40     // Slightly above cursor
+                            left: d3.event.pageX - 250,
+                            top: d3.event.pageY - 40
                         };
 
                         tooltip
@@ -1701,12 +1721,13 @@
                     .on("mouseout", function() {
                         tooltip.style("opacity", 0);
                     });
+
                 // Highlight the optimal solution
                 if (finalSolution) {
                     const optimalX = x(finalSolution.cost);
                     const optimalY = y(finalSolution.impact);
 
-                    // Append the optimal point with updated event handling
+                    // Append the optimal point
                     g.append("circle")
                         .attr("class", "optimal-point")
                         .attr("cx", optimalX)
@@ -1717,8 +1738,8 @@
                         .attr("stroke-width", 1.5)
                         .on("mouseover", function() {
                             const pos = {
-                                left: d3.event.pageX - 250,  // Force 250px to the left of cursor
-                                top: d3.event.pageY - 40     // Slightly above cursor
+                                left: d3.event.pageX - 250,
+                                top: d3.event.pageY - 40
                             };
 
                             tooltip
@@ -1749,7 +1770,6 @@
                             .text(`Impact: ${finalSolution.impact.toFixed(2)}`);
                 }
             }
-
             // Display Solution Info
             function displaySolutionInfo(finalSolution) {
                 const totalCost = finalSolution.cost.toFixed(2);
@@ -2177,7 +2197,6 @@
                 if (!selectedIngredients.includes("Tortilla")) {
                     selectedIngredients.push("Tortilla");
                 }
-
 
                 const budgetInput = d3.select("#budget-input").node();
                 const budget = +budgetInput.value;
