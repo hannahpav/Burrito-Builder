@@ -1121,7 +1121,7 @@
                 return true;
             }
 
-          // Modified initialization function with proper data validation
+            // Modified initialization function with proper data validation
             function initializePopulation(selectedIngredients, importingCountry, budget, populationSize = 50) {
                 const population = [];
                 let attempts = 0;
@@ -1637,7 +1637,15 @@
                     .translate([width / 2, height / 2]);
 
                 const path = d3.geoPath().projection(projection);
-                const tooltip = d3.select(".tooltip");
+
+                    // Ensure the map-legend div exists
+                let legendContainer = d3.select("#map-legend");
+                if (legendContainer.empty()) {
+                    legendContainer = d3.select(".map-content")
+                        .append("div")
+                        .attr("id", "map-legend")
+                        .attr("class", "legend-container");
+                }
 
                 d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson").then(function(data) {
                     // Base map
@@ -2050,13 +2058,15 @@
 
                 const paretoFront = runNSGA2Optimization(selectedIngredients, importingCountry, budget);
 
-                if (paretoFront.length === 0) {
-                    d3.select("#pareto-chart").selectAll("*").remove();
-                    d3.select("#country-map").selectAll("*").remove();
-                    d3.select("#solution-info").html("");
-                    d3.select("#map-legend").remove();
+                // Clear existing visualizations
+                d3.select("#pareto-chart").selectAll("*").remove();
+                d3.select("#country-map").selectAll("*").remove();
+                d3.select("#solution-info").html("");
 
-                    // Show the new popup instead of alert
+                // Important: Don't remove the legend container, just clear its contents
+                d3.select("#map-legend").selectAll("*").remove();
+
+                if (paretoFront.length === 0) {
                     showNoBurritoPopup();
                     return;
                 }
