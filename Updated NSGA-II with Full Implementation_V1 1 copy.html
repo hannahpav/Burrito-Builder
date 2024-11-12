@@ -2,13 +2,15 @@
     <html lang="en">
     <head>
         <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
         <title>NSGA-II Optimization for Burrito Builder</title>
         <script src="https://d3js.org/d3.v5.min.js"></script>
         <script src="https://d3js.org/d3-geo-projection.v4.min.js"></script>
+
         <style>
             /* Global Font Style */
             body {
-                font-family: Arial, sans-serif;
+                font-family: 'Poppins', sans-serif;
                 margin: 20px; /* Added margin for overall padding */
             }
 
@@ -174,13 +176,13 @@
                 font-size: 20px;
                 font-weight: bold;
                 margin-bottom: 1px;
-                color: blue;
+                color: black;
                 text-align: start;
             }
 
             /* Section Label Styling */
             .section-label {
-                color: blue;
+                color: black;
                 font-weight: bold;
             }
 
@@ -810,7 +812,7 @@
             </div> <!-- Close second form-row -->
 
             <!-- Set Priorities for Optimization -->
-            <h3>What matters more when selecting your burrito?</h3>
+            <label class="section-label">What matters more when selecting your burrito?</label>
             <div class="slider-container">
                 <label for="weight-slider">Low Cost</label>
                 <input type="range" id="weight-slider" min="0" max="100" step="1" value="50" style="width: 300px;">
