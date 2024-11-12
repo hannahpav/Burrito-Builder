@@ -131,7 +131,7 @@
 
             #pareto-front h3 {
                 margin-top: 0; /* Remove default top margin from heading */
-                margin-bottom: 10px; /* Add some space below the heading */
+                margin-bottom: 0; /* Add some space below the heading */
             }
 
             /* Highlight Styling for Optimal Solution */
@@ -147,45 +147,84 @@
                 background: white;
             }
 
-            .slider-section {
-                width: 100%;
-                box-sizing: border-box;
-                padding: 20px;
-                margin: 0;
-            }
-
             .slider-flex-container {
                 display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 20px;
+                flex-direction: column;
+                gap: 15px;
+                margin-top: 20px;
             }
 
             .slider-container {
                 display: flex;
                 align-items: flex-start;
-                gap: 15px;
-                min-width: 500px;
-                box-sizing: border-box;
+                gap: 20px;
+                justify-content: center;
+                margin-top: 10px;
             }
 
-            .slider-label-container {
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            /* Style the slider section labels */
             .slider-container label {
-                flex: 0 0 auto;    /* Prevent labels from growing */
-                white-space: nowrap;  /* Keep labels on one line */
+                flex: 0 0;
+                white-space: nowrap;
+                color: #4a5568;
+                font-weight: 500;
+                text-align: center;
+                line-height: 1.2;
             }
 
-            /* Make the range input take up remaining space */
-            .slider-container input[type="range"] {
-                flex: 0 1 300px; /* Allow shrinking but limit growth */
-                min-width: 200px; /* Minimum width for usability */
-                max-width: 300px; /* Maximum width to match other elements */
+            .cost-label {
+                white-space: nowrap;
+            }
+
+            .impact-label {
+                white-space: normal;
+                width: 80px;
+            }
+
+
+                /* Base slider styling */
+            .styled-slider {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 300px;
+                outline: none;
+                margin: 10px 0;
+            }
+
+            /* Chrome/Safari specific styles */
+            .styled-slider::-webkit-slider-runnable-track {
+                width: 100%;
+                height: 4px;
+                background: white;
+                border: 1px solid #cbd5e0;
+                border-radius: 2px;
+                box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+
+            .styled-slider::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                background: white;
+                border: 2px solid #4299e1;
+                cursor: pointer;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                transition: all 0.2s ease;
+                margin-top: -7px;
+            }
+
+            .styled-slider::-webkit-slider-thumb:hover {
+                background: #4299e1;
+                border-color: #2b6cb0;
+            }
+
+            /* Section label styling */
+            .section-label {
+                color: black;
+                font-weight: bold;
+                margin-bottom: 10px;
+                display: block;
             }
 
             /* Add these new styles for the slider appearance */
@@ -820,11 +859,11 @@
                 <li><strong>Adjust Preferences:</strong> Use the slider to balance between cost savings (left) and lower environmental impact (right).</li>
             </ol>
 
-            <p style="margin-bottom: 15px;">
+            <p style="margin-bottom: 15px; font-size: 12px">
                 The Pareto front visualization shows all optimal solutions, where each point represents a unique combination of ingredient sources. The world map below displays the source countries for your selected burrito configuration, with your location highlighted in black.
             </p>
 
-            <p style="font-style: italic; color: #666;">
+            <p style="font-style: italic; color: #666; font-size: 12px;">
                 Note: The environmental impact score is calculated based on factors such as transportation distance and production methods. Lower scores indicate more environmentally friendly choices.
             </p>
             <button class="start-button" id="startButton">Let's Build! 🚀</button>
@@ -885,7 +924,7 @@
                 <div class="form-column right-column section-box">
                     <!-- Pareto Front Visualization -->
                     <div id="pareto-front">
-                        <label class="section-label">Pareto Front Visualization</label>
+                        <label class="section-label">Options in your budget</label>
                         <svg id="pareto-chart" width="400" height="300"></svg>
                     </div>
                 </div>
@@ -894,13 +933,27 @@
             <!-- Set Priorities for Optimization -->
 
             <div class="form-row">
-                <div class="form-column section-box slider-section">
+                <!-- Left Column - Slider Section -->
+                <div class="form-column left-column section-box">
+                    <label class="section-label">What matters more when selecting your burrito?</label>
                     <div class="slider-flex-container">
-                        <label class="section-label">What matters more when selecting your burrito?</label>
                         <div class="slider-container">
-                            <label>Low Cost</label>
-                            <input type="range" id="weight-slider" min="0" max="100" step="1" value="50">
-                            <label>Low Environmental Impact</label>
+                            <label class="cost-label">Low Cost</label>
+                            <input type="range" id="weight-slider" class="styled-slider" min="0" max="100" step="1" value="50">
+                            <label class="impact-label">Low Environmental Impact</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Confirmation Section -->
+                <div class="form-column right-column section-box">
+                    <label class="section-label">How's your burrito looking?</label>
+                    <div class="confirmation-section">
+                        <div class="confirmation-content">
+                            <div class="confirmation-buttons">
+                                <button class="confirm-yes" onclick="handleBurritoConfirm(true)">Let's get it! ✓</button>
+                                <button class="confirm-no" onclick="handleBurritoConfirm(false)">Still workin' ✗</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -913,25 +966,27 @@
                     <div class="map-header">
                         <div class="flex-column justify-between items-center w-full section-box">
                             <div id="solution-info" class="text-center"></div>
-                            <div class="confirmation-section" style="margin-top: 10px;">
-                                <div class="confirmation-content">
-                                    <div class="confirmation-text">Are you happy with your burrito?</div>
-                                    <div class="confirmation-buttons">
-                                        <button class="confirm-yes" onclick="handleBurritoConfirm(true)">Yes, it's perfect! ✓</button>
-                                        <button class="confirm-no" onclick="handleBurritoConfirm(false)">Not yet ✗</button>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                     <div class="section-box">
                         <label class="text-xl font-bold mt-4 mb-2">From where are your burrito ingredients?</label>
 
                         <div class="map-content">
-                            <div class="map-container">
-                                <svg id="country-map" width="960" height="500"></svg>
-                            </div>
-                            <div id="map-legend" class="legend-container">
+                            <div style="position: relative; width: 100%; display: flex;">
+                                <div class="map-container">
+                                    <svg id="country-map" width="960" height="500"></svg>
+                                </div>
+                            <div id="map-legend" class="legend-container";
+                                            style="position: absolute;
+                                            top: 20px;
+                                            right: 20px;
+                                            background-color: rgba(255, 255, 255, 0.9);
+                                            padding: 15px;
+                                            border-radius: 5px;
+                                            border: 1px solid #ccc;
+                                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                                            max-width: 200px;
+                                            z-index: 10;">
                                 <!-- Legend will be populated here -->
                             </div>
                         </div>
