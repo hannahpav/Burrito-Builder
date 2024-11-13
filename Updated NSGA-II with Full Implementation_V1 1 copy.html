@@ -100,6 +100,15 @@
 
             #pareto-chart { width: 100%; height: 300px; }
 
+            .axis text{
+                font-family: 'Poppins', sans-serif;
+            }
+
+            .axis-label {
+                font-family: 'Poppins', sans-serif;
+                fill: black;
+            }
+
             /* Layout Styling */
             .form-row {
                 display: flex;
@@ -1675,8 +1684,8 @@
                 const maxImpact = d3.max(paretoFront, d => d.impact);
 
                 // Add padding to the ranges (5% padding)
-                const costPadding = (maxCost - minCost) * 0.05;
-                const impactPadding = (maxImpact - minImpact) * 0.05;
+                const costPadding = (maxCost - minCost) * 0.1;
+                const impactPadding = (maxImpact - minImpact) * 0.1;
 
                 // Create scales with dynamic ranges
                 const x = d3.scaleLinear()
@@ -1689,9 +1698,11 @@
 
                 // Axes
                 g.append("g")
+                    .attr("class", "axis")
                     .attr("transform", `translate(0,${height})`)
                     .call(d3.axisBottom(x).ticks(5))
                     .append("text")
+                    .attr("class", "axis-label")
                     .attr("x", width / 2)
                     .attr("y", 30)
                     .attr("fill", "black")
@@ -1699,11 +1710,12 @@
                     .text("Cost");
 
                 g.append("g")
+                    .attr("class", "axis")
                     .call(d3.axisLeft(y).ticks(5))
                     .append("text")
+                    .attr("class", "axis-label")
                     .attr("x", -height / 2)
                     .attr("y", -30)
-                    .attr("fill", "black")
                     .attr("transform", "rotate(-90)")
                     .style("text-anchor", "middle")
                     .text("Impact");
@@ -1772,15 +1784,15 @@
                         .attr("x", optimalX)
                         .attr("y", optimalY + 15)
                         .attr("text-anchor", "middle")
-                        .attr("font-size", "10px")
+                        .attr("font-size", "12px")
                         .attr("fill", "black")
                         .append("tspan")
-                            .attr("x", optimalX)
-                            .attr("y", optimalY + 25)
+                            .attr("x", optimalX + 50)
+                            .attr("y", optimalY -5)
                             .text(`Cost: $${finalSolution.cost.toFixed(2)}`)
                         .append("tspan")
-                            .attr("x", optimalX)
-                            .attr("y", optimalY + 40)
+                            .attr("x", optimalX + 50)
+                            .attr("y", optimalY + 10)
                             .text(`Impact: ${finalSolution.impact.toFixed(2)}`);
                 }
             }
@@ -2026,7 +2038,8 @@
                             console.log("sourcecountry:", sourceCountry)
                             const offsetX = (sourceCountry === "New Zealand") ? -150
                                            : (sourceCountry === "Australia") ? -100
-                                           : 0;                            let labelX = coords[0] + offsetX;
+                                           : 0;
+                            let labelX = coords[0] + offsetX;
                             let labelY = coords[1];  // Start at same vertical position as country
 
 
