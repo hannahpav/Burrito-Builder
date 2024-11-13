@@ -1009,7 +1009,7 @@
 
                     <!-- Pareto Front -->
                     <div class="section-box">
-                        <label class="section-label">Options in your budget</label>
+                        <label class="section-label">Burrito options with your ingredients and budget</label>
                         <div id="pareto-front">
                             <svg id="pareto-chart" width="400" height="300"></svg>
                         </div>
@@ -1062,7 +1062,6 @@
 
         <!-- JavaScript Code -->
         <script>
-
             // Splash screen handling
             document.getElementById('startButton').addEventListener('click', function() {
                 const splashScreen = document.getElementById('splashScreen');
@@ -1125,7 +1124,7 @@
                 enableUIElements();
 
             }).catch(function(error) {
-                console.error("Error loading ingredientData.json:", error);
+                console.error("Error loading Ingredient Data:", error);
                 alert("Error loading ingredient data. Please refresh the page.");
             });
 
@@ -1177,20 +1176,6 @@
                         updateBudget();
                     }
                 });
-
-                // Enable weight slider
-                const weightSlider = d3.select("#weight-slider");
-                weightSlider
-                    .property("disabled", false)
-                    .on("input", function() {
-                        const costWeight = +this.value / 100;
-                        const impactWeight = 1 - costWeight;
-
-
-
-                        console.log("Weights updated - Cost:", (1 - costWeight) * 100, "% Impact:", costWeight * 100, "%");
-                        updateParetoFront();
-                    });
 
                 // Initial update
                 updateParetoFront();
@@ -1601,41 +1586,28 @@
                 return paretoFront;
             }
 
-            // Select the optimal solution based on weights
-            function selectOptimalSolution(paretoFront, costWeight, impactWeight) {
-                // Calculate min and max for normalization
-                const minCost = d3.min(paretoFront, d => d.cost);
-                const maxCost = d3.max(paretoFront, d => d.cost);
-                const minImpact = d3.min(paretoFront, d => d.impact);
-                const maxImpact = d3.max(paretoFront, d => d.impact);
+            let currentParetoFront=[]
+            // Select the optimal solution based on slider position
+            function selectOptimalSolution(paretoFront, costWeight) {
+                // If called with one parameter, assume it's costWeight and use currentParetoFront
+                if (arguments.length === 1) {
+                    costWeight = paretoFront;
+                    paretoFront = currentParetoFront;
+                }
 
-                let bestSolution = null;
-                let bestScore = Infinity;
+                if (!paretoFront || paretoFront.length === 0) {
+                    return null;
+                }
 
-                paretoFront.forEach(solution => {
-                    // Normalize cost and impact
-                    const normalizedCost = (solution.cost - minCost) / (maxCost - minCost || 1);
-                    const normalizedImpact = (solution.impact - minImpact) / (maxImpact - minImpact || 1);
+                // Sort solutions by cost (ascending)
+                const sortedSolutions = [...paretoFront].sort((a, b) => a.cost - b.cost);
 
-                    // Invert costWeight since slider movement should be opposite
-                    // When slider is at 0 (far left, "Low Cost"), costWeight should be 1
-                    // When slider is at 1 (far right, "Low Impact"), costWeight should be 0
-                    const adjustedCostWeight = 1 - costWeight;
-                    const adjustedImpactWeight = costWeight;  // This becomes the opposite of costWeight
+                // Calculate index based on slider position
+                // When costWeight is 1 (slider far right), select rightmost point (highest index)
+                // When costWeight is 0 (slider far left), select leftmost point (index 0)
+                const index = Math.floor((costWeight) * (sortedSolutions.length - 1));
 
-                    // Calculate weighted score using normalized values
-                    const weightedScore = normalizedCost * adjustedCostWeight + normalizedImpact * adjustedImpactWeight;
-
-                    // console.log(`Solution: ${JSON.stringify(solution)}, Weighted Score: ${weightedScore}`);
-
-                    if (weightedScore < bestScore) {
-                        bestScore = weightedScore;
-                        bestSolution = solution;
-                    }
-                });
-
-                console.log("Selected optimal solution:", bestSolution);
-                return bestSolution;
+                return sortedSolutions[index];
             }
 
             function updateTooltipPosition(event, tooltip) {
@@ -1812,6 +1784,7 @@
                             .text(`Impact: ${finalSolution.impact.toFixed(2)}`);
                 }
             }
+
             // Display Solution Info
             function displaySolutionInfo(finalSolution) {
                 const totalCost = finalSolution.cost.toFixed(2);
@@ -1845,7 +1818,7 @@
 
                 const path = d3.geoPath().projection(projection);
 
-                    // Ensure the map-legend div exists
+                // Ensure the map-legend div exists
                 let legendContainer = d3.select("#map-legend");
                 if (legendContainer.empty()) {
                     legendContainer = d3.select(".map-content")
@@ -1854,7 +1827,41 @@
                         .attr("class", "legend-container");
                 }
 
+                // Function to create stripe pattern
+                function createStripePattern(svg, countryName, colors) {
+                    const patternId = `stripes-${countryName.replace(/\s+/g, '-')}`;
+
+                    const pattern = svg.append("defs")
+                        .append("pattern")
+                        .attr("id", patternId)
+                        .attr("patternUnits", "userSpaceOnUse")
+                        .attr("width", 10)
+                        .attr("height", 10)
+                        .attr("patternTransform", "rotate(45)");
+
+                    // Add stripes for each color
+                    colors.forEach((color, index) => {
+                        const stripeWidth = 10 / colors.length;
+                        pattern.append("rect")
+                            .attr("x", index * stripeWidth)
+                            .attr("width", stripeWidth)
+                            .attr("height", 10)
+                            .attr("fill", color);
+                    });
+
+                    return `url(#${patternId})`;
+                }
+
                 d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson").then(function(data) {
+                    // Create map of countries to their ingredients
+                    const countryIngredients = {};
+                    Object.entries(finalSolution.solution).forEach(([ingredient, country]) => {
+                        if (!countryIngredients[country]) {
+                            countryIngredients[country] = [];
+                        }
+                        countryIngredients[country].push(ingredient);
+                    });
+
                     // Base map
                     svg.append("g")
                         .selectAll("path")
@@ -1874,33 +1881,61 @@
                     }
 
                     // Color source countries
-                    Object.keys(finalSolution.solution).forEach(ingredient => {
-                        const country = finalSolution.solution[ingredient];
+                    Object.entries(countryIngredients).forEach(([country, ingredients]) => {
                         const countryName = convertCountryName(country, 'forward');
+                        const colors = ingredients.map(ingredient => ingredientColors[ingredient]);
+
+                        const fill = ingredients.length > 1
+                            ? createStripePattern(svg, countryName, colors)
+                            : colors[0];
 
                         svg.selectAll("path")
                             .filter(d => d.properties && d.properties.name === countryName)
-                            .style("fill", ingredientColors[ingredient]);
+                            .style("fill", fill)
+                            .attr("data-ingredients", ingredients.join(", "));
                     });
 
-                    // Get all source countries and sort them by latitude
-                    const sourceCountries = Object.entries(finalSolution.solution)
-                        .map(([ingredient, country]) => {
-                            const data = ingredientData[importingCountry][ingredient][country];
-                            const coords = projection([data.Longitude, data.Latitude]);
-                            return {
-                                ingredient,
-                                country,
-                                coords,
-                                data,
-                                y: coords ? coords[1] : 0
-                            };
+                    // Update tooltip to show all ingredients
+                    svg.selectAll("path")
+                        .on("mouseover", function(d) {
+                            const ingredients = d3.select(this).attr("data-ingredients");
+                            if (ingredients) {
+                                const pos = updateTooltipPosition(d3.event, d3.select(".tooltip"));
+                                d3.select(".tooltip")
+                                    .style("left", pos.left + "px")
+                                    .style("top", pos.top + "px")
+                                    .html(`
+                                        <strong>${d.properties.name}</strong><br>
+                                        Ingredients: ${ingredients}
+                                    `)
+                                    .style("opacity", 1);
+                            }
                         })
-                        .sort((a, b) => a.y - b.y);
+                        .on("mouseout", function() {
+                            d3.select(".tooltip").style("opacity", 0);
+                        });
 
-                    // Create legend container and add legend
+                    // Create legend
                     createActiveLegend(finalSolution, importingCountry);
                 });
+            }
+
+            function preventLabelOverlap(svg, labelClass) {
+                const labels = svg.selectAll(labelClass).nodes();
+                const padding = 15; // Minimum distance between labels
+
+                for (let i = 0; i < labels.length; i++) {
+                    for (let j = i + 1; j < labels.length; j++) {
+                        const labelA = labels[i].getBBox();
+                        const labelB = labels[j].getBBox();
+
+                        if (isOverlapping(labelA, labelB, padding)) {
+                            // Shift labelB down by padding
+                            const currentY = parseFloat(d3.select(labels[j]).attr("y")) + padding;
+                            d3.select(labels[j]).attr("y", currentY);
+                        }
+                    }
+                }
             }
 
             function createActiveLegend(finalSolution, importingCountry) {
@@ -2233,59 +2268,65 @@
                     return;
                 }
 
-                // Get selected ingredients, ensuring tortilla is always included
-                const selectedCheckboxes = Array.from(document.querySelectorAll("input[type=checkbox]:checked")).map(el => el.value);
+                const selectedCheckboxes = Array.from(document.querySelectorAll("input[type=checkbox]:checked"))
+                    .map(el => el.value);
                 const selectedIngredients = [...selectedCheckboxes];
                 if (!selectedIngredients.includes("Tortilla")) {
                     selectedIngredients.push("Tortilla");
                 }
 
-                const budgetInput = d3.select("#budget-input").node();
-                const budget = +budgetInput.value;
-
+                const budget = +d3.select("#budget-input").node().value;
                 if (isNaN(budget) || budget <= 0) {
                     alert("Please enter a valid budget.");
                     return;
                 }
 
                 const importingCountry = d3.select("#importing-country").node().value;
-                console.log("Selected country:", importingCountry);
-                console.log("Selected ingredients:", selectedIngredients);
-                console.log("Budget:", budget);
-
-                if (!ingredientData[importingCountry]) {
-                    console.error(`Data not found for country: ${importingCountry}`);
-                    alert(`No data available for ${importingCountry}`);
-                    return;
-                }
-
                 const costWeight = +d3.select("#weight-slider").property("value") / 100;
-                const impactWeight = 1 - costWeight;
 
-                const paretoFront = runNSGA2Optimization(selectedIngredients, importingCountry, budget);
+                // Calculate and store Pareto front
+                currentParetoFront = runNSGA2Optimization(selectedIngredients, importingCountry, budget);
 
                 // Clear existing visualizations
                 d3.select("#pareto-chart").selectAll("*").remove();
                 d3.select("#country-map").selectAll("*").remove();
                 d3.select("#solution-info").html("");
-
-                // Important: Don't remove the legend container, just clear its contents
                 d3.select("#map-legend").selectAll("*").remove();
 
-                if (paretoFront.length === 0) {
+                if (!currentParetoFront || currentParetoFront.length === 0) {
                     showNoBurritoPopup();
                     return;
                 }
 
-                const finalSolution = selectOptimalSolution(paretoFront, costWeight, impactWeight);
-
-                displayParetoFront(paretoFront, finalSolution);
+                const finalSolution = selectOptimalSolution(currentParetoFront, costWeight);
 
                 if (finalSolution) {
+                    displayParetoFront(currentParetoFront, finalSolution);
                     displaySolutionInfo(finalSolution);
                     displayMap(finalSolution, importingCountry);
                 }
             }
+
+            // Updated slider event listener
+            d3.select("#weight-slider")
+                .on("input", function() {
+                    const costWeight = +this.value / 100;
+                    const importingCountry = d3.select("#importing-country").node().value;
+
+                    if (!currentParetoFront || currentParetoFront.length === 0) {
+                        return;
+                    }
+
+                    // Use existing Pareto front to select new solution
+                    const finalSolution = selectOptimalSolution(currentParetoFront, costWeight);
+
+                    if (finalSolution) {
+                        // Update visualizations with new selection
+                        displayParetoFront(currentParetoFront, finalSolution);
+                        displaySolutionInfo(finalSolution);
+                        displayMap(finalSolution, importingCountry);
+                    }
+                });
 
             // Add new functions for popup handling
             function showNoBurritoPopup() {
