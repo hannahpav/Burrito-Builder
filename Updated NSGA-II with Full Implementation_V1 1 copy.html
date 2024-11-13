@@ -111,22 +111,20 @@
                 box-sizing: border-box;
             }
 
-            /* Fix form columns */
-            .form-column {
+            /* Two-column layout container */
+            .columns-container {
+                display: flex;
+                gap: 20px;
+                margin-bottom: 20px;
+            }
+
+            /* Column styles */
+            .left-column, .right-column {
                 flex: 1;
-                min-width: 300px;
-                margin: 0;
-                box-sizing: border-box;
-            }
-
-            .left-column {
-                /* Reduced margin-right to narrow the gap */
-                margin-right: 0px;
-            }
-
-            .right-column {
-                /* Removed negative margin-left to prevent overlap and narrow the gap */
-                margin-left: 0px;
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+                width: 50%;
             }
 
             /* Adjustments for Pareto Front Visualization */
@@ -963,7 +961,7 @@
 
                     <!-- Priority Slider -->
                     <div class="section-box">
-                        <label class="section-label">What matters more when selecting your burrito?</label>
+                        <label class="section-label">Are you looking for a cheap or sustainable burrito?</label>
                         <div class="slider-flex-container">
                             <div class="slider-container">
                                 <label class="cost-label">Low Cost</label>
