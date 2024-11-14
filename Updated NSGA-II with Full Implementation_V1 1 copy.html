@@ -98,15 +98,17 @@
                 min-width: fit-content;
             }
 
-            #pareto-chart { width: 100%; height: 300px; }
-
             .axis text{
                 font-family: 'Poppins', sans-serif;
+                font-size: 12px;
+                /*font-weight: bold;*/
             }
 
             .axis-label {
                 font-family: 'Poppins', sans-serif;
                 fill: black;
+                font-size: 20px;
+                font-weight: bold;
             }
 
             /* Layout Styling */
@@ -118,6 +120,42 @@
                 gap: 20px;
                 width: 100%;
                 box-sizing: border-box;
+            }
+
+            .form-column.left-column {
+                flex: 0 0 50%;  /* Slightly narrower to accommodate right column */
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .form-column.right-column {
+                flex: 0 0 50%;  /* Slightly wider for the visualization */
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            /* New styles for the combined section */
+            .preference-visualization-section {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+                width: 100%;
+                padding: 0;
+            }
+
+            .preference-slider {
+                width: 100%;
+                padding: 0 40px;
+                margin-bottom: 20px;
+            }
+
+            .visualization-container {
+                width: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
 
             /* Two-column layout container */
@@ -137,14 +175,10 @@
             }
 
             /* Adjustments for Pareto Front Visualization */
-            #pareto-front {
-                margin-top: 0; /* Remove top margin */
-                padding-top: 0; /* Remove top padding if any */
-            }
-
-            #pareto-front h3 {
-                margin-top: 0; /* Remove default top margin from heading */
-                margin-bottom: 0; /* Add some space below the heading */
+            #pareto-chart {
+                width: 100%;
+                height: 300px;
+                margin: 0 auto;
             }
 
             /* Highlight Styling for Optimal Solution */
@@ -168,11 +202,11 @@
             }
 
             .slider-container {
+                width: 100%;
                 display: flex;
-                align-items: flex-start;
-                gap: 20px;
-                justify-content: center;
-                margin-top: 10px;
+                align-items: center;
+                position: relative;
+                /*padding: 20px 70px;*/
             }
 
             .slider-container label {
@@ -184,23 +218,17 @@
                 line-height: 1.2;
             }
 
-            .cost-label {
-                white-space: nowrap;
-            }
-
-            .impact-label {
-                white-space: normal;
-                width: 80px;
-            }
-
-
-                /* Base slider styling */
-            .styled-slider {
+            /* Make the slider track match the chart width */
+            #weight-slider.styled-slider {
+                width: 100%;
+                margin-left: 55px;
+                margin-right: 130px;
                 -webkit-appearance: none;
                 appearance: none;
-                width: 300px;
+                height: 4px;
+                background: #e2e8f0;
+                border-radius: 2px;
                 outline: none;
-                margin: 10px 0;
             }
 
             /* Chrome/Safari specific styles */
@@ -219,18 +247,14 @@
                 width: 18px;
                 height: 18px;
                 border-radius: 50%;
-                background: white;
-                border: 2px solid #4299e1;
+                background: 4299e1;
+                border: 2px solid #2b6cb0;
                 cursor: pointer;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                 transition: all 0.2s ease;
                 margin-top: -7px;
             }
 
-            .styled-slider::-webkit-slider-thumb:hover {
-                background: #4299e1;
-                border-color: #2b6cb0;
-            }
 
             /* Section label styling */
             .section-label {
@@ -311,6 +335,13 @@
             .section-label {
                 color: black;
                 font-weight: bold;
+                margin-right: auto;
+                white-space: nowrap;
+            }
+
+            .section-sublabel{
+                color: darkgray;
+                font-weight: normal;
                 margin-right: auto;
                 white-space: nowrap;
             }
@@ -948,19 +979,18 @@
        </div>
 
         <div class="main-content" id="mainContent">
-            <!-- Two Column Layout for Controls and Options -->
             <div class="form-row">
-                <!-- Left Column: All Controls -->
+                <!-- Left Column -->
                 <div class="form-column left-column">
-                    <!-- Location Selection -->
                     <div class="section-box">
                         <label class="section-label">Where are you eating your burrito?</label>
+                        <label class="section-sublabel">Choose your country from the dropdown</label>
                         <select id="importing-country" style="margin-top:10px;"></select>
                     </div>
 
-                    <!-- Budget Control -->
                     <div class="section-box">
                         <label class="section-label">How much do you want to pay for your burrito?</label>
+                        <label class="section-sublabel">Type in your highest desired cost in the box below"
                         <div style="margin-top: 7px; display: flex; gap: 10px; align-items: center;">
                             $ <input type="number" id="budget-input" name="budget" value="10.00" min="0" step="0.50"
                                 onblur="this.value = parseFloat(this.value).toFixed(2);">
@@ -968,19 +998,6 @@
                         </div>
                     </div>
 
-                    <!-- Priority Slider -->
-                    <div class="section-box">
-                        <label class="section-label">Are you looking for a cheap or sustainable burrito?</label>
-                        <div class="slider-flex-container">
-                            <div class="slider-container">
-                                <label class="cost-label">Low Cost</label>
-                                <input type="range" id="weight-slider" class="styled-slider" min="0" max="100" step="1" value="50">
-                                <label class="impact-label">Low Environmental Impact</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Confirmation Section -->
                     <div class="section-box">
                         <label class="section-label">How's your burrito looking?</label>
                         <div class="confirmation-section">
@@ -992,11 +1009,11 @@
                     </div>
                 </div>
 
-                <!-- Right Column: Ingredient Selection and Pareto Front -->
+                <!-- Right Column -->
                 <div class="form-column right-column">
-                    <!-- Ingredient Selection -->
                     <div class="section-box">
                         <label class="section-label">What's going in your burrito?</label>
+                        <label class="section-sublabel">Choose your ingredients by checking the boxes</label>
                         <div class="flex-container">
                             <div class="ingredient-list">
                                 <input type="checkbox" id="tortilla" name="tortilla" value="Tortilla" checked disabled> Tortilla (wheat)<br>
@@ -1016,11 +1033,24 @@
                         </div>
                     </div>
 
-                    <!-- Pareto Front -->
+                    <!-- Combined Section Box for Visualization and Slider -->
                     <div class="section-box">
-                        <label class="section-label">Burrito options with your ingredients and budget</label>
-                        <div id="pareto-front">
-                            <svg id="pareto-chart" width="400" height="300"></svg>
+                        <label class="section-label">What matters more: cost or environmental impact?</label>
+                        <label class="section-sublabel">Move the slider to the left to show a preference for lower cost,<br>
+                            and to the right for a preference to lower environmental impact</label>
+                        <div class="preference-visualization-section">
+                            <!-- Preference Slider -->
+                            <div class="preference-slider">
+                                <div class="slider-container">
+                                    <input type="range" id="weight-slider" class="styled-slider" min="0" max="100" step="1" value="100">
+                                </div>
+                            </div>
+                            <!-- Pareto Front Visualization -->
+                            <div class="visualization-container">
+                                <svg id="pareto-chart"></svg>
+                            </div>
+
+
                         </div>
                     </div>
                 </div>
@@ -1596,6 +1626,7 @@
             }
 
             let currentParetoFront=[]
+
             // Select the optimal solution based on slider position
             function selectOptimalSolution(paretoFront, costWeight) {
                 // If called with one parameter, assume it's costWeight and use currentParetoFront
@@ -1662,9 +1693,22 @@
             // Display Pareto Front with hover tooltips and highlight the optimal solution
             function displayParetoFront(paretoFront, finalSolution) {
                 const svg = d3.select("#pareto-chart");
-                const svgWidth = +svg.attr("width");
-                const svgHeight = +svg.attr("height");
-                const margin = { top: 10, right: 20, bottom: 30, left: 40 };
+                const container = d3.select(".visualization-container").node();
+                const svgWidth = container.getBoundingClientRect().width;
+                const svgHeight = 300;
+
+                // Set SVG size
+                svg.attr("width", svgWidth)
+                   .attr("height", svgHeight);
+
+                // Update margins to match slider container
+                const margin = {
+                    top: 10,
+                    right: 90, // Increased to match slider label width
+                    bottom: 30,
+                    left: 90  // Increased to match slider label width
+                };
+
                 const width = svgWidth - margin.left - margin.right;
                 const height = svgHeight - margin.top - margin.bottom;
 
@@ -1705,8 +1749,8 @@
                     .attr("class", "axis-label")
                     .attr("x", width / 2)
                     .attr("y", 30)
-                    .attr("fill", "black")
                     .style("text-anchor", "middle")
+                    .style("font-size", "16px")
                     .text("Cost");
 
                 g.append("g")
@@ -1718,6 +1762,7 @@
                     .attr("y", -30)
                     .attr("transform", "rotate(-90)")
                     .style("text-anchor", "middle")
+                    .style("font-size", "16px")
                     .text("Impact");
 
                 // Select the tooltip div
@@ -2153,7 +2198,7 @@
                             const centroid = path.centroid(countryFeature);
 
                             const labelX = centroid[0];
-                            const labelY = centroid[1] - 30;
+                            const labelY = centroid[1];
 
                             // Create label group with tooltip
                             const labelGroup = svg.append("g")
@@ -2176,9 +2221,9 @@
                             // Add background
                             labelGroup.append("rect")
                                 .attr("x", labelX - 60)
-                                .attr("y", labelY - 15)
+                                .attr("y", labelY - 20)
                                 .attr("width", 120)
-                                .attr("height", 36)
+                                .attr("height", 50)
                                 .attr("fill", "white")
                                 .attr("stroke", "#666")
                                 .attr("stroke-width", 1)
@@ -2189,26 +2234,27 @@
                             const label = labelGroup.append("text")
                                 .style("fill", "black")
                                 .style("font-size", "12px")
-                                .style("text-anchor", "middle");
+                                .style("text-anchor", "left");
 
                             label.append("tspan")
-                                .attr("x", labelX)
+                                .attr("x", labelX-50)
                                 .attr("y", labelY)
                                 .text(importingCountry)
                                 .style("font-weight", "bold");
 
                             label.append("tspan")
-                                .attr("x", labelX)
+                                .attr("x", labelX-50)
                                 .attr("y", labelY + 15)
                                 .text("Home Country");
+
 
                             // Add connecting line with tooltip
                             svg.append("line")
                                 .attr("class", "home-country-line")
-                                .attr("x1", centroid[0])
+                                .attr("x1", centroid[0]-90)
                                 .attr("y1", centroid[1])
-                                .attr("x2", labelX)
-                                .attr("y2", labelY + 5)
+                                .attr("x2", labelX-60)
+                                .attr("y2", labelY)
                                 .attr("stroke", "black")
                                 .attr("stroke-width", 2)
                                 .on("mouseover", function() {
