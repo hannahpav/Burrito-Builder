@@ -88,10 +88,11 @@
                 padding: 0;
                 justify-content: flex-start;
                 width: 100%;
+                position: relative;
             }
 
             .map-container {
-                width: 960px;
+                width: calc(100% - 160px);
                 flex: 0 0 auto;
                 min-width: 0;
                 box-sizing: border-box;
@@ -119,27 +120,32 @@
                 display: flex;
                 gap: 20px;
                 width: 100%;
-                box-sizing: border-box;
-                margin-bottom: 20px;
+                justify-content: space-between; /* Ensure proper spacing */
             }
 
             .form-column.left-column,
             .form-column.right-column {
-                flex: 1;  /* Make both columns take equal space */
                 display: flex;
                 flex-direction: column;
                 gap: 20px;
-                width: 50%;  /* Ensure each column takes exactly half */
+            }
+
+            /* Column width adjustments */
+            .form-column.left-column {
+                width: 47%;  /* Set left column to 45% */
+                flex: 0 0 47%;  /* Prevent flex from overriding width */
+            }
+
+            .form-column.right-column {
+                width: 53%;  /* Set right column to 55% */
+                flex: 0 0 53%;  /* Prevent flex from overriding width */
             }
 
             /* New styles for the combined section */
             .preference-visualization-section {
-                flex:1;
-                display: flex;
-                flex-direction: column;
-                gap: 15px;
-                width: 100%;
-                padding: 0;
+                height: auto;      /* Allow height to expand */
+                min-height: 400px; /* Provide minimum height */
+                /*padding: 20px;     !* Add some padding *!*/
             }
 
             .preference-slider {
@@ -149,10 +155,9 @@
             }
 
             .visualization-container {
-                width: 92%;
-                display: flex;
-                justify-content: center;
-                align-items: center;
+                width: 92%;      /* Full width of container */
+                height: auto;     /* Allow height to expand */
+                margin: 20px 0;   /* Add vertical margin */
             }
 
             /* Two-column layout container */
@@ -170,19 +175,12 @@
                 gap: 20px;
             }
 
-            .left-column{
-                width:45%;
-            }
-
-            .right-column{
-                width:55%;
-            }
-
             /* Adjustments for Pareto Front Visualization */
             #pareto-chart {
                 width: 100%;
-                height: 300px;
-                margin: 0 auto;
+                height: 280px;    /* Fixed height for the chart */
+                margin: 0;
+                overflow: visible;/* Remove margins that might cause overflow */
             }
 
             /* Highlight Styling for Optimal Solution */
@@ -210,6 +208,7 @@
                 display: flex;
                 align-items: center;
                 position: relative;
+                padding-bottom: 20px;
             }
 
             .slider-label {
@@ -350,32 +349,33 @@
                 color: black;
                 font-weight: bold;
                 margin-right: auto;
+                margin-bottom: 10px;
                 white-space: nowrap;
                 text-anchor: middle;
                 font-size: 20px;
             }
 
             .section-sublabel{
-                color: darkgray;
+                color: #4a5568;
                 font-weight: normal;
                 margin-right: auto;
                 white-space: nowrap;
+                margin-bottom: 20px;
             }
 
             /* Legend Container with responsive positioning */
             .legend-container {
-                flex: 0 0 150px;
+                width: 175px;           /* Fixed width */
                 background-color: rgba(255, 255, 255, 0.9);
                 padding: 15px;
                 border-radius: 5px;
                 border: 1px solid #ccc;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                height: fit-content; /* Make height adapt to content */
-                min-height: min-content; /* Ensure it doesn't collapse */
-                position: sticky;
-                margin: 0;
-                box-shadow: border-box;
-                top:20px
+                height: fit-content;    /* Make height adapt to content */
+                position: absolute;     /* Changed to absolute positioning */
+                right: 0;              /* Align to right side */
+                top: 0;                /* Align to top */
+                box-sizing: border-box;
             }
 
             .legend-title {
@@ -397,7 +397,7 @@
             #country-map {
                 width: 100%;
                 height: auto;
-                max-width: 960px;
+                max-width: calc(100%-160px);
             }
 
             /* Map SVG dimensions */
@@ -600,6 +600,14 @@
                 margin-top: 20px;
                 font-weight: bold;
                 color: #2d3748;
+            }
+
+            .splash-subtitle {
+                font-size: 2rem;
+                margin-top: 20px;
+                font-weight: bold;
+                color: #2d3748;
+                text-anchor: middle;
             }
 
             .splash-description {
@@ -903,6 +911,9 @@
                 padding: 20px;
                 background-color: white;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                min-height: auto;
+                height: auto;
+                overflow:visible;
                 /*position: relative; !* Enable positioning context *!*/
                 /*display: flex;*/
                 /*flex-direction: column;*/
@@ -957,7 +968,7 @@
 
                 /* Style for the dropdown */
               #importing-country {
-                  font-family: Arial, sans-serif; /* Desired font */
+                  font-family: Poppins, sans-serif; /* Desired font */
                   font-size: 16px;                /* Font size */
                   color: #333;                    /* Text color */
                   width: 100%;                    /* Full width */
@@ -977,7 +988,8 @@
     </head>
     <body>
         <h2 class="splash-title">Burrito Builder</h2>
-        <h3 class="subtitle">An interactive tool that helps you create the perfect burrito while considering both cost and environmental impact.</h3>
+        <p class ="splash-description" style="text-align:center">Build your perfect burrito and map its global journey — <br>balancing flavor, cost, and planet-friendly choices from source to plate.</>
+
 
        <div class="splash-screen" id="splashScreen">
             <div class="splash-content">
@@ -1055,12 +1067,16 @@
                 <div class="section-box">
                     <label class="section-label">What matters more: cost or environmental impact?</label>
                     <label class="section-sublabel">The Graph below shows all options for your budget and ingredients.<br>
-                        To find your perfect cost/impact balance:<br>
-                        move the slider to the left to show a preference for lower cost,<br>
-                        and to the right for a preference to lower environmental impact<br>
-                        The star is indicating your perfect burrito!
+                        <hr style="width:100%; border:none; border-top:2px solid #e2e8f0; margin:10px 0 20px 0;">
+
+
                     </label>
                     <div class="preference-visualization-section">
+                        <!-- Pareto Front Visualization -->
+                        <div class="visualization-container">
+
+                            <svg id="pareto-chart"></svg>
+                        </div>
                         <!-- Preference Slider -->
                         <div class="preference-slider">
                             <div class="slider-container">
@@ -1073,10 +1089,16 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Pareto Front Visualization -->
-                        <div class="visualization-container">
-                            <svg id="pareto-chart"></svg>
-                        </div>
+                        <hr style="width:100%; border:none; border-top:2px solid #e2e8f0; margin:10px 0 20px 0;">
+
+                    <label class="section-sublabel"> <strong>You perfect Cost / Environmental Impact balance:</strong><br>
+                        1. Drag the slider above between Low Cost and <br>
+                        &nbsp;&nbsp;&nbsp;&nbsp; Low Environmental Impact<br>
+                        2. Watch how your preferred balance changes your selection!<br><br>
+                        <strong>The yellow star is indicating your perfect burrito!</strong>
+                    </label>
+
+
                     </div>
                 </div>
 
@@ -1787,7 +1809,7 @@
                     .append("text")
                     .attr("class", "axis-label")
                     .attr("x", width / 2)
-                    .attr("y", 35)
+                    .attr("y", 40)
                     .style("text-anchor", "middle")
                     .style("font-size", "16px")
                     .text("Cost");
@@ -2050,7 +2072,7 @@
                 // Add legend titles
                 legendContainer.append("div")
                     .attr("class", "legend-title")
-                    .text("Click to show/hide labels");
+                    .text("Click to show / hide labels");
 
                 // Add home country section
                 legendContainer.append("div")
