@@ -61,18 +61,22 @@
             .map-wrapper {
                 width: 100%;
                 box-sizing: border-box;
-                position: relative;
                 margin-top: 20px;
             }
 
             /* Map container layout */
             #map {
-                display: block;
-                position: relative;
-                min-width: 960px;
-                padding: 10px;
-                padding-left: 0;
-                margin: 0px;
+                width: 100%;
+                padding: 0;  /* Remove padding that might affect width */
+                margin-bottom: 20px;
+                box-sizing: border-box;
+            }
+
+            /* Update section boxes within map */
+            #map .section-box {
+                width: 100%;
+                margin-bottom: 20px; /* Add space between cost info and map */
+                box-sizing: border-box;
             }
 
             /* Map content container with flexbox */
@@ -106,8 +110,8 @@
 
             .axis-label {
                 font-family: 'Poppins', sans-serif;
-                fill: #4a5568;
-                font-weight: bold;
+                fill: black;
+                font-weight: normal;
             }
 
             /* Layout Styling */
@@ -116,29 +120,16 @@
                 gap: 20px;
                 width: 100%;
                 box-sizing: border-box;
-            }
-            /*.form-row {*/
-            /*    display: flex;*/
-            /*    align-items: stretch;*/
-            /*    flex-wrap: wrap;*/
-            /*    margin-bottom: 20px;*/
-            /*    gap: 20px;*/
-            /*    width: 100%;*/
-            /*    box-sizing: border-box;*/
-            /*}*/
-
-            .form-column.left-column {
-                flex: 0 0 50%;  /* Slightly narrower to accommodate right column */
-                display: flex;
-                flex-direction: column;
-                gap: 20px;
+                margin-bottom: 20px;
             }
 
+            .form-column.left-column,
             .form-column.right-column {
-                flex: 0 0 50%;  /* Slightly wider for the visualization */
+                flex: 1;  /* Make both columns take equal space */
                 display: flex;
                 flex-direction: column;
                 gap: 20px;
+                width: 50%;  /* Ensure each column takes exactly half */
             }
 
             /* New styles for the combined section */
@@ -158,7 +149,7 @@
             }
 
             .visualization-container {
-                width: 100%;
+                width: 92%;
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -184,7 +175,7 @@
             }
 
             .right-column{
-                widht:55%;
+                width:55%;
             }
 
             /* Adjustments for Pareto Front Visualization */
@@ -215,7 +206,7 @@
             }
 
             .slider-container {
-                width: 100%;
+                width: 92%;
                 display: flex;
                 align-items: center;
                 position: relative;
@@ -360,6 +351,8 @@
                 font-weight: bold;
                 margin-right: auto;
                 white-space: nowrap;
+                text-anchor: middle;
+                font-size: 20px;
             }
 
             .section-sublabel{
@@ -561,7 +554,6 @@
 
             .ingredient-list {
                 flex: 1;
-                font-size: 16px;
             }
 
             .burrito-preview {
@@ -911,9 +903,9 @@
                 padding: 20px;
                 background-color: white;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                position: relative; /* Enable positioning context */
-                display: flex;
-                flex-direction: column;
+                /*position: relative; !* Enable positioning context *!*/
+                /*display: flex;*/
+                /*flex-direction: column;*/
             }
 
             /* First row sections */
@@ -1014,92 +1006,91 @@
        </div>
 
         <div class="main-content" id="mainContent">
-            <div class="form-row">
-                <!-- Left Column -->
-                <div class="form-column left-column">
-                    <div class="section-box">
-                        <label class="section-label">Where are you eating your burrito?</label>
-                        <label class="section-sublabel">Choose your country from the dropdown</label>
-                        <select id="importing-country" style="margin-top:10px;"></select>
-                    </div>
+            <!-- Update the form-row section in the main-content div -->
+        <div class="form-row">
+            <!-- Left Column -->
+            <div class="form-column left-column">
+                <div class="section-box">
+                    <label class="section-label">Where are you eating your burrito?</label>
+                    <label class="section-sublabel">Choose your country from the dropdown</label>
+                    <select id="importing-country" style="margin-top:10px;"></select>
+                </div>
 
-                    <div class="section-box">
-                        <label class="section-label">How much do you want to pay for your burrito?</label>
-                        <label class="section-sublabel">Type in your highest desired cost in the box below"
-                        <div style="margin-top: 7px; display: flex; gap: 10px; align-items: center;">
-                            $ <input type="number" id="budget-input" name="budget" value="10.00" min="0" step="0.50"
-                                onblur="this.value = parseFloat(this.value).toFixed(2);">
-                            <button id="update-budget">Update</button>
+                <div class="section-box">
+                    <label class="section-label">How much do you want to pay for your burrito?</label>
+                    <label class="section-sublabel">Type in your highest desired cost in the box below</label>
+                    <div style="margin-top: 7px; display: flex; gap: 10px; align-items: center;">
+                        $ <input type="number" id="budget-input" name="budget" value="10.00" min="0" step="0.50"
+                            onblur="this.value = parseFloat(this.value).toFixed(2);">
+                        <button id="update-budget">Update</button>
+                    </div>
+                </div>
+
+                <div class="section-box">
+                    <label class="section-label">What's going in your burrito?</label>
+                    <label class="section-sublabel">Choose your ingredients by checking the boxes</label>
+                    <div class="flex-container">
+                        <div class="ingredient-list">
+                            <input type="checkbox" id="tortilla" name="tortilla" value="Tortilla" checked disabled> Tortilla (wheat)<br>
+                            <input type="checkbox" id="beef" name="beef" value="Beef"> Beef<br>
+                            <input type="checkbox" id="chicken" name="chicken" value="Chicken"> Chicken<br>
+                            <input type="checkbox" id="pork" name="pork" value="Pork"> Pork<br>
+                            <input type="checkbox" id="cheese" name="cheese" value="Cheese"> Cheese<br>
+                            <input type="checkbox" id="sour-cream" name="sour-cream" value="Sour Cream"> Sour cream<br>
+                            <input type="checkbox" id="rice" name="rice" value="Rice"> Rice<br>
+                            <input type="checkbox" id="beans" name="beans" value="Beans"> Beans<br>
+                            <input type="checkbox" id="lettuce" name="lettuce" value="Lettuce"> Lettuce<br>
+                            <input type="checkbox" id="onions" name="onions" value="Onions"> Onions<br>
+                            <input type="checkbox" id="tomatoes" name="tomatoes" value="Tomato"> Tomatoes<br>
+                            <input type="checkbox" id="avocado" name="avocado" value="Avocado"> Avocado<br>
                         </div>
+                        <div id="burrito-preview" class="burrito-preview"></div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="section-box">
-                        <label class="section-label">How's your burrito looking?</label>
-                        <div class="confirmation-section">
-                            <div class="confirmation-buttons">
-                                <button class="confirm-yes" onclick="handleBurritoConfirm(true)">Let's get it! ✓</button>
-                                <button class="confirm-no" onclick="handleBurritoConfirm(false)">Still workin' ✗</button>
+            <!-- Right Column -->
+            <div class="form-column right-column">
+                <!-- Combined Section Box for Visualization and Slider -->
+                <div class="section-box">
+                    <label class="section-label">What matters more: cost or environmental impact?</label>
+                    <label class="section-sublabel">The Graph below shows all options for your budget and ingredients.<br>
+                        To find your perfect cost/impact balance:<br>
+                        move the slider to the left to show a preference for lower cost,<br>
+                        and to the right for a preference to lower environmental impact<br>
+                        The star is indicating your perfect burrito!
+                    </label>
+                    <div class="preference-visualization-section">
+                        <!-- Preference Slider -->
+                        <div class="preference-slider">
+                            <div class="slider-container">
+                                <div class="slider-label left">
+                                    Low<br>Cost
+                                </div>
+                                <input type="range" id="weight-slider" class="styled-slider" min="0" max="100" step="1" value="50">
+                                <div class="slider-label right">
+                                    Low<br>Environmental<br>Impact
+                                </div>
                             </div>
+                        </div>
+                        <!-- Pareto Front Visualization -->
+                        <div class="visualization-container">
+                            <svg id="pareto-chart"></svg>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right Column -->
-                <div class="form-column right-column">
-                    <div class="section-box">
-                        <label class="section-label">What's going in your burrito?</label>
-                        <label class="section-sublabel">Choose your ingredients by checking the boxes</label>
-                        <div class="flex-container">
-                            <div class="ingredient-list">
-                                <input type="checkbox" id="tortilla" name="tortilla" value="Tortilla" checked disabled> Tortilla (wheat)<br>
-                                <input type="checkbox" id="beef" name="beef" value="Beef"> Beef<br>
-                                <input type="checkbox" id="chicken" name="chicken" value="Chicken"> Chicken<br>
-                                <input type="checkbox" id="pork" name="pork" value="Pork"> Pork<br>
-                                <input type="checkbox" id="cheese" name="cheese" value="Cheese"> Cheese<br>
-                                <input type="checkbox" id="sour-cream" name="sour-cream" value="Sour Cream"> Sour cream<br>
-                                <input type="checkbox" id="rice" name="rice" value="Rice"> Rice<br>
-                                <input type="checkbox" id="beans" name="beans" value="Beans"> Beans<br>
-                                <input type="checkbox" id="lettuce" name="lettuce" value="Lettuce"> Lettuce<br>
-                                <input type="checkbox" id="onions" name="onions" value="Onions"> Onions<br>
-                                <input type="checkbox" id="tomatoes" name="tomatoes" value="Tomato"> Tomatoes<br>
-                                <input type="checkbox" id="avocado" name="avocado" value="Avocado"> Avocado<br>
-                            </div>
-                            <div id="burrito-preview" class="burrito-preview"></div>
-                        </div>
-                    </div>
-
-                    <!-- Combined Section Box for Visualization and Slider -->
-                    <div class="section-box">
-                        <label class="section-label">What matters more: cost or environmental impact?</label>
-                        <label class="section-sublabel">The Graph below shows all options for your budget and ingredients.<br>
-                            To find your perfect cost/impact balance:<br>
-                            move the slider to the left to show a preference for lower cost,<br>
-                            and to the right for a preference to lower environmental impact<br>
-                            The star is indicating your perfect burrito!
-                        </label>
-                        <div class="preference-visualization-section">
-                            <!-- Preference Slider -->
-                            <div class="preference-slider">
-                                <div class="slider-container">
-                                    <div class="slider-label left">
-                                        Low<br>Cost
-                                    </div>
-                                    <input type="range" id="weight-slider" class="styled-slider" min="0" max="100" step="1" value="50">
-                                    <div class="slider-label right">
-                                        Low<br>Environmental<br>Impact
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Pareto Front Visualization -->
-                            <div class="visualization-container">
-                                <svg id="pareto-chart"></svg>
-                            </div>
-
-
+                <div class="section-box">
+                    <label class="section-label">How's your burrito looking?</label>
+                    <div class="confirmation-section">
+                        <div class="confirmation-buttons">
+                            <button class="confirm-yes" onclick="handleBurritoConfirm(true)">Let's get it! ✓</button>
+                            <button class="confirm-no" onclick="handleBurritoConfirm(false)">Still workin' ✗</button>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
             <!-- Full Width Map Section -->
             <div class="map-wrapper">
