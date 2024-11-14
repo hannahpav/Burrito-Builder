@@ -30,9 +30,9 @@
                 width: 50%;
             }
 
-            /* Country Styling */
-            .country { fill: rgb(143, 204, 245); stroke: white; cursor: pointer; }
-            .country:hover { fill: lightblue; }
+            /*!* Country Styling *!*/
+            /*.country { fill: rgb(143, 204, 245); stroke: white; cursor: pointer; }*/
+            /*!*.country:hover { fill: lightblue; }*!*/
 
             /* Tooltip Styling */
             .tooltip {
@@ -142,10 +142,11 @@
             }
 
             .map-container {
-                width: calc(100% - 160px);
+                width: calc(100% - 160px); /* Keep the same width calculation */
                 flex: 0 0 auto;
                 min-width: 0;
                 box-sizing: border-box;
+                margin-left: 175px;    /* Add margin to offset from legend */
             }
 
             html, body {
@@ -438,16 +439,16 @@
 
             /* Legend Container with responsive positioning */
             .legend-container {
-                width: 175px;           /* Fixed width */
+                width: 175px;           /* Keep existing width */
                 background-color: rgba(255, 255, 255, 0.9);
                 padding: 15px;
                 border-radius: 5px;
                 border: 1px solid #ccc;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                height: fit-content;    /* Make height adapt to content */
-                position: absolute;     /* Changed to absolute positioning */
-                right: 0;              /* Align to right side */
-                top: 0;                /* Align to top */
+                height: fit-content;
+                position: absolute;
+                left: 0;               /* Change from right: 0 to left: 0 */
+                top: 0;
                 box-sizing: border-box;
             }
 
@@ -1293,8 +1294,6 @@
                 // Clear existing options
                 dropdown.selectAll("option").remove();
 
-
-
                 // Add new options and set Australia as the first option
                 dropdown.selectAll("option")
                     .data(["Australia", ...importingCountries.filter(country => country !== "Australia").sort()])
@@ -1928,14 +1927,19 @@
                     .attr("r", 5)
                     .attr("fill", "grey")
                     .on("mouseover", function(d) {
-                        const pos = {
-                            left: d3.event.pageX,
-                            top: d3.event.pageY,
-                        };
+                        // Get SVG's position relative to viewport
+                        const svgRect = svg.node().getBoundingClientRect();
+                        const circle = d3.select(this);
+                        const cx = parseFloat(circle.attr("cx"));
+                        const cy = parseFloat(circle.attr("cy"));
+
+                        // Calculate absolute position
+                        const tooltipX = svgRect.left + margin.left + cx;
+                        const tooltipY = svgRect.top + margin.top + cy;
 
                         tooltip
-                            .style("left", pos.left + "px")
-                            .style("top", pos.top + "px")
+                            .style("left", (tooltipX + 10) + "px")
+                            .style("top", (tooltipY - 10) + "px")
                             .html(`Cost: $${d.cost.toFixed(2)}<br>Impact: ${d.impact.toFixed(2)}`)
                             .style("opacity", 1);
                     })
@@ -2014,6 +2018,14 @@
                 );
             }
 
+            function clearLabels() {
+                const svg = d3.select("#country-map");
+                svg.selectAll(".label-group").remove();
+                svg.selectAll(".line").remove();
+                d3.select(".tooltip").style("opacity", 0);  // Hide tooltip
+                activeCountry = null;
+            }
+
             // Modified displayMap function with right-aligned tooltips
             function displayMap(finalSolution, importingCountry) {
                 const svg = d3.select("#country-map");
@@ -2024,22 +2036,38 @@
                     return;
                 }
 
-                // Calculate number of unique countries
+                // Get width and height first
+                const width = +svg.attr("width");
+                const height = +svg.attr("height");
+
+                // Add click handler to the map container
+                d3.select("#map").on("click", function(event) {
+                    // Only clear if clicking the map container itself, not its children
+                    if (event.target === this) {
+                        clearLabels();
+                    }
+                });
+
+                // Add click-away listener to the SVG background
+                svg.append("rect")
+                    .attr("width", width)
+                    .attr("height", height)
+                    .attr("fill", "none")
+                    .style("pointer-events", "all")
+                    .on("click", clearLabels);
+
+                // Calculate statistics
                 const countries = Object.values(finalSolution.solution);
                 const uniqueCountries = [...new Set(countries)];
                 const numberOfCountries = uniqueCountries.length;
-
-               // Calculate number of ingredients
                 const numberOfIngredients = Object.keys(finalSolution.solution).length;
 
-                // Update the section label to include both numbers
+                // Update the section label
                 d3.select("#map .section-box")
                     .select("label.section-label")
                     .html(`From where are your burrito ingredients? <br><span style="font-size: 16px; font-weight: normal; color: #4a5568;">Sourcing ${numberOfIngredients} ingredients from ${numberOfCountries} different countries</span>`);
 
-
-                const width = +svg.attr("width");
-                const height = +svg.attr("height");
+                // Setup map projection
                 const projection = d3.geoRobinson()
                     .scale(170)
                     .center([30, 15])
@@ -2083,22 +2111,112 @@
 
                 d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson").then(function(data) {
                     // Create map of countries to their ingredients
-                    const countryIngredients = {};
-                    Object.entries(finalSolution.solution).forEach(([ingredient, country]) => {
-                        if (!countryIngredients[country]) {
-                            countryIngredients[country] = [];
-                        }
-                        countryIngredients[country].push(ingredient);
-                    });
+                const countryIngredients = {};
+                Object.entries(finalSolution.solution).forEach(([ingredient, country]) => {
+                    if (!countryIngredients[country]) {
+                        countryIngredients[country] = [];
+                    }
+                    countryIngredients[country].push(ingredient);
+                });
 
-                    // Base map
-                    svg.append("g")
-                        .selectAll("path")
-                        .data(data.features)
-                        .enter().append("path")
-                        .attr("d", path)
-                        .attr("fill", "lightgray")
-                        .attr("stroke", "white");
+                // Base map with click interaction
+                svg.append("g")
+                    .selectAll("path")
+                    .data(data.features)
+                    .enter().append("path")
+                    .attr("d", path)
+                    .attr("fill", "lightgray")
+                    .attr("stroke", "white")
+                    .attr("class", "country")
+                    .style("cursor", d => {
+                        const countryName = convertCountryName(d.properties.name, 'backward');
+                        return countryIngredients[countryName] ? "pointer" : "default";
+                    })
+                    .on("click", function(d) {
+                        const countryName = convertCountryName(d.properties.name, 'backward');
+                        if (countryIngredients[countryName]) {
+                            // Remove any existing labels
+                            svg.selectAll(".label-group").remove();
+                            svg.selectAll(".line").remove();
+
+                            // Get country centroid for line positioning
+                            const centroid = path.centroid(d);
+
+                            // Create labels for each ingredient
+                            countryIngredients[countryName].forEach((ingredient, index) => {
+                                const data = ingredientData[importingCountry][ingredient][countryName];
+                                const coords = projection([data.Longitude, data.Latitude]);
+
+                                if (coords) {
+                                    // Calculate label position
+                                    const offsetX = (countryName === "New Zealand") ? -150
+                                                : (countryName === "Australia") ? -100
+                                                : 0;
+                                    let labelX = coords[0] + offsetX;
+                                    let labelY = coords[1] + (index * 80); // Stack labels vertically
+
+                                    // Create label group
+                                    const labelGroup = svg.append("g")
+                                        .attr("class", "label-group")
+                                        .attr("data-ingredient", ingredient)
+                                        .attr("transform", `translate(${labelX},${labelY})`);
+
+                                    // Add background rectangle
+                                    labelGroup.append("rect")
+                                        .attr("x", -6)
+                                        .attr("y", -6)
+                                        .attr("width", 144)
+                                        .attr("height", 63)
+                                        .attr("fill", ingredientColors[ingredient])
+                                        .attr("stroke", "#666")
+                                        .attr("stroke-width", 1)
+                                        .attr("rx", 4)
+                                        .style("opacity", .8);
+
+                                    // Add text content
+                                    const label = labelGroup.append("text")
+                                        .attr("class", "label")
+                                        .style("fill", "black")
+                                        .style("font-size", "12px");
+
+                                    label.append("tspan")
+                                        .attr("x", 0)
+                                        .attr("y", 6)
+                                        .text(countryName)
+                                        .style("font-weight", "bold");
+
+                                    label.append("tspan")
+                                        .attr("x", 0)
+                                        .attr("y", 21)
+                                        .text(`Ingredient: ${ingredient}`);
+
+                                    label.append("tspan")
+                                        .attr("x", 0)
+                                        .attr("y", 36)
+                                        .text(`Cost: $${data.cost.toFixed(2)}`);
+
+                                    label.append("tspan")
+                                        .attr("x", 0)
+                                        .attr("y", 51)
+                                        .text(`Impact: ${data.impact.toFixed(2)}`);
+
+                                    // Add connecting line
+                                    svg.append("line")
+                                        .attr("class", "line")
+                                        .attr("data-ingredient", ingredient)
+                                        .attr("x1", centroid[0])
+                                        .attr("y1", centroid[1])
+                                        .attr("x2", labelX)
+                                        .attr("y2", labelY)
+                                        .attr("stroke", ingredientColors[ingredient])
+                                        .attr("stroke-width", 2);
+                                }
+                            });
+
+                            // Prevent label overlap after all labels are created
+                            preventLabelOverlap(svg);
+                        }
+                    });
 
                     // Highlight importing country
                     const importingCountryName = convertCountryName(importingCountry, 'forward');
@@ -2149,19 +2267,78 @@
                 });
             }
 
-            function preventLabelOverlap(svg, labelClass) {
-                const labels = svg.selectAll(labelClass).nodes();
-                const padding = 15; // Minimum distance between labels
+            // Helper function to check if two boxes overlap
+            function isOverlapping(boxA, boxB, padding) {
+                return !(boxB.x > (boxA.x + boxA.width + padding) ||
+                         (boxB.x + boxB.width + padding) < boxA.x ||
+                         boxB.y > (boxA.y + boxA.height + padding) ||
+                         (boxB.y + boxB.height + padding) < boxA.y);
+            }
 
-                for (let i = 0; i < labels.length; i++) {
-                    for (let j = i + 1; j < labels.length; j++) {
-                        const labelA = labels[i].getBBox();
-                        const labelB = labels[j].getBBox();
+            function preventLabelOverlap(svg) {
+                const labelGroups = svg.selectAll(".label-group").nodes();
+                const padding = 10;
 
-                        if (isOverlapping(labelA, labelB, padding)) {
-                            // Shift labelB down by padding
-                            const currentY = parseFloat(d3.select(labels[j]).attr("y")) + padding;
-                            d3.select(labels[j]).attr("y", currentY);
+                // Sort labels by y-position to make adjustments more predictable
+                labelGroups.sort((a, b) => {
+                    const transformA = d3.select(a).attr("transform");
+                    const transformB = d3.select(b).attr("transform");
+                    const yA = parseFloat(transformA.split(",")[1].replace(")", ""));
+                    const yB = parseFloat(transformB.split(",")[1].replace(")", ""));
+                    return yA - yB;
+                });
+
+                for (let i = 0; i < labelGroups.length; i++) {
+                    const currentGroup = d3.select(labelGroups[i]);
+                    const currentBox = labelGroups[i].getBBox();
+                    const currentTransform = currentGroup.attr("transform");
+                    let [currentX, currentY] = currentTransform
+                        .replace("translate(", "")
+                        .replace(")", "")
+                        .split(",")
+                        .map(parseFloat);
+
+                    for (let j = 0; j < i; j++) {
+                        const otherGroup = d3.select(labelGroups[j]);
+                        const otherBox = labelGroups[j].getBBox();
+                        const otherTransform = otherGroup.attr("transform");
+                        let [otherX, otherY] = otherTransform
+                            .replace("translate(", "")
+                            .replace(")", "")
+                            .split(",")
+                            .map(parseFloat);
+
+                        // Create temporary boxes for overlap detection
+                        const boxA = {
+                            x: currentX,
+                            y: currentY,
+                            width: currentBox.width,
+                            height: currentBox.height
+                        };
+
+                        const boxB = {
+                            x: otherX,
+                            y: otherY,
+                            width: otherBox.width,
+                            height: otherBox.height
+                        };
+
+                        // If overlapping, move current label down
+                        while (isOverlapping(boxA, boxB, padding)) {
+                            currentY += padding;
+                            boxA.y = currentY;
+                        }
+                    }
+
+                    // Update the transform with new position
+                    currentGroup.attr("transform", `translate(${currentX},${currentY})`);
+
+                    // Update the connecting line
+                    const ingredient = currentGroup.attr("data-ingredient");
+                    if (ingredient) {
+                        const line = svg.select(`line[data-ingredient="${ingredient}"]`);
+                        if (!line.empty()) {
+                            line.attr("y2", currentY);
                         }
                     }
                 }
@@ -2252,13 +2429,11 @@
 
                         if (coords) {
                             // Fixed offset to the right
-                            console.log("sourcecountry:", sourceCountry)
                             const offsetX = (sourceCountry === "New Zealand") ? -150
                                            : (sourceCountry === "Australia") ? -100
                                            : 0;
                             let labelX = coords[0] + offsetX;
-                            let labelY = coords[1];  // Start at same vertical position as country
-
+                            let labelY = coords[1];
 
                             // Remove existing label and line
                             svg.selectAll(`.label-group[data-ingredient="${d.ingredient}"]`).remove();
@@ -2336,6 +2511,7 @@
                                     .on("mouseout", function() {
                                         tooltip.style("opacity", 0);
                                     });
+                                preventLabelOverlap(svg)
                             }
                         }
                     });
