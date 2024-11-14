@@ -106,21 +106,26 @@
 
             .axis-label {
                 font-family: 'Poppins', sans-serif;
-                fill: black;
-                font-size: 20px;
+                fill: #4a5568;
                 font-weight: bold;
             }
 
             /* Layout Styling */
             .form-row {
                 display: flex;
-                align-items: stretch;
-                flex-wrap: wrap;
-                margin-bottom: 20px;
                 gap: 20px;
                 width: 100%;
                 box-sizing: border-box;
             }
+            /*.form-row {*/
+            /*    display: flex;*/
+            /*    align-items: stretch;*/
+            /*    flex-wrap: wrap;*/
+            /*    margin-bottom: 20px;*/
+            /*    gap: 20px;*/
+            /*    width: 100%;*/
+            /*    box-sizing: border-box;*/
+            /*}*/
 
             .form-column.left-column {
                 flex: 0 0 50%;  /* Slightly narrower to accommodate right column */
@@ -138,6 +143,7 @@
 
             /* New styles for the combined section */
             .preference-visualization-section {
+                flex:1;
                 display: flex;
                 flex-direction: column;
                 gap: 15px;
@@ -147,8 +153,8 @@
 
             .preference-slider {
                 width: 100%;
-                padding: 0 40px;
-                margin-bottom: 20px;
+                padding: 40px 40px 20px 40px;
+                position: relative
             }
 
             .visualization-container {
@@ -171,7 +177,14 @@
                 display: flex;
                 flex-direction: column;
                 gap: 20px;
-                width: 50%;
+            }
+
+            .left-column{
+                width:45%;
+            }
+
+            .right-column{
+                widht:55%;
             }
 
             /* Adjustments for Pareto Front Visualization */
@@ -183,9 +196,9 @@
 
             /* Highlight Styling for Optimal Solution */
             .optimal-point {
-                fill: red;
+                fill: yellow;
                 stroke: black;
-                stroke-width: 2px;
+                stroke-width: 1px;
             }
             .optimal-label {
                 font-size: 12px;
@@ -206,16 +219,26 @@
                 display: flex;
                 align-items: center;
                 position: relative;
-                /*padding: 20px 70px;*/
             }
 
-            .slider-container label {
-                flex: 0 0;
-                white-space: nowrap;
+            .slider-label {
+                position: absolute;
+                font-size: 16px;
                 color: #4a5568;
-                font-weight: 500;
                 text-align: center;
                 line-height: 1.2;
+                font-weight: bold;
+                pointer-events: none; /* Prevent labels from interfering with slider */
+            }
+
+            .slider-label.left {
+                left: 0;
+                text-align: right;
+            }
+
+            .slider-label.right {
+                right: 0;
+                text-align: left;
             }
 
             /* Make the slider track match the chart width */
@@ -514,6 +537,7 @@
             }
 
             .flex-container {
+                flex:1;
                 display: flex;
                 gap: 2rem;
             }
@@ -537,6 +561,7 @@
 
             .ingredient-list {
                 flex: 1;
+                font-size: 16px;
             }
 
             .burrito-preview {
@@ -880,8 +905,6 @@
             .section-box {
                 width: 100%;
                 box-sizing: border-box;
-                min-height: 100px; /* Set minimum height to prevent collapse */
-                height: auto;      /* Allow height to grow but maintain minimum */
                 margin: 0;
                 border: 2px solid #e2e8f0;
                 border-radius: 8px;
@@ -889,6 +912,18 @@
                 background-color: white;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                 position: relative; /* Enable positioning context */
+                display: flex;
+                flex-direction: column;
+            }
+
+            /* First row sections */
+            .section-box.first-row {
+                min-height: 100px;
+            }
+
+            /* Second row sections */
+            .section-box.second-row {
+                min-height: 300px;
             }
 
             .section-box label {
@@ -1036,13 +1071,23 @@
                     <!-- Combined Section Box for Visualization and Slider -->
                     <div class="section-box">
                         <label class="section-label">What matters more: cost or environmental impact?</label>
-                        <label class="section-sublabel">Move the slider to the left to show a preference for lower cost,<br>
-                            and to the right for a preference to lower environmental impact</label>
+                        <label class="section-sublabel">The Graph below shows all options for your budget and ingredients.<br>
+                            To find your perfect cost/impact balance:<br>
+                            move the slider to the left to show a preference for lower cost,<br>
+                            and to the right for a preference to lower environmental impact<br>
+                            The star is indicating your perfect burrito!
+                        </label>
                         <div class="preference-visualization-section">
                             <!-- Preference Slider -->
                             <div class="preference-slider">
                                 <div class="slider-container">
-                                    <input type="range" id="weight-slider" class="styled-slider" min="0" max="100" step="1" value="100">
+                                    <div class="slider-label left">
+                                        Low<br>Cost
+                                    </div>
+                                    <input type="range" id="weight-slider" class="styled-slider" min="0" max="100" step="1" value="50">
+                                    <div class="slider-label right">
+                                        Low<br>Environmental<br>Impact
+                                    </div>
                                 </div>
                             </div>
                             <!-- Pareto Front Visualization -->
@@ -1639,13 +1684,16 @@
                     return null;
                 }
 
-                // Sort solutions by cost (ascending)
-                const sortedSolutions = [...paretoFront].sort((a, b) => a.cost - b.cost);
+                // Sort solutions by impact (ascending) because left = low cost (high impact)
+                // and right = high cost (low impact)
+                const sortedSolutions = [...paretoFront].sort((a, b) => b.impact - a.impact);
 
-                // Calculate index based on slider position
-                // When costWeight is 1 (slider far right), select rightmost point (highest index)
-                // When costWeight is 0 (slider far left), select leftmost point (index 0)
-                const index = Math.floor((costWeight) * (sortedSolutions.length - 1));
+                // Use the costWeight directly as a percentage along the curve
+                // Scale the costWeight (0-1) to an index in our sorted array
+                const index = Math.min(
+                    Math.floor(costWeight * (sortedSolutions.length - 1)),
+                    sortedSolutions.length - 1
+                );
 
                 return sortedSolutions[index];
             }
@@ -1738,7 +1786,7 @@
 
                 const y = d3.scaleLinear()
                     .range([height, 0])
-                    .domain([minImpact - impactPadding, maxImpact + impactPadding]);
+                    .domain([minImpact - impactPadding, maxImpact + impactPadding])
 
                 // Axes
                 g.append("g")
@@ -1748,18 +1796,18 @@
                     .append("text")
                     .attr("class", "axis-label")
                     .attr("x", width / 2)
-                    .attr("y", 30)
+                    .attr("y", 35)
                     .style("text-anchor", "middle")
                     .style("font-size", "16px")
                     .text("Cost");
 
                 g.append("g")
                     .attr("class", "axis")
-                    .call(d3.axisLeft(y).ticks(5))
+                    .call(d3.axisLeft(y).ticks(5).tickFormat(d=>d.toFixed(2)))
                     .append("text")
                     .attr("class", "axis-label")
                     .attr("x", -height / 2)
-                    .attr("y", -30)
+                    .attr("y", -50)
                     .attr("transform", "rotate(-90)")
                     .style("text-anchor", "middle")
                     .style("font-size", "16px")
@@ -1776,7 +1824,7 @@
                     .attr("cx", d => x(d.cost))
                     .attr("cy", d => y(d.impact))
                     .attr("r", 5)
-                    .attr("fill", "blue")
+                    .attr("fill", "grey")
                     .on("mouseover", function(d) {
                         const pos = {
                             left: d3.event.pageX - 250,
@@ -1793,20 +1841,16 @@
                         tooltip.style("opacity", 0);
                     });
 
-                // Highlight the optimal solution
+                // Highlight the optimal solutions
                 if (finalSolution) {
                     const optimalX = x(finalSolution.cost);
                     const optimalY = y(finalSolution.impact);
 
                     // Append the optimal point
-                    g.append("circle")
+                    g.append("path")
                         .attr("class", "optimal-point")
-                        .attr("cx", optimalX)
-                        .attr("cy", optimalY)
-                        .attr("r", 7)
-                        .attr("fill", "red")
-                        .attr("stroke", "black")
-                        .attr("stroke-width", 1.5)
+                        .attr("d", "M 0 -7 L 2 -2 L 7 -2 L 3 1 L 4 6 L 0 3 L -4 6 L -3 1 L -7 -2 L -2 -2 Z")  // Star path
+                        .attr("transform", `translate(${optimalX}, ${optimalY}) scale(2)`) // Position the star
                         .on("mouseover", function() {
                             const pos = {
                                 left: d3.event.pageX - 250,
