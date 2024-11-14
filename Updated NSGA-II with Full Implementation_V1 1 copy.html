@@ -57,6 +57,51 @@
             .label { font-size: 14px; font-weight: bold; }
             .line { stroke-width: 1.5; }
 
+                   /* Progress message section */
+            .progress-message {
+                width: 100%;
+                margin: 20px 0;
+            }
+
+            .progress-message .section-box {
+                text-align: center;
+                padding: 15px;
+                background-color: white;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                color: black;
+                font-size: 1.2em;
+                font-weight: bold;
+            }
+
+            /* Bottom section layout */
+            .bottom-section {
+                display: flex;
+                gap: 20px;
+                width: 100%;
+                margin: 20px 0;
+                box-sizing: border-box;
+                max-width: inherit;
+                align-items: stretch; /* Ensure both boxes have same height */
+            }
+
+            .bottom-section .section-box:first-child {
+                flex: 0 0 50%;
+                padding: 15px; /* Reduced padding */
+                display: flex;
+                align-items: center;
+            }
+
+            /* Confirmation section (right side) */
+            .bottom-section .section-box:last-child {
+                flex: 0 0 50%;
+                /*padding: 20px;*/
+            }
+
+            /* Section label in confirmation box */
+            .bottom-section .section-box:last-child .section-label {
+                margin-bottom: 10px;
+            }
+
             /* Map wrapper and content layout */
             .map-wrapper {
                 width: 100%;
@@ -121,24 +166,27 @@
                 gap: 20px;
                 width: 100%;
                 justify-content: space-between; /* Ensure proper spacing */
+                margin-bottom:20px
             }
 
-            .form-column.left-column,
-            .form-column.right-column {
+            .form-column.left-column {
+                width: 47%;
                 display: flex;
                 flex-direction: column;
                 gap: 20px;
             }
 
-            /* Column width adjustments */
-            .form-column.left-column {
-                width: 47%;  /* Set left column to 45% */
-                flex: 0 0 47%;  /* Prevent flex from overriding width */
+            .form-column.right-column {
+                width: 53%;
+                display: flex;
+                flex-direction: column;
             }
 
-            .form-column.right-column {
-                width: 53%;  /* Set right column to 55% */
-                flex: 0 0 53%;  /* Prevent flex from overriding width */
+            /* Make right column section box fill height of left column */
+            .form-column.right-column .section-box {
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
             }
 
             /* New styles for the combined section */
@@ -156,8 +204,12 @@
 
             .visualization-container {
                 width: 92%;      /* Full width of container */
-                height: auto;     /* Allow height to expand */
-                margin: 20px 0;   /* Add vertical margin */
+                /*height: auto;     !* Allow height to expand *!*/
+                /*margin: 20px 0;   !* Add vertical margin *!*/
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+                margin-bottom: 35px;
             }
 
             /* Two-column layout container */
@@ -189,6 +241,7 @@
                 stroke: black;
                 stroke-width: 1px;
             }
+
             .optimal-label {
                 font-size: 12px;
                 font-weight: bold;
@@ -330,13 +383,28 @@
             }
 
             #solution-info {
-                max-width: none;
-                font-size: 20px;
-                font-weight: bold;
-                color: black;
-                text-align: left;
+                width: 100%;
+                box-sizing: border-box;
                 margin: 0;
                 padding: 0;
+            }
+
+            #solution-info p {
+                margin: 0;
+                line-height: 1.5;
+                font-size: 20px; /* Increased base font size */
+            }
+
+            #solution-info strong {
+                font-size: 28px; /* Even larger font for the values */
+                color: #2d3748; /* Darker color for emphasis */
+            }
+
+            /* Add some spacing between cost and impact lines */
+            #solution-info p br {
+                margin-bottom: 2px;
+                content: "";
+                display: block;
             }
 
             .importing-country{
@@ -425,8 +493,6 @@
                 width: 100%;
                 margin: 10px 0 0 0;
                 padding: 0;
-                display: flex;
-                justify-content: flex-start;
             }
 
             .confirmation-content {
@@ -443,29 +509,34 @@
                 color: #2d3748;
             }
 
+            /* Confirmation buttons container */
             .confirmation-buttons {
                 display: flex;
                 gap: 15px;
+                margin-top: 10px;
             }
 
             .confirm-yes, .confirm-no {
+                font-family: Poppins;
                 padding: 8px 25px;
                 border: none;
-                border-radius: 20px;
+                border-radius: 5px;
                 cursor: pointer;
-                font-size: 1rem;
+                font-size: 18px;
                 font-weight: 500;
                 transition: all 0.3s ease;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             }
 
             .confirm-yes {
-                background: linear-gradient(45deg, #4CAF50, #45a049);
-                color: white;
+                background: white;
+                border: 1px solid black;
+                color: #4a5568;
             }
 
             .confirm-no {
-                background: linear-gradient(45deg, #ff9b76, #ff7f50);
+                background: rgba(74, 85, 104, 0.65);
+                border: 1px solid black;
                 color: white;
             }
 
@@ -1068,8 +1139,6 @@
                     <label class="section-label">What matters more: cost or environmental impact?</label>
                     <label class="section-sublabel">The Graph below shows all options for your budget and ingredients.<br>
                         <hr style="width:100%; border:none; border-top:2px solid #e2e8f0; margin:10px 0 20px 0;">
-
-
                     </label>
                     <div class="preference-visualization-section">
                         <!-- Pareto Front Visualization -->
@@ -1101,41 +1170,55 @@
 
                     </div>
                 </div>
+            </div>
+        </div>
 
+            <!-- New progress message section -->
+        <div class="progress-message">
+            <div class="section-box">
+                Keep going! Scroll down to see where your ingredients are from and your final cost and impact 👇
+            </div>
+        </div>
+
+        <!-- Full Width Map Section -->
+        <div class="map-wrapper">
+            <div id="map">
+                <!-- Map Visualization -->
                 <div class="section-box">
-                    <label class="section-label">How's your burrito looking?</label>
-                    <div class="confirmation-section">
-                        <div class="confirmation-buttons">
-                            <button class="confirm-yes" onclick="handleBurritoConfirm(true)">Let's get it! ✓</button>
-                            <button class="confirm-no" onclick="handleBurritoConfirm(false)">Still workin' ✗</button>
+                    <label class="section-label">From where are your burrito ingredients? </label>
+                    <div class="map-content">
+                        <div style="position: relative; width: 100%; display: flex;">
+                            <div class="map-container">
+                                <svg id="country-map" width="960" height="500"></svg>
+                            </div>
+                            <div id="map-legend" class="legend-container"></div>
                         </div>
+                    </div>
+                </div>
+                <!-- Solution Info Box -->
+<!--                <div class="section-box">-->
+<!--                    <div id="solution-info" class="text-center"></div>-->
+<!--                </div>-->
+            </div>
+        </div>
+
+        <!-- Bottom section with cost and burrito status -->
+        <div class="bottom-section">
+            <!-- Solution Info Box -->
+            <div class="section-box">
+                <div id="solution-info" class="text-center">></div>
+            </div>
+            <div class="section-box">
+                <div class="confirmation-section">
+                    <div class="confirmation-buttons">
+                        <button class="confirm-yes" onclick="handleBurritoConfirm(true)">I want this burrito!</button>
+                        <button class="confirm-no" onclick="handleBurritoConfirm(false)">Not this one...</button>
                     </div>
                 </div>
             </div>
         </div>
 
-            <!-- Full Width Map Section -->
-            <div class="map-wrapper">
-                <div id="map">
-                    <!-- Solution Info Box -->
-                    <div class="section-box">
-                        <div id="solution-info" class="text-center"></div>
-                    </div>
 
-                    <!-- Map Visualization -->
-                    <div class="section-box">
-                        <label class="section-label">From where are your burrito ingredients?</label>
-                        <div class="map-content">
-                            <div style="position: relative; width: 100%; display: flex;">
-                                <div class="map-container">
-                                    <svg id="country-map" width="960" height="500"></svg>
-                                </div>
-                                <div id="map-legend" class="legend-container"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <!-- Popups -->
             <div class="popup-overlay" id="popupOverlay"></div>
@@ -1840,8 +1923,8 @@
                     .attr("fill", "grey")
                     .on("mouseover", function(d) {
                         const pos = {
-                            left: d3.event.pageX - 250,
-                            top: d3.event.pageY - 40
+                            left: d3.event.pageX,
+                            top: d3.event.pageY,
                         };
 
                         tooltip
@@ -1864,21 +1947,33 @@
                         .attr("class", "optimal-point")
                         .attr("d", "M 0 -7 L 2 -2 L 7 -2 L 3 1 L 4 6 L 0 3 L -4 6 L -3 1 L -7 -2 L -2 -2 Z")  // Star path
                         .attr("transform", `translate(${optimalX}, ${optimalY}) scale(2)`) // Position the star
-                        .on("mouseover", function() {
-                            const pos = {
-                                left: d3.event.pageX - 250,
-                                top: d3.event.pageY - 40
-                            };
+                        // .on("mouseover", function() {
+                        //     const pos = {
+                        //         left: d3.event.pageX - 250,
+                        //         top: d3.event.pageY - 40
+                        //     };
+                        //
+                        //     tooltip
+                        //         .style("left", pos.left + "px")
+                        //         .style("top", pos.top + "px")
+                        //         .html(`Optimal Solution<br>Cost: $${finalSolution.cost.toFixed(2)}<br>Impact: ${finalSolution.impact.toFixed(2)}`)
+                        //         .style("opacity", 1);
+                        // })
+                        // .on("mouseout", function() {
+                        //     tooltip.style("opacity", 0);
+                        // });
 
-                            tooltip
-                                .style("left", pos.left + "px")
-                                .style("top", pos.top + "px")
-                                .html(`Optimal Solution<br>Cost: $${finalSolution.cost.toFixed(2)}<br>Impact: ${finalSolution.impact.toFixed(2)}`)
-                                .style("opacity", 1);
-                        })
-                        .on("mouseout", function() {
-                            tooltip.style("opacity", 0);
-                        });
+                    // Add background rectangle first
+                g.append("rect")
+                    .attr("x", optimalX + 20)  // Adjust position to align with text
+                    .attr("y", optimalY - 22)  // Position slightly above the text
+                    .attr("width", 90)        // Width to accommodate text
+                    .attr("height", 45)        // Height to accommodate both lines
+                    .attr("fill", "white")     // White background
+                    .attr("rx", 4)             // Rounded corners
+                    .attr("stroke", "#e2e8f0") // Light border
+                    .attr("opacity", .7)
+                    .attr("stroke-width", 1);
 
                     // Append label with cost and impact
                     g.append("text")
@@ -1889,11 +1984,11 @@
                         .attr("font-size", "12px")
                         .attr("fill", "black")
                         .append("tspan")
-                            .attr("x", optimalX + 50)
+                            .attr("x", optimalX + 65)
                             .attr("y", optimalY -5)
                             .text(`Cost: $${finalSolution.cost.toFixed(2)}`)
                         .append("tspan")
-                            .attr("x", optimalX + 50)
+                            .attr("x", optimalX + 65)
                             .attr("y", optimalY + 10)
                             .text(`Impact: ${finalSolution.impact.toFixed(2)}`);
                 }
@@ -1905,11 +2000,11 @@
                 const totalImpact = finalSolution.impact.toFixed(2);
                 const countries = Object.values(finalSolution.solution);
                 const uniqueCountries = [...new Set(countries)];
-                const numberOfCountries = uniqueCountries.length;
 
                 const solutionInfoDiv = d3.select("#solution-info");
                 solutionInfoDiv.html(
-                    `<p>Total Cost: $${totalCost} | Total Environmental Impact: ${totalImpact} | Number of Countries: ${numberOfCountries}</p>`
+                    `<p>Total Cost: <strong>$${totalCost}</strong> <br>
+                    Total Environmental Impact: <strong>${totalImpact}</strong></p>`
                 );
             }
 
@@ -1922,6 +2017,20 @@
                     console.log("No valid solution, clearing map.");
                     return;
                 }
+
+                // Calculate number of unique countries
+                const countries = Object.values(finalSolution.solution);
+                const uniqueCountries = [...new Set(countries)];
+                const numberOfCountries = uniqueCountries.length;
+
+               // Calculate number of ingredients
+                const numberOfIngredients = Object.keys(finalSolution.solution).length;
+
+                // Update the section label to include both numbers
+                d3.select("#map .section-box")
+                    .select("label.section-label")
+                    .html(`From where are your burrito ingredients? <br><span style="font-size: 16px; font-weight: normal; color: #4a5568;">Sourcing ${numberOfIngredients} ingredients from ${numberOfCountries} different countries</span>`);
+
 
                 const width = +svg.attr("width");
                 const height = +svg.attr("height");
