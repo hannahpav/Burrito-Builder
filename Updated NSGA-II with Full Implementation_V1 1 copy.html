@@ -1043,17 +1043,29 @@
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
               }
 
+              /* Dropdown container */
+                .dropdown-container {
+                    position: relative;
+                    width: 100%;
+                }
+
                 /* Style for the dropdown */
               #importing-country {
-                  font-family: Poppins, sans-serif; /* Desired font */
-                  font-size: 16px;                /* Font size */
-                  color: #333;                    /* Text color */
-                  width: 100%;                    /* Full width */
-                  padding: 5px;                   /* Padding inside the dropdown */
-                  border: 1px solid #ccc;         /* Border styling */
-                  border-radius: 4px;             /* Rounded corners */
-                  background-color: #f9f9f9;      /* Light background color */
-                  appearance: none;               /* Removes default dropdown arrow */
+                font-family: Poppins, sans-serif; /* Desired font */
+                font-size: 16px;                /* Font size */
+                color: #333;                    /* Text color */
+                width: 100%;                    /* Full width */
+                padding: 5px 35px 5px 5px;                   /* Padding inside the dropdown */
+                border: 1px solid #ccc;         /* Border styling */
+                border-radius: 4px;             /* Rounded corners */
+                background-color: #f9f9f9;      /* Light background color */
+                appearance: none;
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+                background-repeat: no-repeat;
+                background-position: right 10px center;
+                background-size: 16px;
               }
 
               /* Optional styling for dropdown arrow */
@@ -1166,7 +1178,7 @@
                         </div>
                         <hr style="width:100%; border:none; border-top:2px solid #e2e8f0; margin:10px 0 20px 0;">
 
-                    <label class="section-sublabel"> <strong>You perfect Cost / Environmental Impact balance:</strong><br>
+                    <label class="section-sublabel"> <strong>Your perfect Cost / Environmental Impact balance:</strong><br>
                         1. Drag the slider above between Low Cost and <br>
                         &nbsp;&nbsp;&nbsp;&nbsp; Low Environmental Impact<br>
                         2. Watch how your preferred balance changes your selection!<br><br>
@@ -2752,6 +2764,13 @@
 
             // Close popup when clicking overlay
             document.getElementById('popupOverlay').addEventListener('click', closeNoBurritoPopup);
+
+            //budget dropdown decimal corrector
+            document.getElementById('budget-input').addEventListener('input', function() {
+                if (this.value) {
+                    this.value = parseFloat(this.value).toFixed(2);
+                }
+            });
 
             // Get popup elements
             const burritoPopup = document.getElementById('burritoPopup');
