@@ -1286,6 +1286,122 @@
 
         <!-- JavaScript Code -->
         <script>
+
+                        // Modified handleBurritoConfirm function
+            // Add this at the start of your JavaScript to store burrito selections
+            let burritoSelections = [];
+
+            function handleBurritoConfirm(isConfirmed) {
+                // Show overlay
+                const overlay = document.getElementById('popupOverlay');
+                overlay.classList.add('show');
+
+                if (isConfirmed) {
+                    // Collect burrito data
+                    const selectedIngredients = Array.from(document.querySelectorAll("input[type=checkbox]:checked"))
+                        .map(el => el.value);
+
+                    const costElement = document.querySelector("#solution-info strong:first-child");
+                    const impactElement = document.querySelector("#solution-info strong:last-child");
+                    const cost = costElement ? costElement.textContent.replace('$', '') : null;
+                    const impact = impactElement ? impactElement.textContent : null;
+                    const sliderPosition = document.querySelector("#weight-slider").value;
+                    const importingCountry = document.querySelector("#importing-country").value;
+
+                    // Create tracking object
+                    const selection = {
+                        timestamp: new Date().toLocaleString(),
+                        ingredients: selectedIngredients,
+                        cost: cost,
+                        impact: impact,
+                        sliderPosition: sliderPosition,
+                        importingCountry: importingCountry
+                    };
+
+                    // Save to array
+                    burritoSelections.push(selection);
+
+                    // Save to localStorage
+                    localStorage.setItem('burritoSelections', JSON.stringify(burritoSelections));
+
+                    // Log to console
+                    console.log('New burrito selection:', selection);
+                    console.log('All selections:', burritoSelections);
+
+                    // Show success popup
+                    const successPopup = document.createElement('div');
+                    successPopup.className = 'success-popup';
+                    successPopup.innerHTML = `
+                        <div style="font-size: 48px; margin-bottom: 15px;">🎉</div>
+                        <div style="font-size: 24px; color: #2d3748; margin-bottom: 15px;">Fantastic Choice!</div>
+                        <div style="color: #4a5568;">Your perfect burrito combination has been confirmed.</div>
+                    `;
+                    document.body.appendChild(successPopup);
+
+                    setTimeout(() => {
+                        successPopup.style.opacity = '0';
+                        overlay.classList.remove('show');
+                        setTimeout(() => successPopup.remove(), 300);
+                    }, 2000);
+
+                } else {
+                    // Log rejected selection
+                    console.log('Burrito selection rejected');
+
+                    const adjustPopup = document.createElement('div');
+                    adjustPopup.className = 'adjust-popup';
+                    adjustPopup.innerHTML = `
+                        <div style="font-size: 48px; margin-bottom: 15px;">🔄</div>
+                        <div style="font-size: 24px; color: #2d3748; margin-bottom: 15px;">No problem!</div>
+                        <div style="color: #4a5568;">Keep working on your perfect burrito combination.</div>
+                    `;
+                    document.body.appendChild(adjustPopup);
+
+                    setTimeout(() => {
+                        adjustPopup.style.opacity = '0';
+                        overlay.classList.remove('show');
+                        setTimeout(() => adjustPopup.remove(), 300);
+                    }, 2000);
+                }
+            }
+
+            // Add this function to view the data
+            function viewBurritoData() {
+                // Get data from localStorage
+                const savedSelections = localStorage.getItem('burritoSelections');
+                const selections = savedSelections ? JSON.parse(savedSelections) : [];
+
+                // Create download link for CSV
+                let csv = 'Timestamp,Ingredients,Cost,Impact,Slider Position,Importing Country\n';
+                selections.forEach(selection => {
+                    csv += `${selection.timestamp},"${selection.ingredients.join('; ')}", ${selection.cost},${selection.impact},${selection.sliderPosition},${selection.importingCountry}\n`;
+                });
+
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.setAttribute('hidden', '');
+                a.setAttribute('href', url);
+                a.setAttribute('download', 'burrito_selections.csv');
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+
+            // Add a button to view data (add this HTML somewhere in your page)
+            const dataButton = document.createElement('button');
+            dataButton.innerHTML = 'Download Burrito Data';
+            dataButton.style.position = 'fixed';
+            dataButton.style.bottom = '20px';
+            dataButton.style.right = '20px';
+            dataButton.style.padding = '10px';
+            dataButton.style.backgroundColor = 'white';
+            dataButton.style.border = '1px solid black';
+            dataButton.style.borderRadius = '5px';
+            dataButton.style.cursor = 'pointer';
+            dataButton.onclick = viewBurritoData;
+            document.body.appendChild(dataButton);
+
             // Splash screen handling
             document.getElementById('startButton').addEventListener('click', function() {
                 const splashScreen = document.getElementById('splashScreen');
@@ -2813,77 +2929,9 @@
                 burritoPopup.classList.add('show');
             });
 
-            // Modified handleBurritoConfirm function
-            function handleBurritoConfirm(isConfirmed) {
-                // Show overlay
-                const overlay = document.getElementById('popupOverlay');
-                overlay.classList.add('show');
 
-                if (isConfirmed) {
-                    // Collect and send analytics data
-                    const selectedIngredients = Array.from(document.querySelectorAll("input[type=checkbox]:checked"))
-                        .map(el => el.value);
 
-                    const costElement = document.querySelector("#solution-info strong:first-child");
-                    const impactElement = document.querySelector("#solution-info strong:last-child");
-                    const cost = costElement ? costElement.textContent.replace('$', '') : null;
-                    const impact = impactElement ? impactElement.textContent : null;
-                    const sliderPosition = document.querySelector("#weight-slider").value;
-                    const importingCountry = document.querySelector("#importing-country").value;
 
-                    // Send event to Google Analytics
-                    gtag('event', 'burrito_confirmed', {
-                        'ingredients': selectedIngredients.join(', '),
-                        'cost': parseFloat(cost),
-                        'environmental_impact': parseFloat(impact),
-                        'preference_slider': parseInt(sliderPosition),
-                        'importing_country': importingCountry,
-                        'ingredient_count': selectedIngredients.length
-                    });
-
-                    // Additional analytics events...
-                    selectedIngredients.forEach(ingredient => {
-                        gtag('event', 'ingredient_selected', {
-                            'ingredient_name': ingredient
-                        });
-                    });
-
-                    // Show success popup (your original code)
-                    const successPopup = document.createElement('div');
-                    successPopup.className = 'success-popup';
-                    successPopup.innerHTML = `
-                        <div style="font-size: 48px; margin-bottom: 15px;">🎉</div>
-                        <div style="font-size: 24px; color: #2d3748; margin-bottom: 15px;">Fantastic Choice!</div>
-                        <div style="color: #4a5568;">Your perfect burrito combination has been confirmed.</div>
-                    `;
-                    document.body.appendChild(successPopup);
-
-                    setTimeout(() => {
-                        successPopup.style.opacity = '0';
-                        overlay.classList.remove('show');
-                        setTimeout(() => successPopup.remove(), 300);
-                    }, 2000);
-                } else {
-                    // Track rejected burrito
-                    gtag('event', 'burrito_rejected');
-
-                    // Show adjustment popup (your original code)
-                    const adjustPopup = document.createElement('div');
-                    adjustPopup.className = 'adjust-popup';
-                    adjustPopup.innerHTML = `
-                        <div style="font-size: 48px; margin-bottom: 15px;">🔄</div>
-                        <div style="font-size: 24px; color: #2d3748; margin-bottom: 15px;">No problem!</div>
-                        <div style="color: #4a5568;">Keep working on your perfect burrito combination.</div>
-                    `;
-                    document.body.appendChild(adjustPopup);
-
-                    setTimeout(() => {
-                        adjustPopup.style.opacity = '0';
-                        overlay.classList.remove('show');
-                        setTimeout(() => adjustPopup.remove(), 300);
-                    }, 2000);
-                }
-            }
             // Close popup when clicking outside
             document.addEventListener('click', (event) => {
                 if (!burritoPopup.contains(event.target) && event.target !== confirmButton) {

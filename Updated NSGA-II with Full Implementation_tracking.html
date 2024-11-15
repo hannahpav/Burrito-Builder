@@ -693,10 +693,11 @@
             }
 
             .splash-title {
-                font-size: 3rem;
+                font-size: 2.4rem;
                 margin-top: 20px;
                 font-weight: bold;
                 color: #2d3748;
+                width: 100% !important;
             }
 
             .splash-subtitle {
@@ -1093,6 +1094,31 @@
                   display: none; /* Removes dropdown arrow for Internet Explorer */
               }
 
+            /* Add these new styles to your existing CSS */
+
+            /* Update the title row to match form-row width */
+            .form-row.title-row {
+                width: 100%;
+                margin-bottom: 20px;
+                margin-top:20px
+            }
+
+            .form-row.title-row .section-box {
+                width: 100%;
+            }
+
+            /* Remove margins from splash-title when inside section-box */
+            .section-box .splash-title {
+                margin: 0;
+                color: #2d3748;
+            }
+
+            /* Adjust subtitle spacing when inside section-box */
+            .section-box .subtitle {
+                margin: 10px 0 0 0;
+                color: #4a5568;
+            }
+
         </style>
     </head>
     <body>
@@ -1100,10 +1126,6 @@
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KZBBT26L"
         height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <!-- End Google Tag Manager (noscript) -->
-
-        <h2 class="splash-title">Burrito Builder</h2>
-        <p class ="splash-description" style="text-align:center">Build your perfect burrito and map its global journey — <br>balancing flavor, cost, and planet-friendly choices from source to plate.</>
-
 
        <div class="splash-screen" id="splashScreen">
             <div class="splash-content">
@@ -1132,6 +1154,16 @@
        </div>
 
         <div class="main-content" id="mainContent">
+        <!-- Title section box constrained to main-content width -->
+        <div class="form-row title-row">
+            <div class="section-box" style="text-align: center;">
+                <h2 class="splash-title" style="margin: 0;">Burrito Builder</h2>
+                <p class="subtitle" style="margin: 10px 0 0 0;">
+                    Build your perfect burrito and map its global journey — <br>
+                    balancing flavor, cost, and planet-friendly choices from source to plate.
+                </p>
+            </div>
+        </div>
             <!-- Update the form-row section in the main-content div -->
         <div class="form-row">
             <!-- Left Column -->
@@ -1993,22 +2025,7 @@
                     g.append("path")
                         .attr("class", "optimal-point")
                         .attr("d", "M 0 -7 L 2 -2 L 7 -2 L 3 1 L 4 6 L 0 3 L -4 6 L -3 1 L -7 -2 L -2 -2 Z")  // Star path
-                        .attr("transform", `translate(${optimalX}, ${optimalY}) scale(2)`) // Position the star
-                        // .on("mouseover", function() {
-                        //     const pos = {
-                        //         left: d3.event.pageX - 250,
-                        //         top: d3.event.pageY - 40
-                        //     };
-                        //
-                        //     tooltip
-                        //         .style("left", pos.left + "px")
-                        //         .style("top", pos.top + "px")
-                        //         .html(`Optimal Solution<br>Cost: $${finalSolution.cost.toFixed(2)}<br>Impact: ${finalSolution.impact.toFixed(2)}`)
-                        //         .style("opacity", 1);
-                        // })
-                        // .on("mouseout", function() {
-                        //     tooltip.style("opacity", 0);
-                        // });
+                        .attr("transform", `translate(${optimalX}, ${optimalY}) scale(2)`) // Position the start
 
                     // Add background rectangle first
                 g.append("rect")
@@ -2815,40 +2832,47 @@
 
             // Modified handleBurritoConfirm function
             function handleBurritoConfirm(isConfirmed) {
-                // Show overlay
                 const overlay = document.getElementById('popupOverlay');
                 overlay.classList.add('show');
 
                 if (isConfirmed) {
-                    // Collect and send analytics data
+                    // Collect all session data
                     const selectedIngredients = Array.from(document.querySelectorAll("input[type=checkbox]:checked"))
                         .map(el => el.value);
 
                     const costElement = document.querySelector("#solution-info strong:first-child");
                     const impactElement = document.querySelector("#solution-info strong:last-child");
-                    const cost = costElement ? costElement.textContent.replace('$', '') : null;
-                    const impact = impactElement ? impactElement.textContent : null;
-                    const sliderPosition = document.querySelector("#weight-slider").value;
+                    const cost = costElement ? parseFloat(costElement.textContent.replace('$', '')) : null;
+                    const impact = impactElement ? parseFloat(impactElement.textContent) : null;
+                    const sliderPosition = parseInt(document.querySelector("#weight-slider").value);
                     const importingCountry = document.querySelector("#importing-country").value;
 
-                    // Send event to Google Analytics
-                    gtag('event', 'burrito_confirmed', {
-                        'ingredients': selectedIngredients.join(', '),
-                        'cost': parseFloat(cost),
-                        'environmental_impact': parseFloat(impact),
-                        'preference_slider': parseInt(sliderPosition),
+                    // Format cost range
+                    const costRange = cost < 5 ? 'Under $5' :
+                                     cost < 10 ? '$5-$10' :
+                                     cost < 15 ? '$10-$15' : 'Over $15';
+
+                    // Send event with parameters formatted for GA4
+                    gtag('event', 'burrito_selection', {
                         'importing_country': importingCountry,
-                        'ingredient_count': selectedIngredients.length
+                        'ingredient_count': selectedIngredients.length,
+                        'cost_range': costRange,
+                        'ingredients': selectedIngredients.join(','),
+                        'total_cost': cost,
+                        'impact_score': impact,
+                        'preference_slider': sliderPosition
                     });
 
-                    // Additional analytics events...
-                    selectedIngredients.forEach(ingredient => {
-                        gtag('event', 'ingredient_selected', {
-                            'ingredient_name': ingredient
-                        });
+                    // Also send individual events for better tracking
+                    gtag('event', 'select_country', {
+                        'country': importingCountry
                     });
 
-                    // Show success popup (your original code)
+                    gtag('event', 'ingredient_selection', {
+                        'count': selectedIngredients.length
+                    });
+
+                    // Rest of your popup code...
                     const successPopup = document.createElement('div');
                     successPopup.className = 'success-popup';
                     successPopup.innerHTML = `
@@ -2864,10 +2888,8 @@
                         setTimeout(() => successPopup.remove(), 300);
                     }, 2000);
                 } else {
-                    // Track rejected burrito
                     gtag('event', 'burrito_rejected');
 
-                    // Show adjustment popup (your original code)
                     const adjustPopup = document.createElement('div');
                     adjustPopup.className = 'adjust-popup';
                     adjustPopup.innerHTML = `
@@ -2884,6 +2906,7 @@
                     }, 2000);
                 }
             }
+
             // Close popup when clicking outside
             document.addEventListener('click', (event) => {
                 if (!burritoPopup.contains(event.target) && event.target !== confirmButton) {
