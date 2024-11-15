@@ -1178,8 +1178,10 @@
                     <label class="section-label">How much do you want to pay for your burrito?</label>
                     <label class="section-sublabel">Type in your highest desired cost in the box below</label>
                     <div style="margin-top: 7px; display: flex; gap: 10px; align-items: center;">
-                        $ <input type="number" id="budget-input" name="budget" value="10.00" min="0" step="0.50"
-                            onblur="this.value = parseFloat(this.value).toFixed(2);">
+                        $ <input type="text" id="budget-input" name="budget" value="10.00"
+                            pattern="^\d*\.?\d{0,2}$"
+                            inputmode="numeric"
+                            style="width: 100px; text-align: right;">
                         <button id="update-budget">Update</button>
                     </div>
                 </div>
@@ -1408,26 +1410,45 @@
                 const budgetInput = d3.select("#budget-input");
                 const updateButton = d3.select("#update-budget");
 
-                // Function to handle budget update
-                function updateBudget() {
-                    const budget = +budgetInput.node().value;
-                    if (budget <= 0) {
-                        alert("Please enter a valid budget greater than 0");
-                        budgetInput.node().value = 1;
-                        return;
-                    }
-                    console.log("Budget changed to:", budget);
-                    updateParetoFront();
+                function formatAsCurrency(value) {
+                    return parseFloat(value).toFixed(2);
                 }
 
-                // Update button click handler
-                updateButton.on("click", updateBudget);
+                budgetInput.on('input', function() {
+                    // Allow typing numbers freely
+                    const value = this.value.replace(/[^\d.]/g, '');
 
-                // Enter key handler
-                budgetInput.on("keydown", function() {
-                    if (d3.event.keyCode === 13) { // 13 is the Enter key code
+                    // Prevent multiple decimal points
+                    const decimalCount = (value.match(/\./g) || []).length;
+                    if (decimalCount > 1) {
+                        this.value = value.slice(0, -1);
+                        return;
+                    }
+
+                    this.value = value;
+                });
+
+                budgetInput.on('blur', function() {
+                    if (this.value) {
+                        this.value = formatAsCurrency(this.value);
+                    }
+                });
+
+                updateButton.on('click', function() {
+                    const value = parseFloat(budgetInput.node().value);
+                    if (isNaN(value) || value <= 0) {
+                        alert("Please enter a valid budget greater than 0");
+                        budgetInput.node().value = "10.00";
+                        return;
+                    }
+                    budgetInput.node().value = formatAsCurrency(value);
+                    updateParetoFront();
+                });
+
+                budgetInput.on('keydown', function() {
+                    if (d3.event.key === 'Enter') {
                         d3.event.preventDefault();
-                        updateBudget();
+                        updateButton.node().click();
                     }
                 });
 
@@ -2068,7 +2089,8 @@
                 const solutionInfoDiv = d3.select("#solution-info");
                 solutionInfoDiv.html(
                     `<p>Total Cost: <strong>$${totalCost}</strong> <br>
-                    Total Environmental Impact: <strong>${totalImpact}</strong></p>`
+                    Total Environmental Impact: <strong>${totalImpact}</strong>
+                    </p>`
                 );
             }
 
@@ -2806,13 +2828,6 @@
 
             // Close popup when clicking overlay
             document.getElementById('popupOverlay').addEventListener('click', closeNoBurritoPopup);
-
-            //budget dropdown decimal corrector
-            document.getElementById('budget-input').addEventListener('input', function() {
-                if (this.value) {
-                    this.value = parseFloat(this.value).toFixed(2);
-                }
-            });
 
             // Get popup elements
             const burritoPopup = document.getElementById('burritoPopup');
