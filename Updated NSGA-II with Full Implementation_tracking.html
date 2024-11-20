@@ -2086,10 +2086,29 @@
                 const countries = Object.values(finalSolution.solution);
                 const uniqueCountries = [...new Set(countries)];
 
+                // Determine impact level and color
+                let impactLevel;
+                let impactColor;
+                if (totalImpact < 25) {
+                    impactLevel = "Low Impact";
+                    impactColor = "#4CAF50"; // Green
+                } else if (totalImpact <= 55) {
+                    impactLevel = "Medium Impact";
+                    impactColor = "#FFC107"; // Yellow
+                } else {
+                    impactLevel = "High Impact";
+                    impactColor = "#F44336"; // Red
+                }
+
                 const solutionInfoDiv = d3.select("#solution-info");
                 solutionInfoDiv.html(
                     `<p>Total Cost: <strong>$${totalCost}</strong> <br>
                     Total Environmental Impact: <strong>${totalImpact}</strong>
+                    <span style="display: inline-block; margin-left: 10px; padding: 4px 8px;
+                    background-color: ${impactColor}; color: ${totalImpact <= 70 ? 'black' : 'white'};
+                    border-radius: 4px; font-size: 14px;">
+                    ${impactLevel}
+                    </span>
                     </p>`
                 );
             }
@@ -2186,7 +2205,7 @@
                 }
 
                 d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson").then(function(data) {
-                    // Create map of countries to their ingredients
+                // Create map of countries to their ingredients
                 const countryIngredients = {};
                 Object.entries(finalSolution.solution).forEach(([ingredient, country]) => {
                     if (!countryIngredients[country]) {
