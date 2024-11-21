@@ -49,11 +49,6 @@
                 text-align: center;
                 width: 50%;
             }
-
-            /*!* Country Styling *!*/
-            /*.country { fill: rgb(143, 204, 245); stroke: white; cursor: pointer; }*/
-            /*!*.country:hover { fill: lightblue; }*!*/
-
             /* Tooltip Styling */
             .tooltip {
                 position: fixed;  /* Change from absolute to fixed */
@@ -77,7 +72,7 @@
             .label { font-size: 14px; font-weight: bold; }
             .line { stroke-width: 1.5; }
 
-                   /* Progress message section */
+           /* Progress message section */
             .progress-message {
                 width: 100%;
                 margin: 20px 0;
@@ -106,12 +101,12 @@
 
             /* Common styles for both section boxes */
             .bottom-section .section-box {
-                flex: 1;  /* Both boxes take equal width */
+                flex: 1;
                 padding: 20px;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
-                min-height: 120px;  /* Ensure minimum height */
+                min-height: 120px;
                 box-sizing: border-box;
                 position: relative;
                 overflow: visible;
@@ -142,7 +137,7 @@
                 box-sizing: border-box;
             }
 
-            /* Update section boxes within map */
+            /* Section boxes within map */
             #map .section-box {
                 width: 100%;
                 margin-bottom: 20px; /* Add space between cost info and map */
@@ -162,11 +157,10 @@
             }
 
             .map-container {
-                width: calc(100% - 160px); /* Keep the same width calculation */
+                width: calc(100% - 160px);
                 flex: 0 0 auto;
                 min-width: 0;
                 box-sizing: border-box;
-                /*margin-left: 175px;    !* Add margin to offset from legend *!*/
             }
 
             html, body {
@@ -177,7 +171,6 @@
             .axis text{
                 font-family: 'Poppins', sans-serif;
                 font-size: 12px;
-                /*font-weight: bold;*/
             }
 
             .axis-label {
@@ -191,7 +184,7 @@
                 display: flex;
                 gap: 20px;
                 width: 100%;
-                justify-content: space-between; /* Ensure proper spacing */
+                justify-content: space-between;
                 margin-bottom:20px
             }
 
@@ -217,9 +210,8 @@
 
             /* New styles for the combined section */
             .preference-visualization-section {
-                height: auto;      /* Allow height to expand */
-                min-height: 400px; /* Provide minimum height */
-                /*padding: 20px;     !* Add some padding *!*/
+                height: auto;
+                min-height: 400px;
             }
 
             .preference-slider {
@@ -229,9 +221,7 @@
             }
 
             .visualization-container {
-                width: 92%;      /* Full width of container */
-                /*height: auto;     !* Allow height to expand *!*/
-                /*margin: 20px 0;   !* Add vertical margin *!*/
+                width: 92%;
                 flex-grow: 1;
                 display: flex;
                 flex-direction: column;
@@ -256,9 +246,9 @@
             /* Adjustments for Pareto Front Visualization */
             #pareto-chart {
                 width: 100%;
-                height: 280px;    /* Fixed height for the chart */
+                height: 280px;
                 margin: 0;
-                overflow: visible;/* Remove margins that might cause overflow */
+                overflow: visible;
             }
 
             /* Highlight Styling for Optimal Solution */
@@ -297,7 +287,7 @@
                 text-align: center;
                 line-height: 1.2;
                 font-weight: bold;
-                pointer-events: none; /* Prevent labels from interfering with slider */
+                pointer-events: none;
             }
 
             .slider-label.left {
@@ -356,7 +346,7 @@
                 display: block;
             }
 
-            /* Add these new styles for the slider appearance */
+            /* Styles for the slider appearance */
             input[type="range"] {
                 -webkit-appearance: none;
                 width: 200px;
@@ -393,7 +383,7 @@
 
             /* Map Header Styling */
             .map-header {
-                display: block;  /* Ensure header doesn't affect flow */
+                display: block;
                 width: 100%;
                 margin:0 0 20px 0;
                 padding:0;
@@ -403,8 +393,8 @@
                 display: flex;
                 position: relative;
                 z-index: 1;
-                justify-content: flex-start;  /* Change from between to flex-start */
-                align-items: flex-start;      /* Change from center to flex-start */
+                justify-content: flex-start;
+                align-items: flex-start;
                 width: 100%;
             }
 
@@ -418,15 +408,14 @@
             #solution-info p {
                 margin: 0;
                 line-height: 1.5;
-                font-size: 20px; /* Increased base font size */
+                font-size: 20px;
             }
 
             #solution-info strong {
-                font-size: 28px; /* Even larger font for the values */
-                color: #2d3748; /* Darker color for emphasis */
+                font-size: 28px;
+                color: #2d3748;
             }
 
-            /* Add some spacing between cost and impact lines */
             #solution-info p br {
                 margin-bottom: 2px;
                 content: "";
@@ -459,7 +448,7 @@
 
             /* Legend Container with responsive positioning */
             .legend-container {
-                width: 175px;           /* Keep existing width */
+                width: 175px;
                 background-color: rgba(255, 255, 255, 0.9);
                 padding: 15px;
                 border-radius: 5px;
@@ -467,7 +456,7 @@
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                 height: fit-content;
                 position: absolute;
-                right: 0;               /* Change from right: 0 to left: 0 */
+                right: 0;
                 top: 0;
                 box-sizing: border-box;
             }
@@ -511,8 +500,8 @@
             .map-header {
                 display: block;
                 width: 100%;
-                margin: 0;        /* Remove auto margins */
-                padding: 0;       /* Remove padding */
+                margin: 0;
+                padding: 0;
             }
 
             .confirmation-section {
@@ -571,7 +560,7 @@
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             }
 
-            /* Update success and adjust popups to be centered */
+            /* Success and popups */
             .success-popup, .adjust-popup {
                 position: fixed;
                 top: 50%;
@@ -609,7 +598,7 @@
                 visibility: visible;
             }
 
-            /* Update the popup positioning to be centered */
+            /* popup positioning to be centered */
             .popup-confirm {
                 position: fixed;
                 top: 50%;
@@ -638,7 +627,7 @@
                 gap: 10px;
             }
 
-            /* Update flex container styles */
+            /* Flex container styles */
             .flex-column.justify-between.items-center.w-full {
                 display: flex;
                 position: relative;
@@ -646,7 +635,7 @@
                 justify-content: flex-start;
                 align-items: flex-start;
                 width: 100%;
-                margin-bottom: 20px;  /* Consistent spacing */
+                margin-bottom: 20px;
             }
 
             .ingredient-list {
@@ -1012,9 +1001,6 @@
                 min-height: auto;
                 height: auto;
                 overflow:visible;
-                /*position: relative; !* Enable positioning context *!*/
-                /*display: flex;*/
-                /*flex-direction: column;*/
             }
 
             /* First row sections */
@@ -1034,9 +1020,9 @@
 
           #budget-input,
               #update-budget {
-                  font-family: Arial, sans-serif;  /* Choose your desired font */
-                  font-size: 16px;                 /* Adjust font size */
-                  color: #333;                     /* Text color */
+                  font-family: Arial, sans-serif;
+                  font-size: 16px;
+                  color: #333;
               }
 
               /* Additional styling for the input */
@@ -1044,18 +1030,18 @@
                   width: 100px;
                   text-align: right;
                   padding: 5px;
-                  border: 1px solid #ccc;          /* Optional: add border */
-                  border-radius: 4px;              /* Optional: rounded corners */
+                  border: 1px solid #ccc;
+                  border-radius: 4px;
               }
 
               /* Additional styling for the button */
               #update-budget {
-                  background-color: white;       /* Button background color */
-                  border: 1px solid black;                    /* Remove default border */
-                  padding: 8px 12px;               /* Padding inside the button */
-                  border-radius: 4px;              /* Rounded corners */
-                  cursor: pointer;                 /* Pointer cursor on hover */
-                  font-weight: bold;               /* Bold text */
+                  background-color: white;
+                  border: 1px solid black;
+                  padding: 8px 12px;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  font-weight: bold;
               }
 
               /* Button hover effect */
@@ -1072,14 +1058,14 @@
 
                 /* Style for the dropdown */
               #importing-country {
-                font-family: Poppins, sans-serif; /* Desired font */
-                font-size: 16px;                /* Font size */
-                color: #333;                    /* Text color */
-                width: 100%;                    /* Full width */
-                padding: 5px 35px 5px 5px;                   /* Padding inside the dropdown */
-                border: 1px solid #ccc;         /* Border styling */
-                border-radius: 4px;             /* Rounded corners */
-                background-color: #f9f9f9;      /* Light background color */
+                font-family: Poppins, sans-serif;
+                font-size: 16px;
+                color: #333;
+                width: 100%;
+                padding: 5px 35px 5px 5px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                background-color: #f9f9f9;
                 appearance: none;
                 -webkit-appearance: none;
                 -moz-appearance: none;
@@ -1093,8 +1079,6 @@
               #importing-country::-ms-expand {
                   display: none; /* Removes dropdown arrow for Internet Explorer */
               }
-
-            /* Add these new styles to your existing CSS */
 
             /* Update the title row to match form-row width */
             .form-row.title-row {
@@ -1127,6 +1111,7 @@
         height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <!-- End Google Tag Manager (noscript) -->
 
+<!--        We ended up not using the splash screen-->
        <div class="splash-screen" id="splashScreen">
             <div class="splash-content">
                 <h1 class="splash-title">🌯 Burrito Builder</h1>
@@ -1152,7 +1137,7 @@
             <button class="start-button" id="startButton">Let's Build! 🚀</button>
         </div>
        </div>
-
+        <!--header-->
         <div class="main-content" id="mainContent">
         <!-- Title section box constrained to main-content width -->
         <div class="form-row title-row">
@@ -1164,7 +1149,7 @@
                 </p>
             </div>
         </div>
-            <!-- Update the form-row section in the main-content div -->
+            <!-- Left column -->
         <div class="form-row">
             <!-- Left Column -->
             <div class="form-column left-column">
@@ -1173,7 +1158,7 @@
                     <label class="section-sublabel">Choose your country from the dropdown</label>
                     <select id="importing-country" style="margin-top:10px;"></select>
                 </div>
-
+                <!--burrito cost-->
                 <div class="section-box">
                     <label class="section-label">How much do you want to pay for your burrito?</label>
                     <label class="section-sublabel">Type in your highest desired cost in the box below</label>
@@ -1185,7 +1170,7 @@
                         <button id="update-budget">Update</button>
                     </div>
                 </div>
-
+                <!--ingredients-->
                 <div class="section-box">
                     <label class="section-label">What's going in your burrito?</label>
                     <label class="section-sublabel">Choose your ingredients by checking the boxes</label>
@@ -1220,7 +1205,6 @@
                     <div class="preference-visualization-section">
                         <!-- Pareto Front Visualization -->
                         <div class="visualization-container">
-
                             <svg id="pareto-chart"></svg>
                         </div>
                         <!-- Preference Slider -->
@@ -1272,10 +1256,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- Solution Info Box -->
-<!--                <div class="section-box">-->
-<!--                    <div id="solution-info" class="text-center"></div>-->
-<!--                </div>-->
             </div>
         </div>
 
@@ -1295,8 +1275,6 @@
                 </div>
             </div>
         </div>
-
-
 
             <!-- Popups -->
             <div class="popup-overlay" id="popupOverlay"></div>
@@ -1384,7 +1362,7 @@
                 alert("Error loading ingredient data. Please refresh the page.");
             });
 
-            // Function to enable UI elements - redefine this first
+            // Function to enable UI elements
             function enableUIElements() {
                 // Enable all checkboxes except tortilla
                 d3.selectAll("input[type=checkbox]")
@@ -1474,6 +1452,7 @@
                 "Avocado": "#b15928"
             };
 
+            // Align country names in our json with geojson
             const countryNameMapping = {
                         "Argentina": "Argentina",
                         "Australia": "Australia",
@@ -1943,9 +1922,9 @@
                 // Update margins to match slider container
                 const margin = {
                     top: 10,
-                    right: 90, // Increased to match slider label width
+                    right: 90,
                     bottom: 30,
-                    left: 90  // Increased to match slider label width
+                    left: 90
                 };
 
                 const width = svgWidth - margin.left - margin.right;
@@ -2048,15 +2027,15 @@
                         .attr("d", "M 0 -7 L 2 -2 L 7 -2 L 3 1 L 4 6 L 0 3 L -4 6 L -3 1 L -7 -2 L -2 -2 Z")  // Star path
                         .attr("transform", `translate(${optimalX}, ${optimalY}) scale(2)`) // Position the start
 
-                    // Add background rectangle first
+                // Add background rectangle
                 g.append("rect")
-                    .attr("x", optimalX + 20)  // Adjust position to align with text
-                    .attr("y", optimalY - 22)  // Position slightly above the text
-                    .attr("width", 90)        // Width to accommodate text
-                    .attr("height", 45)        // Height to accommodate both lines
-                    .attr("fill", "white")     // White background
-                    .attr("rx", 4)             // Rounded corners
-                    .attr("stroke", "#e2e8f0") // Light border
+                    .attr("x", optimalX + 20)
+                    .attr("y", optimalY - 22)
+                    .attr("width", 90)
+                    .attr("height", 45)
+                    .attr("fill", "white")
+                    .attr("rx", 4)
+                    .attr("stroke", "#e2e8f0")
                     .attr("opacity", .7)
                     .attr("stroke-width", 1);
 
